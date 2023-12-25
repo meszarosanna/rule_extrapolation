@@ -1,0 +1,9 @@
+pytest~=7.4.0
+coverage
+codecov
+pytest-cov
+pytest-flake8
+black~=23.12.1
+flake8
+check-manifest
+mypy~=1.8.0
