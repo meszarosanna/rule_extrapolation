@@ -3,3 +3,4 @@ pytorch-lightning~=2.0.0
 jsonargparse[signatures]>=4.17.0
 wandb~=0.15.11
 omegaconf~=2.3.0
+numpy~=1.26.2
