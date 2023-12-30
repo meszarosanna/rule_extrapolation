@@ -1,14 +1,10 @@
 # Importing necessary libraries
 import torch
-import numpy as np
 import torch.nn as nn
 
 import math
 
-BS = 64
-PAD = 4
-SOS_token = np.array([2])
-EOS_token = np.array([3])
+from llm_non_identifiability.data import generate_aNbN_grammar_data, batchify_data, PAD
 
 
 class PositionalEncoding(nn.Module):
@@ -137,56 +133,8 @@ class Transformer(nn.Module):
         return matrix == pad_token
 
 
-def generate_random_data(n, max_length=32):
-    lengths = np.random.randint(low=1, high=max_length // 2, size=n)
-
-    data = []
-
-    [
-        data.append(
-            np.concatenate((SOS_token, np.zeros(length), np.ones(length), EOS_token))
-        )
-        for length in lengths
-    ]
-
-    np.random.shuffle(data)
-
-    return data
-
-
-def batchify_data(data, batch_size=BS, padding=True, padding_token=PAD):
-    batches = []
-    for idx in range(0, len(data), batch_size):
-        # We make sure we dont get the last bit if its not batch_size size
-        if idx + batch_size < len(data):
-            # Here you would need to get the max length of the batch,
-            # and normalize the length with the PAD token.
-            if padding is True:
-                max_batch_length = 0
-
-                # Get longest sentence in batch
-                for seq in data[idx : idx + batch_size]:
-                    if len(seq) > max_batch_length:
-                        max_batch_length = len(seq)
-
-                # Append X padding tokens until it reaches the max length
-                for seq_idx in range(batch_size):
-                    remaining_length = max_batch_length - len(data[idx + seq_idx])
-
-                    if remaining_length > 0:
-                        data[idx + seq_idx] = np.concatenate(
-                            (data[idx + seq_idx], [padding_token] * remaining_length)
-                        )
-
-            batches.append(np.stack(data[idx : idx + batch_size]))
-
-    print(f"{len(batches)} batches of size {batch_size}")
-
-    return batches
-
-
-train_data = generate_random_data(9000)
-val_data = generate_random_data(3000)
+train_data = generate_aNbN_grammar_data(9000)
+val_data = generate_aNbN_grammar_data(3000)
 
 train_dataloader = batchify_data(train_data)
 val_dataloader = batchify_data(val_data)
