@@ -107,3 +107,21 @@ def batchify_data(data, batch_size=BS, padding=True, padding_token=PAD):
     print(f"{len(batches)} batches of size {batch_size}")
 
     return batches
+
+
+def pad(data):
+    max_batch_length = 0
+
+    # Get longest sentence in batch
+    for seq in data:
+        if len(seq) > max_batch_length:
+            max_batch_length = len(seq)
+
+    # Append X padding tokens until it reaches the max length
+    for i, seq in enumerate(data):
+        remaining_length = max_batch_length - len(seq)
+
+        if remaining_length > 0:
+            data[i] = np.concatenate((data[i], [PAD] * remaining_length))
+
+    return data
