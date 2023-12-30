@@ -3,6 +3,7 @@ import numpy as np
 PAD = 4
 SOS_token = np.array([2])
 EOS_token = np.array([3])
+BS = 64
 
 
 def generate_aNbN_grammar_data(n, max_length=32):
@@ -56,7 +57,25 @@ def generate_abN_grammar_data(n, max_length=32):
     return data
 
 
-BS = 64
+def generate_aN_bM_grammar_data(n, max_length=32):
+    """
+    PCFG with one rule:
+    - a's are before b's
+
+    :param n:
+    :param max_length:
+    :return:
+    """
+
+    lengths_a = np.random.randint(low=1, high=max_length, size=n)
+    lengths_b = np.ones_like(lengths_a) * max_length - lengths_a
+
+    data = []
+
+    for la, lb in zip(lengths_a, lengths_b):
+        data.append(np.concatenate((SOS_token, np.zeros(la), np.ones(lb), EOS_token)))
+
+    return data
 
 
 def batchify_data(data, batch_size=BS, padding=True, padding_token=PAD):
