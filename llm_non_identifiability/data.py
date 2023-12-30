@@ -124,4 +124,4 @@ def pad(data):
         if remaining_length > 0:
             data[i] = np.concatenate((data[i], [PAD] * remaining_length))
 
-    return data
+    return np.array(data)
