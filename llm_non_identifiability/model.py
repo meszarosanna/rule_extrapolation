@@ -34,10 +34,10 @@ class PositionalEncoding(nn.Module):
         pos_encoding = pos_encoding.unsqueeze(0).transpose(0, 1)
         self.register_buffer("pos_encoding", pos_encoding)
 
-    def forward(self, token_embedding: torch.tensor) -> torch.tensor:
+    def forward(self, token_embedding: torch.Tensor) -> torch.Tensor:
         # Residual connection + pos encoding
         return self.dropout(
-            token_embedding + self.pos_encoding[: token_embedding.size(0), :]
+            token_embedding + self.pos_encoding[: token_embedding.size(0), :]  # type: ignore[index]
         )
 
 
@@ -108,7 +108,7 @@ class Transformer(nn.Module):
 
         return out
 
-    def get_tgt_mask(self, size) -> torch.tensor:
+    def get_tgt_mask(self, size) -> torch.Tensor:
         # Generates a squeare matrix where the each row allows one word more to be seen
         mask = torch.tril(torch.ones(size, size) == 1)  # Lower triangular matrix
         mask = mask.float()
@@ -125,8 +125,8 @@ class Transformer(nn.Module):
         return mask
 
     def create_pad_mask(
-        self, matrix: torch.tensor, pad_token: int = PAD
-    ) -> torch.tensor:
+        self, matrix: torch.Tensor, pad_token: int = PAD
+    ) -> torch.Tensor:
         # If matrix = [1,2,3,0,0,0] where pad_token=0, the result mask is
         # [False, False, False, True, True, True]
         return matrix == pad_token
