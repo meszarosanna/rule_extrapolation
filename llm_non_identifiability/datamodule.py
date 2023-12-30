@@ -10,7 +10,9 @@ from llm_non_identifiability.dataset import GrammarDataset
 
 
 class GrammarDataModule(pl.LightningDataModule):
-    def __init__(self, n_train, n_val, n_test, max_length, batch_size=64):
+    def __init__(
+        self, n_train=9000, n_val=3000, n_test=1024, max_length=32, batch_size=64
+    ):
         super().__init__()
         self.save_hyperparameters()
 
