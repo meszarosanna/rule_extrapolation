@@ -2,6 +2,7 @@
 import torch
 import torch.nn as nn
 
+import llm_non_identifiability.data
 from llm_non_identifiability.data import generate_aNbN_grammar_data, batchify_data
 from llm_non_identifiability.model import Transformer
 
@@ -217,6 +218,46 @@ class LightningGrammarModule(pl.LightningModule):
         loss = self.hparams.loss_fn(pred, y_expected)
 
         return X, y, pred, loss
+
+    def predict_step(self, batch, batch_idx=None, prompt=None, max_length=32):
+        X, y = batch
+
+        if prompt is None:
+            prompt = torch.tensor(
+                [[llm_non_identifiability.data.SOS_token.item(), 0, 0, 0, 1]],
+                dtype=torch.long,
+                device=self.hparams.device,
+            )
+
+        for _ in range(max_length):
+            # Get mask to mask out the next words
+            sequence_length = prompt.size(1)
+            tgt_mask = self.model.get_tgt_mask(sequence_length).to(self.hparams.device)
+
+            # Standard training except we pass in y_input and tgt_mask
+            pred = self.model(
+                X[0].view(1, -1),
+                prompt,
+                tgt_mask,
+                self.model.create_pad_mask(X[0].view(1, -1), 4),
+                self.model.create_pad_mask(prompt, 4),
+            )
+
+            _, next_item = torch.max(pred[-1].view(-1), dim=-1)
+
+            next_item = torch.tensor([[next_item]], device=self.hparams.device)
+
+            # Concatenate previous input with predicted best word
+            prompt = torch.cat((prompt, next_item), dim=1)
+
+            # Stop if model predicts end of sentence
+            if (
+                next_item.view(-1).item()
+                == llm_non_identifiability.data.EOS_token.item()
+            ):
+                break
+
+        return prompt.view(-1).tolist()
 
 
 if __name__ == "__main__":
