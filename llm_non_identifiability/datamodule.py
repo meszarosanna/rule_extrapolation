@@ -60,3 +60,10 @@ class GrammarDataModule(pl.LightningDataModule):
             batch_size=self.hparams.batch_size,
             shuffle=False,
         )
+
+    def predict_dataloader(self):
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.hparams.batch_size,
+            shuffle=False,
+        )
