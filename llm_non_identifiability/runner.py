@@ -222,13 +222,15 @@ class LightningGrammarModule(pl.LightningModule):
     def predict_step(self, batch, batch_idx=None, prompt=None, max_length=32):
         X, y = batch
 
+        return self._predict(X[0].view(1, -1), max_length, prompt)
+
+    def _predict(self, src, max_length=32, prompt=None):
         if prompt is None:
             prompt = torch.tensor(
                 [[llm_non_identifiability.data.SOS_token.item(), 0, 0, 0, 1]],
                 dtype=torch.long,
                 device=self.hparams.device,
             )
-
         for _ in range(max_length):
             # Get mask to mask out the next words
             sequence_length = prompt.size(1)
@@ -236,10 +238,10 @@ class LightningGrammarModule(pl.LightningModule):
 
             # Standard training except we pass in y_input and tgt_mask
             pred = self.model(
-                X[0].view(1, -1),
+                src,
                 prompt,
                 tgt_mask,
-                self.model.create_pad_mask(X[0].view(1, -1), 4),
+                self.model.create_pad_mask(src, 4),
                 self.model.create_pad_mask(prompt, 4),
             )
 
@@ -256,7 +258,6 @@ class LightningGrammarModule(pl.LightningModule):
                 == llm_non_identifiability.data.EOS_token.item()
             ):
                 break
-
         return prompt.view(-1).tolist()
 
 
