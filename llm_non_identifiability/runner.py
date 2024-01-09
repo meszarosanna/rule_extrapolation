@@ -29,7 +29,7 @@ class LightningGrammarModule(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
 
-        self.hparams.loss_fn = nn.CrossEntropyLoss()
+        self.hparams["loss_fn"] = nn.CrossEntropyLoss()
         self.model = Transformer(
             num_tokens=5,
             dim_model=8,
@@ -89,7 +89,7 @@ class LightningGrammarModule(pl.LightningModule):
 
         return X, y, pred, loss
 
-    def predict_step(
+    def predict_step(  # type: ignore
         self,
         batch,
         batch_idx=None,
@@ -125,12 +125,12 @@ class LightningGrammarModule(pl.LightningModule):
             prompt = torch.tensor(
                 [[llm_non_identifiability.data.SOS_token.item(), 0, 0, 0, 1]],
                 dtype=torch.long,
-                device=self.hparams.device,
+                device=self.hparams.device,  # type: ignore
             )
         for _ in range(max_length):
             # Get mask to mask out the next words
             sequence_length = prompt.size(1)
-            tgt_mask = self.model.get_tgt_mask(sequence_length).to(self.hparams.device)
+            tgt_mask = self.model.get_tgt_mask(sequence_length).to(self.hparams.device)  # type: ignore
 
             # forward pass
             pred = self.model(
@@ -143,7 +143,7 @@ class LightningGrammarModule(pl.LightningModule):
 
             # pick the highest probability token
             _, next_item = torch.max(pred[-1].view(-1), dim=-1)
-            next_item = torch.tensor([[next_item]], device=self.hparams.device)
+            next_item = torch.tensor([[next_item]], device=self.hparams.device)  # type: ignore
 
             # Concatenate previous input with predicted best word
             prompt = torch.cat((prompt, next_item), dim=1)
