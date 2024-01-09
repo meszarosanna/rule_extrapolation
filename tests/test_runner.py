@@ -6,17 +6,17 @@ from llm_non_identifiability.runner import LightningGrammarModule
 import torch
 
 
-def test_fit(n_train, n_val, n_test):
+def test_fit(num_train, num_val, num_test):
     trainer = Trainer(fast_dev_run=True)
     runner = LightningGrammarModule()
-    dm = GrammarDataModule(n_train=n_train, n_val=n_val, n_test=n_test)
+    dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
     trainer.fit(runner, datamodule=dm)
 
 
-def test_predict(n_train, n_val, n_test):
+def test_predict(num_train, num_val, num_test):
     trainer = Trainer(fast_dev_run=True)
     runner = LightningGrammarModule()
-    dm = GrammarDataModule(n_train=n_train, n_val=n_val, n_test=n_test)
+    dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
     trainer.fit(runner, datamodule=dm)
 
     trainer.predict(runner, datamodule=dm)

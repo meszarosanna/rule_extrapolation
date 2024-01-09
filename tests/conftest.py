@@ -7,20 +7,20 @@ def max_length():
 
 
 @pytest.fixture
-def n():
+def num_samples():
     return 20
 
 
 @pytest.fixture
-def n_train():
+def num_train():
     return 128
 
 
 @pytest.fixture
-def n_val():
+def num_val():
     return 64
 
 
 @pytest.fixture
-def n_test():
+def num_test():
     return 32
