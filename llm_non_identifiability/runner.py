@@ -18,6 +18,12 @@ class LightningGrammarModule(pl.LightningModule):
 
     def __init__(
         self,
+        num_tokens: int = 5,  # SOS, EOS, 0, 1, PAD
+        dim_model: int = 8,
+        num_heads: int = 4,
+        num_encoder_layers: int = 2,
+        num_decoder_layers: int = 2,
+        dropout_p: float = 0.1,
         lr: float = 0.01,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
     ):
@@ -31,12 +37,12 @@ class LightningGrammarModule(pl.LightningModule):
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
         self.model = Transformer(
-            num_tokens=5,
-            dim_model=8,
-            num_heads=4,
-            num_encoder_layers=2,
-            num_decoder_layers=2,
-            dropout_p=0.1,
+            num_tokens=self.hparams.num_tokens,
+            dim_model=self.hparams.dim_model,
+            num_heads=self.hparams.num_heads,
+            num_encoder_layers=self.hparams.num_encoder_layers,
+            num_decoder_layers=self.hparams.num_decoder_layers,
+            dropout_p=self.hparams.dropout_p,
         )
 
     def configure_optimizers(self):
