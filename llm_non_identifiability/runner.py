@@ -37,12 +37,12 @@ class LightningGrammarModule(pl.LightningModule):
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
         self.model = Transformer(
-            num_tokens=self.hparams.num_tokens,
-            dim_model=self.hparams.dim_model,
-            num_heads=self.hparams.num_heads,
-            num_encoder_layers=self.hparams.num_encoder_layers,
-            num_decoder_layers=self.hparams.num_decoder_layers,
-            dropout_p=self.hparams.dropout_p,
+            num_tokens=self.hparams.num_tokens,  # type: ignore [union-attr]
+            dim_model=self.hparams.dim_model,  # type: ignore [union-attr]
+            num_heads=self.hparams.num_heads,  # type: ignore [union-attr]
+            num_encoder_layers=self.hparams.num_encoder_layers,  # type: ignore [union-attr]
+            num_decoder_layers=self.hparams.num_decoder_layers,  # type: ignore [union-attr]
+            dropout_p=self.hparams.dropout_p,  # type: ignore [union-attr]
         )
 
     def configure_optimizers(self):
@@ -165,7 +165,7 @@ class LightningGrammarModule(pl.LightningModule):
     def on_fit_end(self) -> None:
         if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
             logger: pl.loggers.wandb.WandbLogger = self.logger  # type: ignore
-            if self.hparams.offline is True:  # type: ignore [attr-defined]
+            if self.hparams.offline is True:  # type: ignore [union-attr]
                 # Syncing W&B at the end
                 # 1. save sync dir (after marking a run finished, the W&B object changes (is teared down?)
                 sync_dir = dirname(logger.experiment.dir)
