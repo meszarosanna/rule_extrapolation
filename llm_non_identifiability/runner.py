@@ -1,14 +1,14 @@
 # Importing necessary libraries
+import subprocess
+from os.path import dirname
+from typing import Optional
+
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 
 import llm_non_identifiability.data
 from llm_non_identifiability.model import Transformer
-
-from typing import Optional
-
-
-import pytorch_lightning as pl
 
 
 class LightningGrammarModule(pl.LightningModule):
@@ -161,3 +161,15 @@ class LightningGrammarModule(pl.LightningModule):
             ):
                 break
         return prompt.view(-1).tolist()
+
+    def on_fit_end(self) -> None:
+        if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
+            logger: pl.loggers.wandb.WandbLogger = self.logger  # type: ignore
+            if self.hparams.offline is True:  # type: ignore [attr-defined]
+                # Syncing W&B at the end
+                # 1. save sync dir (after marking a run finished, the W&B object changes (is teared down?)
+                sync_dir = dirname(logger.experiment.dir)
+                # 2. mark run complete
+                wandb.finish()  # type: ignore
+                # 3. call the sync command for the run directory
+                subprocess.check_call(["wandb", "sync", sync_dir])
