@@ -1,0 +1,31 @@
+command:
+  - ${env}
+  - python3
+  - llm_non_identifiability/cli.py
+  - fit
+  - "--config"
+  - "configs/config.yaml"
+  - ${args}
+method: grid
+metric:
+  goal: maximize
+  name: val_log_likelihood
+parameters:
+  seed_everything:
+    values: [42, 64, 982, 5748, 23567]
+  trainer.max_epochs:
+      values: [150, 250, 500]
+  model.offline:
+    value: true
+  model.dim_model:
+    value: 8,
+  model.num_heads:
+    value: 4,
+  model.num_encoder_layers:
+    value: 2,
+  model.num_decoder_layers:
+    value: 2,
+  model.dropout_p:
+    value: 0.1,
+  model.lr:
+    value: 0.01,
