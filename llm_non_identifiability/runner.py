@@ -259,8 +259,8 @@ class LightningGrammarModule(pl.LightningModule):
             X,
             y_input,
             tgt_mask,
-            self.model.create_pad_mask(X, 4),
-            self.model.create_pad_mask(y_input, 4),
+            self.model.create_pad_mask(X, 4).to(self.hparams.device),
+            self.model.create_pad_mask(y_input, 4).to(self.hparams.device),
         )
 
         # Permute pred to have batch size first again
