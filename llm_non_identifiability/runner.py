@@ -148,8 +148,7 @@ class LightningGrammarModule(pl.LightningModule):
             )
 
             # pick the highest probability token
-            _, next_item = torch.max(pred[-1].view(-1), dim=-1)
-            next_item = torch.tensor([[next_item]], device=self.hparams.device)  # type: ignore
+            next_item = self._pick_most_likely_token(pred)
 
             # Concatenate previous input with predicted best word
             prompt = torch.cat((prompt, next_item), dim=1)
@@ -161,6 +160,11 @@ class LightningGrammarModule(pl.LightningModule):
             ):
                 break
         return prompt.view(-1).tolist()
+
+    def _pick_most_likely_token(self, pred: torch.Tensor) -> torch.Tensor:
+        _, next_item = torch.max(pred[-1].view(-1), dim=-1)
+        next_item = torch.tensor([[next_item]], device=self.hparams.device)  # type: ignore
+        return next_item
 
     def on_fit_end(self) -> None:
         self._sync_wandb()
