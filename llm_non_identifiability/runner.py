@@ -60,7 +60,7 @@ class LightningGrammarModule(pl.LightningModule):
         X, y, y_expected, pred, loss = self._forward(batch)
 
         # pick most likely token and calculate and log accuracy
-        pred_tokens = self._pick_most_likely_token(pred)
+        pred_tokens = self._pick_most_likely_tokens(pred)
         accuracy = torch.sum(pred_tokens == y_expected) / y_expected.numel()
 
         self.log(f"{panel_name}/accuracy", accuracy)
@@ -153,8 +153,11 @@ class LightningGrammarModule(pl.LightningModule):
                 self.model.create_pad_mask(prompt, 4),
             )
 
-            # pick the highest probability token
-            next_item = self._pick_most_likely_token(pred)
+            # Permute pred to have batch size first again
+            pred = pred.permute(1, 2, 0)
+
+            _, next_item = torch.max(pred[0, :, -1].view(-1), dim=-1)
+            next_item = torch.tensor([[next_item]], device=self.hparams.device)  # type: ignore
 
             # Concatenate previous input with predicted best word
             prompt = torch.cat((prompt, next_item), dim=1)
@@ -167,10 +170,9 @@ class LightningGrammarModule(pl.LightningModule):
                 break
         return prompt.view(-1).tolist()
 
-    def _pick_most_likely_token(self, pred: torch.Tensor) -> torch.Tensor:
-        _, next_item = torch.max(pred[-1].view(-1), dim=-1)
-        next_item = torch.tensor([[next_item]], device=self.hparams.device)  # type: ignore
-        return next_item
+    def _pick_most_likely_tokens(self, pred: torch.Tensor) -> torch.Tensor:
+        _, next_items = torch.max(pred, dim=1)
+        return next_items.to(self.hparams.device)  # type: ignore
 
     def on_fit_end(self) -> None:
         self._sync_wandb()
