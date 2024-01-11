@@ -3,7 +3,7 @@ import math
 import torch
 from torch import nn as nn
 
-from llm_non_identifiability.data import PAD_token
+from llm_non_identifiability.data import EOS_token
 
 
 class PositionalEncoding(nn.Module):
@@ -125,7 +125,7 @@ class Transformer(nn.Module):
         return mask
 
     def create_pad_mask(
-        self, matrix: torch.Tensor, pad_token: int = PAD_token
+        self, matrix: torch.Tensor, pad_token: int = EOS_token
     ) -> torch.Tensor:
         # If matrix = [1,2,3,0,0,0] where pad_token=0, the result mask is
         # [False, False, False, True, True, True]
