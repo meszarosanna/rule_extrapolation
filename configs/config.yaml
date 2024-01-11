@@ -8,7 +8,7 @@ trainer:
       log_model: all
       project: llm_non_identifiability
       save_dir:
-      offline: true
+      offline: false
   accelerator: auto
   strategy: auto
   devices: auto

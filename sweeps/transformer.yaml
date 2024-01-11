@@ -15,8 +15,6 @@ parameters:
     values: [42, 64, 982, 5748, 23567]
   trainer.max_epochs:
       value: 250
-  model.offline:
-    value: true
   model.dim_model:
     value: 8
   model.num_heads:
