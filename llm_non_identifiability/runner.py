@@ -50,14 +50,20 @@ class LightningGrammarModule(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         panel_name = "Train"
-        _, _, _, loss = self._forward(batch)
+        _, _, _, _, loss = self._forward(batch)
         self.log(f"{panel_name}/loss", loss)
 
         return loss
 
     def validation_step(self, batch, batch_idx):
         panel_name = "Val"
-        X, y, pred, loss = self._forward(batch)
+        X, y, y_expected, pred, loss = self._forward(batch)
+
+        # pick most likely token and calculate and log accuracy
+        pred_tokens = self._pick_most_likely_token(pred)
+        accuracy = torch.sum(pred_tokens == y_expected) / y_expected.numel()
+
+        self.log(f"{panel_name}/accuracy", accuracy)
 
         self.log(f"{panel_name}/loss", loss)
 
@@ -93,7 +99,7 @@ class LightningGrammarModule(pl.LightningModule):
 
         loss = self.hparams.loss_fn(pred, y_expected)
 
-        return X, y, pred, loss
+        return X, y, y_expected, pred, loss
 
     def predict_step(  # type: ignore
         self,
