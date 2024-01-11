@@ -69,6 +69,102 @@ class LightningGrammarModule(pl.LightningModule):
 
         return loss
 
+    def _eval_prompt_prediction(self, max_length: int = 32):
+        # Here we test some examples to observe how the model predicts
+        src = torch.tensor(
+            [[2, 0, 0, 0, 0, 1, 1, 1, 1, 3]],
+            dtype=torch.long,
+            device=self.hparams.device,
+        )
+
+        prompts = [
+            torch.tensor(
+                [
+                    [
+                        2,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        1,
+                        1,
+                    ]
+                ],
+                dtype=torch.long,
+                device=self.hparams.device,
+            ),
+            torch.tensor(
+                [
+                    [
+                        2,
+                        0,
+                        0,
+                        1,
+                        1,
+                    ]
+                ],
+                dtype=torch.long,
+                device=self.hparams.device,
+            ),
+            torch.tensor(
+                [
+                    [
+                        2,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        1,
+                        1,
+                    ]
+                ],
+                dtype=torch.long,
+                device=self.hparams.device,
+            ),
+            torch.tensor(
+                [
+                    [
+                        2,
+                        0,
+                        0,
+                        0,
+                        1,
+                    ]
+                ],
+                dtype=torch.long,
+                device=self.hparams.device,
+            ),
+        ]
+
+        ood_prompts = [
+            torch.tensor(
+                [[2, 1, 1, 1, 0, 0]], dtype=torch.long, device=self.hparams.device
+            ),
+            torch.tensor(
+                [[2, 0, 0, 0, 1, 1, 0, 1]], dtype=torch.long, device=self.hparams.device
+            ),
+            torch.tensor(
+                [[2, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0]],
+                dtype=torch.long,
+                device=self.hparams.device,
+            ),
+            torch.tensor(
+                [[2, 0, 1, 1, 0, 0, 1, 0, 1, 0]],
+                dtype=torch.long,
+                device=self.hparams.device,
+            ),
+        ]
+
+        for idx, prompt in enumerate(prompts):
+            self._predict(max_length=max_length, src=src, prompt=prompt)
+
+        for idx, prompt in enumerate(ood_prompts):
+            self._predict(max_length=max_length, src=src, prompt=prompt)
+
     def _forward(self, batch):
         """
         Forward pass for calculating the model predictions and the loss.
