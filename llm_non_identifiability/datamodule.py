@@ -2,6 +2,7 @@
 
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
+import os
 
 from llm_non_identifiability.data import (
     generate_aNbN_grammar_data,
@@ -69,6 +70,7 @@ class GrammarDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.hparams.batch_size,
             shuffle=True,
+            num_workers=os.cpu_count(),
         )
 
     def val_dataloader(self):
@@ -76,6 +78,7 @@ class GrammarDataModule(pl.LightningDataModule):
             self.val_dataset,
             batch_size=self.hparams.batch_size,
             shuffle=False,
+            num_workers=os.cpu_count(),
         )
 
     def test_dataloader(self):
@@ -83,6 +86,7 @@ class GrammarDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.hparams.batch_size,
             shuffle=False,
+            num_workers=os.cpu_count(),
         )
 
     def predict_dataloader(self):
@@ -90,4 +94,5 @@ class GrammarDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.hparams.batch_size,
             shuffle=False,
+            num_workers=os.cpu_count(),
         )
