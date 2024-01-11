@@ -163,6 +163,9 @@ class LightningGrammarModule(pl.LightningModule):
         return prompt.view(-1).tolist()
 
     def on_fit_end(self) -> None:
+        self._sync_wandb()
+
+    def _sync_wandb(self):
         if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
             logger: pl.loggers.wandb.WandbLogger = self.logger  # type: ignore
             if self.hparams.offline is True:  # type: ignore [union-attr]
