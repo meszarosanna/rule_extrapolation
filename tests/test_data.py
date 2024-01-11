@@ -10,7 +10,7 @@ import numpy as np
 
 import torch
 
-from llm_non_identifiability.data import check_as_before_bs
+from llm_non_identifiability.data import check_as_before_bs, check_same_number_as_bs
 
 
 def test_aNbN_grammar_equal_as_bs(num_samples, max_length):
@@ -65,3 +65,17 @@ def test_check_as_before_bs():
 
     sequence = torch.tensor([0, 0, 1, 1])
     assert check_as_before_bs(sequence) == True
+
+
+def test_check_same_number_as_bs():
+    sequence = torch.tensor([0, 0, 1, 0, 1])
+    assert check_same_number_as_bs(sequence) == False
+
+    sequence = torch.tensor([0, 0, 1, 1])
+    assert check_same_number_as_bs(sequence) == True
+
+    sequence = torch.tensor([0, 1, 1, 0])
+    assert check_same_number_as_bs(sequence) == True
+
+    sequence = torch.tensor([1, 1, 0, 0])
+    assert check_same_number_as_bs(sequence) == True

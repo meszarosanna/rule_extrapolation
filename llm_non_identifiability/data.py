@@ -109,3 +109,14 @@ def check_as_before_bs(sequence: torch.Tensor):
     # find the last a
     last_a = torch.where(sequence == 0)[0][-1]
     return first_b > last_a
+
+
+def check_same_number_as_bs(sequence: torch.Tensor):
+    """
+    Check if the number of a's and b's is the same
+    :param sequence:
+    :return:
+    """
+    num_as = torch.sum(sequence == 0)
+    num_bs = torch.sum(sequence == 1)
+    return num_as == num_bs
