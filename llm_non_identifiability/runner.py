@@ -172,7 +172,7 @@ class LightningGrammarModule(pl.LightningModule):
     def _sync_wandb(self):
         if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
             logger: pl.loggers.wandb.WandbLogger = self.logger  # type: ignore
-            if self.hparams.offline is True:  # type: ignore [union-attr]
+            if self.hparams.offline is True:  # type: ignore [union-attr,attr-defined]
                 # Syncing W&B at the end
                 # 1. save sync dir (after marking a run finished, the W&B object changes (is teared down?)
                 sync_dir = dirname(logger.experiment.dir)
