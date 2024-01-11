@@ -37,12 +37,12 @@ class LightningGrammarModule(pl.LightningModule):
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
         self.model = Transformer(
-            num_tokens=self.hparams.num_tokens,  # type: ignore [union-attr]
-            dim_model=self.hparams.dim_model,  # type: ignore [union-attr]
-            num_heads=self.hparams.num_heads,  # type: ignore [union-attr]
-            num_encoder_layers=self.hparams.num_encoder_layers,  # type: ignore [union-attr]
-            num_decoder_layers=self.hparams.num_decoder_layers,  # type: ignore [union-attr]
-            dropout_p=self.hparams.dropout_p,  # type: ignore [union-attr]
+            num_tokens=self.hparams.num_tokens,  # type: ignore [union-attr,attr-defined]
+            dim_model=self.hparams.dim_model,  # type: ignore [union-attr,attr-defined]
+            num_heads=self.hparams.num_heads,  # type: ignore [union-attr,attr-defined]
+            num_encoder_layers=self.hparams.num_encoder_layers,  # type: ignore [union-attr,attr-defined]
+            num_decoder_layers=self.hparams.num_decoder_layers,  # type: ignore [union-attr,attr-defined]
+            dropout_p=self.hparams.dropout_p,  # type: ignore [union-attr,attr-defined]
         )
 
     def configure_optimizers(self):
