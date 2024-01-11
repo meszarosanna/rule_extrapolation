@@ -1,4 +1,5 @@
 import pytest
+import torch
 
 
 @pytest.fixture
@@ -8,7 +9,7 @@ def max_length():
 
 @pytest.fixture
 def num_samples():
-    return 20
+    return 32
 
 
 @pytest.fixture
@@ -24,3 +25,8 @@ def num_val():
 @pytest.fixture
 def num_test():
     return 32
+
+
+@pytest.fixture
+def device():
+    return "cuda" if torch.cuda.is_available() else "cpu"

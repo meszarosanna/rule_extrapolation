@@ -22,9 +22,7 @@ def test_predict(num_train, num_val, num_test):
     trainer.predict(runner, datamodule=dm)
 
 
-def test_predict_inner(max_length):
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
+def test_predict_inner(max_length, device):
     runner = LightningGrammarModule()
 
     # Here we test some examples to observe how the model predicts
@@ -36,3 +34,9 @@ def test_predict_inner(max_length):
 
     for idx, example in enumerate(examples):
         runner._predict(max_length=max_length, src=example)
+
+
+def test_eval_prompt_prediction(max_length, device):
+    runner = LightningGrammarModule()
+
+    _, _, _, _ = runner._eval_prompt_prediction(max_length=max_length)
