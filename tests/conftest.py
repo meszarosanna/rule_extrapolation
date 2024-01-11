@@ -9,7 +9,7 @@ def max_length():
 
 @pytest.fixture
 def num_samples():
-    return 20
+    return 32
 
 
 @pytest.fixture
