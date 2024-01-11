@@ -14,18 +14,18 @@ parameters:
   seed_everything:
     values: [42, 64, 982, 5748, 23567]
   trainer.max_epochs:
-      values: [150, 250, 500]
+      value: 250
   model.offline:
     value: true
   model.dim_model:
-    value: 8,
+    value: 8
   model.num_heads:
-    value: 4,
+    value: 4
   model.num_encoder_layers:
     value: 2,
   model.num_decoder_layers:
-    value: 2,
+    value: 2
   model.dropout_p:
-    value: 0.1,
+    value: 0.1
   model.lr:
-    value: 0.01,
+    value: 0.01
