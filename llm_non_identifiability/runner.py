@@ -9,6 +9,7 @@ import torch.nn as nn
 
 import llm_non_identifiability.data
 from llm_non_identifiability.model import Transformer
+from llm_non_identifiability.data import check_same_number_as_bs, check_as_before_bs
 
 
 class LightningGrammarModule(pl.LightningModule):
@@ -58,21 +59,46 @@ class LightningGrammarModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         panel_name = "Val"
         X, y, y_expected, pred, loss = self._forward(batch)
+        self.log(f"{panel_name}/loss", loss)
 
         # pick most likely token and calculate and log accuracy
         pred_tokens = self._pick_most_likely_tokens(pred)
         accuracy = torch.sum(pred_tokens == y_expected) / y_expected.numel()
-
         self.log(f"{panel_name}/accuracy", accuracy)
 
-        self.log(f"{panel_name}/loss", loss)
+        (
+            as_before_bs_accuracy,
+            same_number_as_bs_accuracy,
+            ood_as_before_bs_accuracy,
+            ood_same_number_as_bs_accuracy,
+        ) = self._eval_prompt_prediction()
+        self.log(f"{panel_name}/as_before_bs_accuracy", as_before_bs_accuracy)
+        self.log(f"{panel_name}/same_number_as_bs_accuracy", same_number_as_bs_accuracy)
+        self.log(f"{panel_name}/ood_as_before_bs_accuracy", ood_as_before_bs_accuracy)
+        self.log(
+            f"{panel_name}/ood_same_number_as_bs_accuracy",
+            ood_same_number_as_bs_accuracy,
+        )
 
         return loss
 
     def _eval_prompt_prediction(self, max_length: int = 32):
         # Here we test some examples to observe how the model predicts
         src = torch.tensor(
-            [[2, 0, 0, 0, 0, 1, 1, 1, 1, 3]],
+            [
+                [
+                    llm_non_identifiability.data.SOS_token.item(),
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1,
+                    1,
+                    llm_non_identifiability.data.EOS_token.item(),
+                ]
+            ],
             dtype=torch.long,
             device=self.hparams.device,
         )
@@ -139,6 +165,8 @@ class LightningGrammarModule(pl.LightningModule):
                 device=self.hparams.device,
             ),
         ]
+        as_before_bs = []
+        same_number_as_bs = []
 
         ood_prompts = [
             torch.tensor(
@@ -158,12 +186,57 @@ class LightningGrammarModule(pl.LightningModule):
                 device=self.hparams.device,
             ),
         ]
+        ood_as_before_bs = []
+        ood_same_number_as_bs = []
 
         for idx, prompt in enumerate(prompts):
-            self._predict(max_length=max_length, src=src, prompt=prompt)
+            prompt_pred = self._predict(max_length=max_length, src=src, prompt=prompt)
+            as_before_bs.append(
+                check_as_before_bs(
+                    torch.tensor(
+                        prompt_pred, device=self.hparams.device, dtype=torch.long
+                    )
+                )
+            )
+            same_number_as_bs.append(
+                check_same_number_as_bs(
+                    torch.tensor(
+                        prompt_pred, device=self.hparams.device, dtype=torch.long
+                    )
+                )
+            )
+
+        as_before_bs_accuracy = sum(as_before_bs) / len(as_before_bs)
+        same_number_as_bs_accuracy = sum(same_number_as_bs) / len(same_number_as_bs)
 
         for idx, prompt in enumerate(ood_prompts):
-            self._predict(max_length=max_length, src=src, prompt=prompt)
+            prompt_pred = self._predict(max_length=max_length, src=src, prompt=prompt)
+            ood_as_before_bs.append(
+                check_as_before_bs(
+                    torch.tensor(
+                        prompt_pred, device=self.hparams.device, dtype=torch.long
+                    )
+                )
+            )
+            ood_same_number_as_bs.append(
+                check_same_number_as_bs(
+                    torch.tensor(
+                        prompt_pred, device=self.hparams.device, dtype=torch.long
+                    )
+                )
+            )
+
+        ood_as_before_bs_accuracy = sum(ood_as_before_bs) / len(ood_as_before_bs)
+        ood_same_number_as_bs_accuracy = sum(ood_same_number_as_bs) / len(
+            ood_same_number_as_bs
+        )
+
+        return (
+            as_before_bs_accuracy,
+            same_number_as_bs_accuracy,
+            ood_as_before_bs_accuracy,
+            ood_same_number_as_bs_accuracy,
+        )
 
     def _forward(self, batch):
         """
