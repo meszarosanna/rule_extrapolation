@@ -61,7 +61,6 @@ model:
   num_decoder_layers: 2
   dropout_p: 0.1
   lr: 0.01
-  device: cpu
 data:
   num_train: 9000
   num_val: 3000
