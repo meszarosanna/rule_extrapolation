@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 
-PAD_token = 4
 SOS_token = np.array([2])
 EOS_token = np.array([3])
 
@@ -93,7 +92,7 @@ def pad(data: list, max_seq_length: int = 0) -> np.ndarray:
         remaining_length = max_seq_length - len(seq)
 
         if remaining_length > 0:
-            data[i] = np.concatenate((data[i], [PAD_token] * remaining_length))
+            data[i] = np.concatenate((data[i], [EOS_token.item()] * remaining_length))
 
     return np.array(data)
 

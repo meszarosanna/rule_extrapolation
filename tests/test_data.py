@@ -3,7 +3,7 @@ from llm_non_identifiability.data import (
     generate_abN_grammar_data,
     generate_aNbM_grammar_data,
     pad,
-    PAD_token,
+    EOS_token,
 )
 
 import numpy as np
@@ -54,7 +54,11 @@ def test_aNbM_grammar_as_before_bs(num_samples, max_length):
 def test_pad_varying_sequence_lengths():
     data = [[1, 2, 3], [4, 5], [6, 7, 8, 9]]
 
-    expected_result = [[1, 2, 3, PAD_token], [4, 5, PAD_token, PAD_token], [6, 7, 8, 9]]
+    expected_result = [
+        [1, 2, 3, EOS_token.item()],
+        [4, 5, EOS_token.item(), EOS_token.item()],
+        [6, 7, 8, 9],
+    ]
     result = pad(data)
 
     # check that the result is as expected with .all()
