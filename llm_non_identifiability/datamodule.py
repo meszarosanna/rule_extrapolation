@@ -71,6 +71,7 @@ class GrammarDataModule(pl.LightningDataModule):
             batch_size=self.hparams.batch_size,
             shuffle=True,
             num_workers=os.cpu_count(),
+            persistent_workers=True,
         )
 
     def val_dataloader(self):
@@ -79,6 +80,7 @@ class GrammarDataModule(pl.LightningDataModule):
             batch_size=self.hparams.batch_size,
             shuffle=False,
             num_workers=os.cpu_count(),
+            persistent_workers=True,
         )
 
     def test_dataloader(self):
@@ -87,6 +89,7 @@ class GrammarDataModule(pl.LightningDataModule):
             batch_size=self.hparams.batch_size,
             shuffle=False,
             num_workers=os.cpu_count(),
+            persistent_workers=True,
         )
 
     def predict_dataloader(self):
@@ -95,4 +98,5 @@ class GrammarDataModule(pl.LightningDataModule):
             batch_size=self.hparams.batch_size,
             shuffle=False,
             num_workers=os.cpu_count(),
+            persistent_workers=True,
         )
