@@ -8,13 +8,13 @@ command:
   - ${args}
 method: grid
 metric:
-  goal: maximize
-  name: val_log_likelihood
+  goal: minimize
+  name: Val/loss
 parameters:
   seed_everything:
     values: [42, 64, 982, 5748, 23567]
   trainer.max_epochs:
-      value: 250
+      value: 2000
   model.dim_model:
     value: 8
   model.num_heads:
@@ -26,4 +26,6 @@ parameters:
   model.dropout_p:
     value: 0.1
   model.lr:
-    value: 0.01
+    values: [0.001, 0.01]
+  data.batch_size:
+    values: [64, 256]
