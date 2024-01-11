@@ -22,7 +22,7 @@ parameters:
   model.num_heads:
     value: 4
   model.num_encoder_layers:
-    value: 2,
+    value: 2
   model.num_decoder_layers:
     value: 2
   model.dropout_p:
