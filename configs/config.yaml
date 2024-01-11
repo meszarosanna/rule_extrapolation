@@ -27,7 +27,7 @@ trainer:
   limit_predict_batches: null
   overfit_batches: 0.0
   val_check_interval: null
-  check_val_every_n_epoch: 1
+  check_val_every_n_epoch: 25
   num_sanity_val_steps: null
   log_every_n_steps: null
   enable_checkpointing: null
