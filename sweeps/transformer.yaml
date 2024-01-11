@@ -14,7 +14,7 @@ parameters:
   seed_everything:
     values: [42, 64, 982, 5748, 23567]
   trainer.max_epochs:
-      value: 250
+      value: 500
   model.dim_model:
     value: 8
   model.num_heads:
