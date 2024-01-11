@@ -29,13 +29,4 @@ if __name__ == "__main__":
         GrammarDataModule,
         save_config_callback=None,
         run=True,
-        # trainer_defaults={
-        #     "callbacks": [
-        #         ModelCheckpoint(
-        #             save_top_k=1,
-        #             monitor="val_loss",
-        #             mode="min",
-        #         ),
-        #     ]
-        # },
     )
