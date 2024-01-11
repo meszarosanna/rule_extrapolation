@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 PAD_token = 4
 SOS_token = np.array([2])
@@ -95,3 +96,16 @@ def pad(data: list, max_seq_length: int = 0) -> np.ndarray:
             data[i] = np.concatenate((data[i], [PAD_token] * remaining_length))
 
     return np.array(data)
+
+
+def check_as_before_bs(sequence: torch.Tensor):
+    """
+    Check if the first b comes after the last a
+    :param sequence:
+    :return:
+    """
+    # find the first b
+    first_b = torch.where(sequence == 1)[0][0]
+    # find the last a
+    last_a = torch.where(sequence == 0)[0][-1]
+    return first_b > last_a

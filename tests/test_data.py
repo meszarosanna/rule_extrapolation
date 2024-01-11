@@ -8,6 +8,10 @@ from llm_non_identifiability.data import (
 
 import numpy as np
 
+import torch
+
+from llm_non_identifiability.data import check_as_before_bs
+
 
 def test_aNbN_grammar_equal_as_bs(num_samples, max_length):
     sequences = generate_aNbN_grammar_data(num_samples, max_length)
@@ -53,3 +57,11 @@ def test_pad_varying_sequence_lengths():
 
     # check that the result is as expected with .all()
     assert (np.array(result) == np.array(expected_result)).all()
+
+
+def test_check_as_before_bs():
+    sequence = torch.tensor([0, 0, 1, 0, 1])
+    assert check_as_before_bs(sequence) == False
+
+    sequence = torch.tensor([0, 0, 1, 1])
+    assert check_as_before_bs(sequence) == True
