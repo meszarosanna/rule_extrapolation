@@ -18,7 +18,7 @@
 ### Installing dependencies
 
 ```bash
-# clone lti-ica   
+# clone the repo with submodules  
 git clone --recurse-submodules https://github.com/rpatrik96/llm-non-identifiability
 
 
