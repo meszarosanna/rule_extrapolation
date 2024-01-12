@@ -26,6 +26,6 @@ parameters:
   model.dropout_p:
     value: 0.1
   model.lr:
-    values: [0.001, 0.01]
+    values: [0.003, 0.01]
   data.batch_size:
     values: [64, 256]

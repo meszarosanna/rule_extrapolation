@@ -1,6 +1,4 @@
-from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.cli import LightningCLI
-from pytorch_lightning.loggers.wandb import WandbLogger
 
 from llm_non_identifiability.datamodule import GrammarDataModule
 from llm_non_identifiability.runner import LightningGrammarModule
