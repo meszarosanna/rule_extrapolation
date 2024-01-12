@@ -38,12 +38,12 @@ class LightningGrammarModule(pl.LightningModule):
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
         self.model = Transformer(
-            num_tokens=self.hparams.num_tokens,  # type: ignore [union-attr,attr-defined]
-            dim_model=self.hparams.dim_model,  # type: ignore [union-attr,attr-defined]
-            num_heads=self.hparams.num_heads,  # type: ignore [union-attr,attr-defined]
-            num_encoder_layers=self.hparams.num_encoder_layers,  # type: ignore [union-attr,attr-defined]
-            num_decoder_layers=self.hparams.num_decoder_layers,  # type: ignore [union-attr,attr-defined]
-            dropout_p=self.hparams.dropout_p,  # type: ignore [union-attr,attr-defined]
+            num_tokens=self.hparams.num_tokens,
+            dim_model=self.hparams.dim_model,
+            num_heads=self.hparams.num_heads,
+            num_encoder_layers=self.hparams.num_encoder_layers,
+            num_decoder_layers=self.hparams.num_decoder_layers,
+            dropout_p=self.hparams.dropout_p,
         )
 
     def configure_optimizers(self):
@@ -349,7 +349,7 @@ class LightningGrammarModule(pl.LightningModule):
     def _sync_wandb(self):
         if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
             logger: pl.loggers.wandb.WandbLogger = self.logger  # type: ignore
-            if self.hparams.offline is True:  # type: ignore [union-attr,attr-defined]
+            if self.hparams.offline is True:
                 # Syncing W&B at the end
                 # 1. save sync dir (after marking a run finished, the W&B object changes (is teared down?)
                 sync_dir = dirname(logger.experiment.dir)
