@@ -7,9 +7,14 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 
-import llm_non_identifiability.data
 from llm_non_identifiability.model import Transformer
-from llm_non_identifiability.data import check_same_number_as_bs, check_as_before_bs
+from llm_non_identifiability.data import (
+    check_same_number_as_bs,
+    check_as_before_bs,
+    EOS_token,
+    SOS_token,
+    PAD_token,
+)
 
 
 class LightningGrammarModule(pl.LightningModule):
@@ -19,7 +24,7 @@ class LightningGrammarModule(pl.LightningModule):
 
     def __init__(
         self,
-        num_tokens: int = 4,  # SOS, EOS, 0, 1
+        num_tokens: int = 5,  #  0, 1, SOS, EOS, PAD
         dim_model: int = 8,
         num_heads: int = 4,
         num_encoder_layers: int = 2,
@@ -87,7 +92,7 @@ class LightningGrammarModule(pl.LightningModule):
         src = torch.tensor(
             [
                 [
-                    llm_non_identifiability.data.SOS_token.item(),
+                    SOS_token.item(),
                     0,
                     0,
                     0,
@@ -96,7 +101,7 @@ class LightningGrammarModule(pl.LightningModule):
                     1,
                     1,
                     1,
-                    llm_non_identifiability.data.EOS_token.item(),
+                    EOS_token.item(),
                 ]
             ],
             dtype=torch.long,
@@ -304,7 +309,7 @@ class LightningGrammarModule(pl.LightningModule):
         """
         if prompt is None:
             prompt = torch.tensor(
-                [[llm_non_identifiability.data.SOS_token.item(), 0, 0, 0, 1]],
+                [[SOS_token.item(), 0, 0, 0, 1]],
                 dtype=torch.long,
                 device=self.hparams.device,  # type: ignore
             )
@@ -332,10 +337,7 @@ class LightningGrammarModule(pl.LightningModule):
             prompt = torch.cat((prompt, next_item), dim=1)
 
             # Stop if model predicts end of sentence
-            if (
-                next_item.view(-1).item()
-                == llm_non_identifiability.data.EOS_token.item()
-            ):
+            if next_item.view(-1).item() == EOS_token.item():
                 break
         return prompt.view(-1).tolist()
 
