@@ -3,6 +3,7 @@ import torch
 
 SOS_token = np.array([2])
 EOS_token = np.array([3])
+PAD_token = np.array([4])
 
 
 def generate_aNbN_grammar_data(num_samples: int, max_length: int = 32) -> list:
@@ -92,7 +93,7 @@ def pad(data: list, max_seq_length: int = 0) -> np.ndarray:
         remaining_length = max_seq_length - len(seq)
 
         if remaining_length > 0:
-            data[i] = np.concatenate((data[i], [EOS_token.item()] * remaining_length))
+            data[i] = np.concatenate((data[i], [PAD_token.item()] * remaining_length))
 
     return np.array(data)
 
