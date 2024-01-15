@@ -21,6 +21,8 @@ def test_cli_fast_dev_run():
         "64",
         "--data.num_test",
         "32",
+        "--data.max_length",
+        "16",
     ]
     cli = LLMLightningCLI(
         LightningGrammarModule,
