@@ -66,7 +66,7 @@ class LightningGrammarModule(pl.LightningModule):
             self.hparams.device
         )
 
-        rules = self.trainer.datamodule.grammar_rules
+        rules = self.trainer.datamodule.prompt_grammar_rules
 
         rules_met = [rules(t).item() for t in test_prompts]
 
