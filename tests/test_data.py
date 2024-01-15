@@ -75,6 +75,9 @@ def test_check_as_before_bs():
     sequence = torch.tensor([0, 0, 1, 1])
     assert check_as_before_bs(sequence) == True
 
+    sequence = torch.tensor([1, 1])
+    assert check_as_before_bs(sequence) == False
+
 
 def test_check_same_number_as_bs():
     sequence = torch.tensor([0, 0, 1, 0, 1])

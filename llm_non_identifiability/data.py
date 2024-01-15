@@ -103,11 +103,16 @@ def check_as_before_bs(sequence: torch.Tensor):
     :param sequence:
     :return:
     """
-    # find the first b
-    first_b = torch.where(sequence == 1)[0][0]
+
     # find the last a
-    last_a = torch.where(sequence == 0)[0][-1]
-    return first_b > last_a
+    if len(a_tokens := torch.where(sequence == 0)[0]) > 0:
+        last_a = a_tokens[-1]
+        # find the first b
+        first_b = torch.where(sequence == 1)[0][0]
+
+        return first_b > last_a
+    else:
+        return False
 
 
 def check_same_number_as_bs(sequence: torch.Tensor):
