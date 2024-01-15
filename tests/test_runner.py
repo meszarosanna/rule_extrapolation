@@ -2,6 +2,7 @@ from pytorch_lightning.trainer import Trainer
 
 from llm_non_identifiability.datamodule import GrammarDataModule
 from llm_non_identifiability.runner import LightningGrammarModule
+from llm_non_identifiability.data import EOS_token
 
 import torch
 
@@ -27,9 +28,15 @@ def test_predict_inner(max_length, device):
 
     # Here we test some examples to observe how the model predicts
     examples = [
-        torch.tensor([[2, 0, 0, 0, 0, 1, 1, 1, 1, 3]], dtype=torch.long, device=device),
-        torch.tensor([[2, 0, 0, 0, 1, 1, 1, 3]], dtype=torch.long, device=device),
-        torch.tensor([[2, 0, 1, 3]], dtype=torch.long, device=device),
+        torch.tensor(
+            [[0, 0, 0, 0, 1, 1, 1, 1, EOS_token.item()]],
+            dtype=torch.long,
+            device=device,
+        ),
+        torch.tensor(
+            [[0, 0, 0, 1, 1, 1, EOS_token.item()]], dtype=torch.long, device=device
+        ),
+        torch.tensor([[0, 1, EOS_token.item()]], dtype=torch.long, device=device),
     ]
 
     for idx, example in enumerate(examples):
