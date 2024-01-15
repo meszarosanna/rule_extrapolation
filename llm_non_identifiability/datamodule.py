@@ -8,6 +8,8 @@ from llm_non_identifiability.data import (
     generate_aNbN_grammar_data,
     generate_abN_grammar_data,
     generate_aNbM_grammar_data,
+    check_as_before_bs,
+    check_same_number_as_bs,
 )
 from llm_non_identifiability.dataset import GrammarDataset
 
@@ -47,6 +49,20 @@ class GrammarDataModule(pl.LightningDataModule):
             return generate_abN_grammar_data
         elif self.hparams.grammar == "aNbM":
             return generate_aNbM_grammar_data
+        else:
+            raise ValueError(f"Unknown grammar {self.hparams.grammar}")
+
+    @property
+    def grammar_rules(self):
+        """
+        Selects the grammar rules to use.
+        """
+        if self.hparams.grammar == "aNbN":
+            return lambda x: check_same_number_as_bs(x) and check_as_before_bs(x)
+        elif self.hparams.grammar == "abN":
+            return lambda x: check_same_number_as_bs(x)
+        elif self.hparams.grammar == "aNbM":
+            return lambda x: check_as_before_bs(x)
         else:
             raise ValueError(f"Unknown grammar {self.hparams.grammar}")
 
