@@ -20,8 +20,6 @@ class LLMLightningCLI(LightningCLI):
             help="Tags for the run on Weights and Biases",
         )
 
-        parser.link_arguments("trainer.logger.init_args.offline", "model.offline")
-
 
 if __name__ == "__main__":
     cli = LLMLightningCLI(
