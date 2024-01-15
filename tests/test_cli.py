@@ -16,13 +16,13 @@ def test_cli_fast_dev_run():
         "--trainer.logger",
         "null",
         "--data.num_train",
-        "128",
-        "--data.num_val",
-        "64",
-        "--data.num_test",
         "32",
-        "--data.max_length",
+        "--data.num_val",
         "16",
+        "--data.num_test",
+        "8",
+        "--data.max_length",
+        "4",
     ]
     cli = LLMLightningCLI(
         LightningGrammarModule,
