@@ -1,9 +1,8 @@
 import numpy as np
 import torch
 
-SOS_token = np.array([2])
-EOS_token = np.array([3])
-PAD_token = np.array([4])
+EOS_token = np.array([2])
+PAD_token = np.array([3])
 
 
 def generate_aNbN_grammar_data(num_samples: int, max_length: int = 32) -> list:
@@ -23,9 +22,7 @@ def generate_aNbN_grammar_data(num_samples: int, max_length: int = 32) -> list:
     data = []
 
     for length in lengths:
-        data.append(
-            np.concatenate((SOS_token, np.zeros(length), np.ones(length), EOS_token))
-        )
+        data.append(np.concatenate((np.zeros(length), np.ones(length), EOS_token)))
 
     return data
 
@@ -48,7 +45,7 @@ def generate_abN_grammar_data(num_samples: int, max_length: int = 32) -> list:
         abN = np.concatenate((np.zeros(lengths), np.ones(lengths)))
         # shuffle the symbols between start and end tokens
         np.random.shuffle(abN)
-        data.append(np.concatenate((SOS_token, abN, EOS_token)))
+        data.append(np.concatenate((abN, EOS_token)))
 
     return data
 
@@ -69,7 +66,7 @@ def generate_aNbM_grammar_data(num_samples: int, max_length: int = 32) -> list:
     data = []
 
     for la, lb in zip(lengths_a, lengths_b):
-        data.append(np.concatenate((SOS_token, np.zeros(la), np.ones(lb), EOS_token)))
+        data.append(np.concatenate((np.zeros(la), np.ones(lb), EOS_token)))
 
     return data
 
