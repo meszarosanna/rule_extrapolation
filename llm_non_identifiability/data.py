@@ -104,13 +104,17 @@ def check_as_before_bs(sequence: torch.Tensor):
     :return:
     """
 
-    # find the last a
     if len(a_tokens := torch.where(sequence == 0)[0]) > 0:
+        # find the last a
         last_a = a_tokens[-1]
-        # find the first b
-        first_b = torch.where(sequence == 1)[0][0]
 
-        return first_b > last_a
+        if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+            # find the first b
+            first_b = b_tokens[0]
+
+            return first_b > last_a
+        else:
+            return True
     else:
         return False
 
