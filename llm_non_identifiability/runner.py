@@ -11,6 +11,7 @@ from llm_non_identifiability.data import (
     check_same_number_as_bs,
     check_as_before_bs,
     EOS_token,
+    PAD_token,
     check_sequence_finished,
     generate_test_prompts,
 )
@@ -121,34 +122,21 @@ class LightningGrammarModule(pl.LightningModule):
 
         return loss
 
+    @property
+    def test_prompts_src(self):
+        ds = self.trainer.datamodule.test_dataset.data.view(-1)
+        return ds[ds != PAD_token.item()].long().to(self.hparams.device)
+
     def _eval_prompt_prediction(self, max_length: Optional[int] = None):
         if max_length is None:
             max_length = self.hparams.max_pred_length
-        # Here we test some examples to observe how the model predicts
-        src = torch.tensor(
-            [
-                [
-                    0,
-                    0,
-                    0,
-                    0,
-                    1,
-                    1,
-                    1,
-                    1,
-                    EOS_token.item(),
-                ]
-            ],
-            dtype=torch.long,
-            device=self.hparams.device,
-        )
 
         (
             as_before_bs_accuracy,
             finished_accuracy,
             same_number_as_bs_accuracy,
         ) = self._calc_prompt_pred_metrics(
-            self.test_prompts_in_distribution, max_length, src
+            self.test_prompts_in_distribution, max_length
         )
 
         (
@@ -156,7 +144,7 @@ class LightningGrammarModule(pl.LightningModule):
             ood_finished_accuracy,
             ood_same_number_as_bs_accuracy,
         ) = self._calc_prompt_pred_metrics(
-            self.test_prompts_out_of_distribution, max_length, src
+            self.test_prompts_out_of_distribution, max_length
         )
 
         return (
@@ -168,13 +156,15 @@ class LightningGrammarModule(pl.LightningModule):
             ood_finished_accuracy,
         )
 
-    def _calc_prompt_pred_metrics(self, prompts, max_length, src):
+    def _calc_prompt_pred_metrics(self, prompts, max_length):
         as_before_bs = []
         same_number_as_bs = []
         finished = []
         for idx, prompt in enumerate(prompts):
             prompt_pred = self._predict(
-                max_length=max_length, src=src, prompt=prompt.unsqueeze(0)
+                max_length=max_length,
+                src=self.test_prompts_src.unsqueeze(0),
+                prompt=prompt.unsqueeze(0),
             )
             prompt_pred = torch.tensor(
                 prompt_pred, device=self.hparams.device, dtype=torch.long
