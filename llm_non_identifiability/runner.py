@@ -68,7 +68,7 @@ class LightningGrammarModule(pl.LightningModule):
 
         rules = self.trainer.datamodule.prompt_grammar_rules
 
-        rules_met = [rules(t).item() for t in test_prompts]
+        rules_met = [rules(t) for t in test_prompts]
 
         self.test_prompts_in_distribution = test_prompts[rules_met]
         self.test_prompts_out_of_distribution = test_prompts[[not r for r in rules_met]]
