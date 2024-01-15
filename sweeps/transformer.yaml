@@ -11,8 +11,6 @@ metric:
   goal: minimize
   name: Val/loss
 parameters:
-  seed_everything:
-    values: [42, 64, 982, 5748, 23567]
   trainer.max_epochs:
       value: 2000
   model.dim_model:
@@ -29,3 +27,5 @@ parameters:
     values: [0.003, 0.01]
   data.batch_size:
     values: [64, 256]
+  seed_everything:
+    values: [ 42, 64, 982, 5748, 23567 ]

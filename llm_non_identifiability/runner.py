@@ -59,7 +59,7 @@ class LightningGrammarModule(pl.LightningModule):
         )
 
     def configure_optimizers(self):
-        return torch.optim.SGD(self.model.parameters(), lr=self.hparams.lr)
+        return torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr)
 
     def on_fit_start(self) -> None:
         test_prompts = generate_test_prompts(length=self.hparams.test_prompt_length).to(
