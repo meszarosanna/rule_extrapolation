@@ -136,118 +136,21 @@ class LightningGrammarModule(pl.LightningModule):
             device=self.hparams.device,
         )
 
-        prompts = [
-            torch.tensor(
-                [
-                    [
-                        0,
-                        0,
-                        0,
-                        0,
-                        1,
-                        1,
-                        1,
-                    ]
-                ],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-            torch.tensor(
-                [
-                    [
-                        0,
-                        0,
-                        1,
-                        1,
-                    ]
-                ],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-            torch.tensor(
-                [
-                    [
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        1,
-                        1,
-                        1,
-                    ]
-                ],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-            torch.tensor(
-                [
-                    [
-                        0,
-                        0,
-                        0,
-                        1,
-                    ]
-                ],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-        ]
-        as_before_bs = []
-        same_number_as_bs = []
-        finished = []
-
-        ood_prompts = [
-            torch.tensor(
-                [[1, 1, 1, 0, 0]], dtype=torch.long, device=self.hparams.device
-            ),
-            torch.tensor(
-                [[0, 0, 0, 1, 1, 0, 1]], dtype=torch.long, device=self.hparams.device
-            ),
-            torch.tensor(
-                [[0, 0, 1, 1, 0, 0, 1, 0, 1, 0]],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-            torch.tensor(
-                [[0, 1, 1, 0, 0, 1, 0, 1, 0]],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-        ]
-        ood_as_before_bs = []
-        ood_same_number_as_bs = []
-        ood_finished = []
-
-        for idx, prompt in enumerate(prompts):
-            prompt_pred = self._predict(max_length=max_length, src=src, prompt=prompt)
-            prompt_pred = torch.tensor(
-                prompt_pred, device=self.hparams.device, dtype=torch.long
-            )
-            as_before_bs.append(check_as_before_bs(prompt_pred))
-            same_number_as_bs.append(check_same_number_as_bs(prompt_pred))
-
-            finished.append(check_sequence_finished(prompt_pred))
-
-        as_before_bs_accuracy = sum(as_before_bs) / len(as_before_bs)
-        same_number_as_bs_accuracy = sum(same_number_as_bs) / len(same_number_as_bs)
-        finished_accuracy = sum(finished) / len(finished)
-
-        for idx, prompt in enumerate(ood_prompts):
-            prompt_pred = self._predict(max_length=max_length, src=src, prompt=prompt)
-            prompt_pred = torch.tensor(
-                prompt_pred, device=self.hparams.device, dtype=torch.long
-            )
-            ood_as_before_bs.append(check_as_before_bs(prompt_pred))
-            ood_same_number_as_bs.append(check_same_number_as_bs(prompt_pred))
-            ood_finished.append(check_sequence_finished(prompt_pred))
-
-        ood_as_before_bs_accuracy = sum(ood_as_before_bs) / len(ood_as_before_bs)
-        ood_same_number_as_bs_accuracy = sum(ood_same_number_as_bs) / len(
-            ood_same_number_as_bs
+        (
+            as_before_bs_accuracy,
+            finished_accuracy,
+            same_number_as_bs_accuracy,
+        ) = self._calc_prompt_pred_metrics(
+            self.test_prompts_in_distribution, max_length, src
         )
-        ood_finished_accuracy = sum(ood_finished) / len(ood_finished)
+
+        (
+            ood_as_before_bs_accuracy,
+            ood_finished_accuracy,
+            ood_same_number_as_bs_accuracy,
+        ) = self._calc_prompt_pred_metrics(
+            self.test_prompts_out_of_distribution, max_length, src
+        )
 
         return (
             as_before_bs_accuracy,
@@ -257,6 +160,26 @@ class LightningGrammarModule(pl.LightningModule):
             ood_same_number_as_bs_accuracy,
             ood_finished_accuracy,
         )
+
+    def _calc_prompt_pred_metrics(self, prompts, max_length, src):
+        as_before_bs = []
+        same_number_as_bs = []
+        finished = []
+        for idx, prompt in enumerate(prompts):
+            prompt_pred = self._predict(
+                max_length=max_length, src=src, prompt=prompt.unsqueeze(0)
+            )
+            prompt_pred = torch.tensor(
+                prompt_pred, device=self.hparams.device, dtype=torch.long
+            )
+            as_before_bs.append(check_as_before_bs(prompt_pred))
+            same_number_as_bs.append(check_same_number_as_bs(prompt_pred))
+
+            finished.append(check_sequence_finished(prompt_pred))
+        as_before_bs_accuracy = sum(as_before_bs) / len(as_before_bs)
+        same_number_as_bs_accuracy = sum(same_number_as_bs) / len(same_number_as_bs)
+        finished_accuracy = sum(finished) / len(finished)
+        return as_before_bs_accuracy, finished_accuracy, same_number_as_bs_accuracy
 
     def _forward(self, batch):
         """
