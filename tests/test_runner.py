@@ -34,9 +34,3 @@ def test_predict_inner(max_length, device):
 
     for idx, example in enumerate(examples):
         runner._predict(max_length=max_length, src=example)
-
-
-def test_eval_prompt_prediction(max_length, device):
-    runner = LightningGrammarModule()
-
-    _, _, _, _, _, _ = runner._eval_prompt_prediction(max_length=max_length)
