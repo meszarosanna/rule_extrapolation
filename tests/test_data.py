@@ -4,6 +4,9 @@ from llm_non_identifiability.data import (
     generate_aNbM_grammar_data,
     pad,
     PAD_token,
+    check_sequence_finished,
+    EOS_token,
+    generate_test_prompts,
 )
 
 import numpy as np
@@ -72,6 +75,12 @@ def test_check_as_before_bs():
     sequence = torch.tensor([0, 0, 1, 1])
     assert check_as_before_bs(sequence) == True
 
+    sequence = torch.tensor([1, 1])
+    assert check_as_before_bs(sequence) == False
+
+    sequence = torch.tensor([0, 0])
+    assert check_as_before_bs(sequence) == True
+
 
 def test_check_same_number_as_bs():
     sequence = torch.tensor([0, 0, 1, 0, 1])
@@ -85,3 +94,28 @@ def test_check_same_number_as_bs():
 
     sequence = torch.tensor([1, 1, 0, 0])
     assert check_same_number_as_bs(sequence) == True
+
+
+def test_check_sequence_finished():
+    sequence = torch.tensor([0, 1, 0, 1])
+    assert check_sequence_finished(sequence) == False
+
+    sequence = torch.tensor([0, 1, EOS_token.item(), 0, 1])
+    assert check_sequence_finished(sequence) == False
+
+    sequence = torch.tensor([0, 1, EOS_token.item(), 0, 1, EOS_token.item(), 0, 1])
+    assert check_sequence_finished(sequence) == False
+
+    sequence = torch.tensor([0, 1, EOS_token.item()])
+    assert check_sequence_finished(sequence) == True
+
+    sequence = torch.tensor(
+        [0, 1, EOS_token.item(), EOS_token.item(), PAD_token.item()]
+    )
+    assert check_sequence_finished(sequence) == True
+
+
+def test_generate_test_prompts():
+    prompts = generate_test_prompts(6)
+
+    assert prompts.shape == (2**6, 6)

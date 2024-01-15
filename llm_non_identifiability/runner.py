@@ -11,6 +11,9 @@ from llm_non_identifiability.data import (
     check_same_number_as_bs,
     check_as_before_bs,
     EOS_token,
+    PAD_token,
+    check_sequence_finished,
+    generate_test_prompts,
 )
 from llm_non_identifiability.model import Transformer
 
@@ -27,6 +30,8 @@ class LightningGrammarModule(pl.LightningModule):
         num_heads: int = 4,
         num_encoder_layers: int = 2,
         num_decoder_layers: int = 2,
+        max_pred_length: int = 64,
+        test_prompt_length: int = 6,
         dropout_p: float = 0.1,
         lr: float = 0.01,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
@@ -34,6 +39,8 @@ class LightningGrammarModule(pl.LightningModule):
     ):
         """
 
+        :param test_prompt_length:
+        :param max_pred_length:
         :param offline:
         :param lr: learning rate
         :param device:
@@ -53,6 +60,29 @@ class LightningGrammarModule(pl.LightningModule):
 
     def configure_optimizers(self):
         return torch.optim.SGD(self.model.parameters(), lr=self.hparams.lr)
+
+    def on_fit_start(self) -> None:
+        test_prompts = generate_test_prompts(length=self.hparams.test_prompt_length).to(
+            self.hparams.device
+        )
+
+        rules = self.trainer.datamodule.grammar_rules
+
+        rules_met = [rules(t).item() for t in test_prompts]
+
+        self.test_prompts_in_distribution = test_prompts[rules_met]
+        self.test_prompts_out_of_distribution = test_prompts[[not r for r in rules_met]]
+
+        self.hparams.test_prompts_in_distribution_len = len(
+            self.test_prompts_in_distribution
+        )
+        self.hparams.test_prompts_ood_len = len(self.test_prompts_out_of_distribution)
+
+        assert (
+            len(test_prompts)
+            == self.hparams.test_prompts_in_distribution_len
+            + self.hparams.test_prompts_ood_len
+        )
 
     def training_step(self, batch, batch_idx):
         panel_name = "Train"
@@ -74,169 +104,79 @@ class LightningGrammarModule(pl.LightningModule):
         (
             as_before_bs_accuracy,
             same_number_as_bs_accuracy,
+            finished_accuracy,
             ood_as_before_bs_accuracy,
             ood_same_number_as_bs_accuracy,
+            ood_finished_accuracy,
         ) = self._eval_prompt_prediction()
         self.log(f"{panel_name}/as_before_bs_accuracy", as_before_bs_accuracy)
         self.log(f"{panel_name}/same_number_as_bs_accuracy", same_number_as_bs_accuracy)
+        self.log(f"{panel_name}/finished_accuracy", finished_accuracy)
+
         self.log(f"{panel_name}/ood_as_before_bs_accuracy", ood_as_before_bs_accuracy)
         self.log(
             f"{panel_name}/ood_same_number_as_bs_accuracy",
             ood_same_number_as_bs_accuracy,
         )
+        self.log(f"{panel_name}/ood_finished_accuracy", ood_finished_accuracy)
 
         return loss
 
-    def _eval_prompt_prediction(self, max_length: int = 32):
-        # Here we test some examples to observe how the model predicts
-        src = torch.tensor(
-            [
-                [
-                    0,
-                    0,
-                    0,
-                    0,
-                    1,
-                    1,
-                    1,
-                    1,
-                    EOS_token.item(),
-                ]
-            ],
-            dtype=torch.long,
-            device=self.hparams.device,
+    @property
+    def test_prompts_src(self):
+        ds = self.trainer.datamodule.test_dataset.data.view(-1)
+        return ds[ds != PAD_token.item()].long().to(self.hparams.device)
+
+    def _eval_prompt_prediction(self, max_length: Optional[int] = None):
+        if max_length is None:
+            max_length = self.hparams.max_pred_length
+
+        (
+            as_before_bs_accuracy,
+            finished_accuracy,
+            same_number_as_bs_accuracy,
+        ) = self._calc_prompt_pred_metrics(
+            self.test_prompts_in_distribution, max_length
         )
 
-        prompts = [
-            torch.tensor(
-                [
-                    [
-                        0,
-                        0,
-                        0,
-                        0,
-                        1,
-                        1,
-                        1,
-                    ]
-                ],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-            torch.tensor(
-                [
-                    [
-                        0,
-                        0,
-                        1,
-                        1,
-                    ]
-                ],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-            torch.tensor(
-                [
-                    [
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        1,
-                        1,
-                        1,
-                    ]
-                ],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-            torch.tensor(
-                [
-                    [
-                        0,
-                        0,
-                        0,
-                        1,
-                    ]
-                ],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-        ]
-        as_before_bs = []
-        same_number_as_bs = []
-
-        ood_prompts = [
-            torch.tensor(
-                [[1, 1, 1, 0, 0]], dtype=torch.long, device=self.hparams.device
-            ),
-            torch.tensor(
-                [[0, 0, 0, 1, 1, 0, 1]], dtype=torch.long, device=self.hparams.device
-            ),
-            torch.tensor(
-                [[0, 0, 1, 1, 0, 0, 1, 0, 1, 0]],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-            torch.tensor(
-                [[0, 1, 1, 0, 0, 1, 0, 1, 0]],
-                dtype=torch.long,
-                device=self.hparams.device,
-            ),
-        ]
-        ood_as_before_bs = []
-        ood_same_number_as_bs = []
-
-        for idx, prompt in enumerate(prompts):
-            prompt_pred = self._predict(max_length=max_length, src=src, prompt=prompt)
-            as_before_bs.append(
-                check_as_before_bs(
-                    torch.tensor(
-                        prompt_pred, device=self.hparams.device, dtype=torch.long
-                    )
-                )
-            )
-            same_number_as_bs.append(
-                check_same_number_as_bs(
-                    torch.tensor(
-                        prompt_pred, device=self.hparams.device, dtype=torch.long
-                    )
-                )
-            )
-
-        as_before_bs_accuracy = sum(as_before_bs) / len(as_before_bs)
-        same_number_as_bs_accuracy = sum(same_number_as_bs) / len(same_number_as_bs)
-
-        for idx, prompt in enumerate(ood_prompts):
-            prompt_pred = self._predict(max_length=max_length, src=src, prompt=prompt)
-            ood_as_before_bs.append(
-                check_as_before_bs(
-                    torch.tensor(
-                        prompt_pred, device=self.hparams.device, dtype=torch.long
-                    )
-                )
-            )
-            ood_same_number_as_bs.append(
-                check_same_number_as_bs(
-                    torch.tensor(
-                        prompt_pred, device=self.hparams.device, dtype=torch.long
-                    )
-                )
-            )
-
-        ood_as_before_bs_accuracy = sum(ood_as_before_bs) / len(ood_as_before_bs)
-        ood_same_number_as_bs_accuracy = sum(ood_same_number_as_bs) / len(
-            ood_same_number_as_bs
+        (
+            ood_as_before_bs_accuracy,
+            ood_finished_accuracy,
+            ood_same_number_as_bs_accuracy,
+        ) = self._calc_prompt_pred_metrics(
+            self.test_prompts_out_of_distribution, max_length
         )
 
         return (
             as_before_bs_accuracy,
             same_number_as_bs_accuracy,
+            finished_accuracy,
             ood_as_before_bs_accuracy,
             ood_same_number_as_bs_accuracy,
+            ood_finished_accuracy,
         )
+
+    def _calc_prompt_pred_metrics(self, prompts, max_length):
+        as_before_bs = []
+        same_number_as_bs = []
+        finished = []
+        for idx, prompt in enumerate(prompts):
+            prompt_pred = self._predict(
+                max_length=max_length,
+                src=self.test_prompts_src.unsqueeze(0),
+                prompt=prompt.unsqueeze(0),
+            )
+            prompt_pred = torch.tensor(
+                prompt_pred, device=self.hparams.device, dtype=torch.long
+            )
+            as_before_bs.append(check_as_before_bs(prompt_pred))
+            same_number_as_bs.append(check_same_number_as_bs(prompt_pred))
+
+            finished.append(check_sequence_finished(prompt_pred))
+        as_before_bs_accuracy = sum(as_before_bs) / len(as_before_bs)
+        same_number_as_bs_accuracy = sum(same_number_as_bs) / len(same_number_as_bs)
+        finished_accuracy = sum(finished) / len(finished)
+        return as_before_bs_accuracy, finished_accuracy, same_number_as_bs_accuracy
 
     def _forward(self, batch):
         """

@@ -8,6 +8,8 @@ from llm_non_identifiability.data import (
     generate_aNbN_grammar_data,
     generate_abN_grammar_data,
     generate_aNbM_grammar_data,
+    check_as_before_bs,
+    check_same_number_as_bs,
 )
 from llm_non_identifiability.dataset import GrammarDataset
 
@@ -50,6 +52,20 @@ class GrammarDataModule(pl.LightningDataModule):
         else:
             raise ValueError(f"Unknown grammar {self.hparams.grammar}")
 
+    @property
+    def grammar_rules(self):
+        """
+        Selects the grammar rules to use.
+        """
+        if self.hparams.grammar == "aNbN":
+            return lambda x: check_same_number_as_bs(x) and check_as_before_bs(x)
+        elif self.hparams.grammar == "abN":
+            return lambda x: check_same_number_as_bs(x)
+        elif self.hparams.grammar == "aNbM":
+            return lambda x: check_as_before_bs(x)
+        else:
+            raise ValueError(f"Unknown grammar {self.hparams.grammar}")
+
     def prepare_data(self):
         """
         This method is called only once to prepare the data.
@@ -61,9 +77,13 @@ class GrammarDataModule(pl.LightningDataModule):
         val_data = grammar_generator(self.hparams.num_val, self.hparams.max_length)
         test_data = grammar_generator(self.hparams.num_test, self.hparams.max_length)
 
-        self.test_dataset = GrammarDataset(test_data)
-        self.val_dataset = GrammarDataset(val_data)
-        self.train_dataset = GrammarDataset(train_data)
+        self.test_dataset = GrammarDataset(
+            test_data, max_length=self.hparams.max_length
+        )
+        self.val_dataset = GrammarDataset(val_data, max_length=self.hparams.max_length)
+        self.train_dataset = GrammarDataset(
+            train_data, max_length=self.hparams.max_length
+        )
 
     def train_dataloader(self):
         return DataLoader(

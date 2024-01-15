@@ -4,7 +4,7 @@ import torch
 
 @pytest.fixture
 def max_length():
-    return 32
+    return 16
 
 
 @pytest.fixture

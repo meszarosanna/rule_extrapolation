@@ -4,6 +4,8 @@ import torch
 EOS_token = np.array([2])
 PAD_token = np.array([3])
 
+from itertools import product
+
 
 def generate_aNbN_grammar_data(num_samples: int, max_length: int = 32) -> list:
     """
@@ -60,7 +62,7 @@ def generate_aNbM_grammar_data(num_samples: int, max_length: int = 32) -> list:
     :return: list of length num_samples with maximal sequences of length max_length
     """
 
-    lengths_a = np.random.randint(low=0, high=max_length - 2, size=num_samples)
+    lengths_a = np.random.randint(low=1, high=max_length - 2, size=num_samples)
     lengths_b = np.ones_like(lengths_a) * max_length - lengths_a - 2
 
     data = []
@@ -101,11 +103,20 @@ def check_as_before_bs(sequence: torch.Tensor):
     :param sequence:
     :return:
     """
-    # find the first b
-    first_b = torch.where(sequence == 1)[0][0]
-    # find the last a
-    last_a = torch.where(sequence == 0)[0][-1]
-    return first_b > last_a
+
+    if len(a_tokens := torch.where(sequence == 0)[0]) > 0:
+        # find the last a
+        last_a = a_tokens[-1]
+
+        if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+            # find the first b
+            first_b = b_tokens[0]
+
+            return first_b > last_a
+        else:
+            return True
+    else:
+        return False
 
 
 def check_same_number_as_bs(sequence: torch.Tensor):
@@ -117,3 +128,38 @@ def check_same_number_as_bs(sequence: torch.Tensor):
     num_as = torch.sum(sequence == 0)
     num_bs = torch.sum(sequence == 1)
     return num_as == num_bs
+
+
+def check_sequence_finished(sequence: torch.Tensor):
+    """
+    Check if the sequence is finished (EOS token)
+    :param sequence:
+    :return:
+    """
+
+    # check whether there are no 0's or 1's in the sequence after the first EOS token
+
+    # find the first EOS token
+    if len(eos_tokens := torch.where(sequence == EOS_token.item())[0]) > 0:
+        first_EOS = torch.where(sequence == EOS_token.item())[0][0]
+        # check whether there are any 0's or 1's after the first EOS token
+        return (
+            torch.sum(sequence[first_EOS + 1 :] == 0)
+            + torch.sum(sequence[first_EOS + 1 :] == 1)
+            == 0
+        )
+    else:
+        return False
+
+
+def generate_test_prompts(length: int = 6):
+    """
+    Generates all prompts of a given length with symbols a and b
+    :param length:
+    :return:
+    """
+
+    symbols = [0, 1]
+    prompts = torch.tensor(list(product(symbols, repeat=length)), dtype=torch.long)
+
+    return prompts
