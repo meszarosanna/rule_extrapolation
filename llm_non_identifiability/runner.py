@@ -12,6 +12,7 @@ from llm_non_identifiability.data import (
     check_as_before_bs,
     EOS_token,
     check_sequence_finished,
+    generate_test_prompts,
 )
 from llm_non_identifiability.model import Transformer
 
@@ -28,7 +29,8 @@ class LightningGrammarModule(pl.LightningModule):
         num_heads: int = 4,
         num_encoder_layers: int = 2,
         num_decoder_layers: int = 2,
-        max_pred_length=1024,
+        max_pred_length: int = 1024,
+        test_prompt_length: int = 6,
         dropout_p: float = 0.1,
         lr: float = 0.01,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
@@ -36,6 +38,7 @@ class LightningGrammarModule(pl.LightningModule):
     ):
         """
 
+        :param test_prompt_length:
         :param max_pred_length:
         :param offline:
         :param lr: learning rate
@@ -53,6 +56,10 @@ class LightningGrammarModule(pl.LightningModule):
             num_decoder_layers=self.hparams.num_decoder_layers,
             dropout_p=self.hparams.dropout_p,
         )
+
+        self.test_prompts = generate_test_prompts(
+            length=self.hparams.test_prompt_length
+        ).to(self.hparams.device)
 
     def configure_optimizers(self):
         return torch.optim.SGD(self.model.parameters(), lr=self.hparams.lr)
