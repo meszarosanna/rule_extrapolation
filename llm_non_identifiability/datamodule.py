@@ -77,9 +77,13 @@ class GrammarDataModule(pl.LightningDataModule):
         val_data = grammar_generator(self.hparams.num_val, self.hparams.max_length)
         test_data = grammar_generator(self.hparams.num_test, self.hparams.max_length)
 
-        self.test_dataset = GrammarDataset(test_data)
-        self.val_dataset = GrammarDataset(val_data)
-        self.train_dataset = GrammarDataset(train_data)
+        self.test_dataset = GrammarDataset(
+            test_data, max_length=self.hparams.max_length
+        )
+        self.val_dataset = GrammarDataset(val_data, max_length=self.hparams.max_length)
+        self.train_dataset = GrammarDataset(
+            train_data, max_length=self.hparams.max_length
+        )
 
     def train_dataloader(self):
         return DataLoader(
