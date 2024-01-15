@@ -28,6 +28,7 @@ class LightningGrammarModule(pl.LightningModule):
         num_heads: int = 4,
         num_encoder_layers: int = 2,
         num_decoder_layers: int = 2,
+        max_pred_length=1024,
         dropout_p: float = 0.1,
         lr: float = 0.01,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
@@ -35,6 +36,7 @@ class LightningGrammarModule(pl.LightningModule):
     ):
         """
 
+        :param max_pred_length:
         :param offline:
         :param lr: learning rate
         :param device:
@@ -93,7 +95,9 @@ class LightningGrammarModule(pl.LightningModule):
 
         return loss
 
-    def _eval_prompt_prediction(self, max_length: int = 32):
+    def _eval_prompt_prediction(self, max_length: Optional[int] = None):
+        if max_length is None:
+            max_length = self.hparams.max_pred_length
         # Here we test some examples to observe how the model predicts
         src = torch.tensor(
             [

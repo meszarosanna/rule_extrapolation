@@ -4,6 +4,8 @@ import torch
 EOS_token = np.array([2])
 PAD_token = np.array([3])
 
+from itertools import product
+
 
 def generate_aNbN_grammar_data(num_samples: int, max_length: int = 32) -> list:
     """
@@ -139,3 +141,16 @@ def check_sequence_finished(sequence: torch.Tensor):
         )
     else:
         return False
+
+
+def generate_test_prompts(length: int = 6):
+    """
+    Generates all prompts of a given length with symbols a and b
+    :param length:
+    :return:
+    """
+
+    symbols = [0, 1]
+    prompts = torch.tensor(list(product(symbols, repeat=length)), dtype=torch.long)
+
+    return prompts

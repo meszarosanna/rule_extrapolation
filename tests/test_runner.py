@@ -39,4 +39,4 @@ def test_predict_inner(max_length, device):
 def test_eval_prompt_prediction(max_length, device):
     runner = LightningGrammarModule()
 
-    _, _, _, _ = runner._eval_prompt_prediction(max_length=max_length)
+    _, _, _, _, _, _ = runner._eval_prompt_prediction(max_length=max_length)

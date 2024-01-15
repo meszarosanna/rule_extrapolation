@@ -6,6 +6,7 @@ from llm_non_identifiability.data import (
     PAD_token,
     check_sequence_finished,
     EOS_token,
+    generate_test_prompts,
 )
 
 import numpy as np
@@ -106,3 +107,9 @@ def test_check_sequence_finished():
         [0, 1, EOS_token.item(), EOS_token.item(), PAD_token.item()]
     )
     assert check_sequence_finished(sequence) == True
+
+
+def test_generate_test_prompts():
+    prompts = generate_test_prompts(6)
+
+    assert prompts.shape == (2**6, 6)
