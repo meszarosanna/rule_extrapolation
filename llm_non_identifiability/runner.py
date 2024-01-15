@@ -29,7 +29,7 @@ class LightningGrammarModule(pl.LightningModule):
         num_heads: int = 4,
         num_encoder_layers: int = 2,
         num_decoder_layers: int = 2,
-        max_pred_length: int = 1024,
+        max_pred_length: int = 64,
         test_prompt_length: int = 6,
         dropout_p: float = 0.1,
         lr: float = 0.01,
@@ -57,12 +57,24 @@ class LightningGrammarModule(pl.LightningModule):
             dropout_p=self.hparams.dropout_p,
         )
 
-        self.test_prompts = generate_test_prompts(
-            length=self.hparams.test_prompt_length
-        ).to(self.hparams.device)
-
     def configure_optimizers(self):
         return torch.optim.SGD(self.model.parameters(), lr=self.hparams.lr)
+
+    def on_fit_start(self) -> None:
+        test_prompts = generate_test_prompts(length=self.hparams.test_prompt_length).to(
+            self.hparams.device
+        )
+
+        rules = self.trainer.datamodule.grammar_rules
+
+        rules_met = [rules(t).item() for t in test_prompts]
+
+        self.test_prompts_in_distribution = test_prompts[rules_met]
+        self.test_prompts_out_of_distribution = test_prompts[[not r for r in rules_met]]
+
+        assert len(test_prompts) == len(self.test_prompts_in_distribution) + len(
+            self.test_prompts_out_of_distribution
+        )
 
     def training_step(self, batch, batch_idx):
         panel_name = "Train"
