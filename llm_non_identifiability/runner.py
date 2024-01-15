@@ -7,14 +7,12 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 
-from llm_non_identifiability.model import Transformer
 from llm_non_identifiability.data import (
     check_same_number_as_bs,
     check_as_before_bs,
     EOS_token,
-    SOS_token,
-    PAD_token,
 )
+from llm_non_identifiability.model import Transformer
 
 
 class LightningGrammarModule(pl.LightningModule):
@@ -24,7 +22,7 @@ class LightningGrammarModule(pl.LightningModule):
 
     def __init__(
         self,
-        num_tokens: int = 5,  #  0, 1, SOS, EOS, PAD
+        num_tokens: int = 4,
         dim_model: int = 8,
         num_heads: int = 4,
         num_encoder_layers: int = 2,
@@ -32,9 +30,11 @@ class LightningGrammarModule(pl.LightningModule):
         dropout_p: float = 0.1,
         lr: float = 0.01,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
+        offline: bool = False,
     ):
         """
 
+        :param offline:
         :param lr: learning rate
         :param device:
         """
@@ -92,7 +92,6 @@ class LightningGrammarModule(pl.LightningModule):
         src = torch.tensor(
             [
                 [
-                    SOS_token.item(),
                     0,
                     0,
                     0,
@@ -112,7 +111,6 @@ class LightningGrammarModule(pl.LightningModule):
             torch.tensor(
                 [
                     [
-                        2,
                         0,
                         0,
                         0,
@@ -128,7 +126,6 @@ class LightningGrammarModule(pl.LightningModule):
             torch.tensor(
                 [
                     [
-                        2,
                         0,
                         0,
                         1,
@@ -141,7 +138,6 @@ class LightningGrammarModule(pl.LightningModule):
             torch.tensor(
                 [
                     [
-                        2,
                         0,
                         0,
                         0,
@@ -159,7 +155,6 @@ class LightningGrammarModule(pl.LightningModule):
             torch.tensor(
                 [
                     [
-                        2,
                         0,
                         0,
                         0,
@@ -175,18 +170,18 @@ class LightningGrammarModule(pl.LightningModule):
 
         ood_prompts = [
             torch.tensor(
-                [[2, 1, 1, 1, 0, 0]], dtype=torch.long, device=self.hparams.device
+                [[1, 1, 1, 0, 0]], dtype=torch.long, device=self.hparams.device
             ),
             torch.tensor(
-                [[2, 0, 0, 0, 1, 1, 0, 1]], dtype=torch.long, device=self.hparams.device
+                [[0, 0, 0, 1, 1, 0, 1]], dtype=torch.long, device=self.hparams.device
             ),
             torch.tensor(
-                [[2, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0]],
+                [[0, 0, 1, 1, 0, 0, 1, 0, 1, 0]],
                 dtype=torch.long,
                 device=self.hparams.device,
             ),
             torch.tensor(
-                [[2, 0, 1, 1, 0, 0, 1, 0, 1, 0]],
+                [[0, 1, 1, 0, 0, 1, 0, 1, 0]],
                 dtype=torch.long,
                 device=self.hparams.device,
             ),
@@ -309,7 +304,7 @@ class LightningGrammarModule(pl.LightningModule):
         """
         if prompt is None:
             prompt = torch.tensor(
-                [[SOS_token.item(), 0, 0, 0, 1]],
+                [[0, 0, 0, 1]],
                 dtype=torch.long,
                 device=self.hparams.device,  # type: ignore
             )
