@@ -62,7 +62,7 @@ def generate_aNbM_grammar_data(num_samples: int, max_length: int = 32) -> list:
     :return: list of length num_samples with maximal sequences of length max_length
     """
 
-    lengths_a = np.random.randint(low=0, high=max_length - 2, size=num_samples)
+    lengths_a = np.random.randint(low=1, high=max_length - 2, size=num_samples)
     lengths_b = np.ones_like(lengths_a) * max_length - lengths_a - 2
 
     data = []
