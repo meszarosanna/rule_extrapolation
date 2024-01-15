@@ -11,6 +11,7 @@ from llm_non_identifiability.data import (
     check_same_number_as_bs,
     check_as_before_bs,
     EOS_token,
+    check_sequence_finished,
 )
 from llm_non_identifiability.model import Transformer
 
@@ -167,6 +168,7 @@ class LightningGrammarModule(pl.LightningModule):
         ]
         as_before_bs = []
         same_number_as_bs = []
+        finished = []
 
         ood_prompts = [
             torch.tensor(
@@ -188,54 +190,44 @@ class LightningGrammarModule(pl.LightningModule):
         ]
         ood_as_before_bs = []
         ood_same_number_as_bs = []
+        ood_finished = []
 
         for idx, prompt in enumerate(prompts):
             prompt_pred = self._predict(max_length=max_length, src=src, prompt=prompt)
-            as_before_bs.append(
-                check_as_before_bs(
-                    torch.tensor(
-                        prompt_pred, device=self.hparams.device, dtype=torch.long
-                    )
-                )
+            prompt_pred = torch.tensor(
+                prompt_pred, device=self.hparams.device, dtype=torch.long
             )
-            same_number_as_bs.append(
-                check_same_number_as_bs(
-                    torch.tensor(
-                        prompt_pred, device=self.hparams.device, dtype=torch.long
-                    )
-                )
-            )
+            as_before_bs.append(check_as_before_bs(prompt_pred))
+            same_number_as_bs.append(check_same_number_as_bs(prompt_pred))
+
+            finished.append(check_sequence_finished(prompt_pred))
 
         as_before_bs_accuracy = sum(as_before_bs) / len(as_before_bs)
         same_number_as_bs_accuracy = sum(same_number_as_bs) / len(same_number_as_bs)
+        finished_accuracy = sum(finished) / len(finished)
 
         for idx, prompt in enumerate(ood_prompts):
             prompt_pred = self._predict(max_length=max_length, src=src, prompt=prompt)
-            ood_as_before_bs.append(
-                check_as_before_bs(
-                    torch.tensor(
-                        prompt_pred, device=self.hparams.device, dtype=torch.long
-                    )
-                )
+            prompt_pred = torch.tensor(
+                prompt_pred, device=self.hparams.device, dtype=torch.long
             )
-            ood_same_number_as_bs.append(
-                check_same_number_as_bs(
-                    torch.tensor(
-                        prompt_pred, device=self.hparams.device, dtype=torch.long
-                    )
-                )
-            )
+            ood_as_before_bs.append(check_as_before_bs(prompt_pred))
+            ood_same_number_as_bs.append(check_same_number_as_bs(prompt_pred))
+            ood_finished.append(check_sequence_finished(prompt_pred))
 
         ood_as_before_bs_accuracy = sum(ood_as_before_bs) / len(ood_as_before_bs)
         ood_same_number_as_bs_accuracy = sum(ood_same_number_as_bs) / len(
             ood_same_number_as_bs
         )
+        ood_finished_accuracy = sum(ood_finished) / len(ood_finished)
 
         return (
             as_before_bs_accuracy,
             same_number_as_bs_accuracy,
+            finished_accuracy,
             ood_as_before_bs_accuracy,
             ood_same_number_as_bs_accuracy,
+            ood_finished_accuracy,
         )
 
     def _forward(self, batch):
