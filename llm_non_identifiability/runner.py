@@ -75,16 +75,21 @@ class LightningGrammarModule(pl.LightningModule):
         (
             as_before_bs_accuracy,
             same_number_as_bs_accuracy,
+            finished_accuracy,
             ood_as_before_bs_accuracy,
             ood_same_number_as_bs_accuracy,
+            ood_finished_accuracy,
         ) = self._eval_prompt_prediction()
         self.log(f"{panel_name}/as_before_bs_accuracy", as_before_bs_accuracy)
         self.log(f"{panel_name}/same_number_as_bs_accuracy", same_number_as_bs_accuracy)
+        self.log(f"{panel_name}/finished_accuracy", finished_accuracy)
+
         self.log(f"{panel_name}/ood_as_before_bs_accuracy", ood_as_before_bs_accuracy)
         self.log(
             f"{panel_name}/ood_same_number_as_bs_accuracy",
             ood_same_number_as_bs_accuracy,
         )
+        self.log(f"{panel_name}/ood_finished_accuracy", ood_finished_accuracy)
 
         return loss
 
