@@ -7,14 +7,7 @@ from llm_non_identifiability.data import EOS_token
 import torch
 
 
-def test_fit(num_train, num_val, num_test):
-    trainer = Trainer(fast_dev_run=True)
-    runner = LightningGrammarModule()
-    dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
-    trainer.fit(runner, datamodule=dm)
-
-
-def test_predict(num_train, num_val, num_test):
+def test_fit_and_predict(num_train, num_val, num_test):
     trainer = Trainer(fast_dev_run=True)
     runner = LightningGrammarModule()
     dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
