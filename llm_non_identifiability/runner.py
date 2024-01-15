@@ -72,8 +72,15 @@ class LightningGrammarModule(pl.LightningModule):
         self.test_prompts_in_distribution = test_prompts[rules_met]
         self.test_prompts_out_of_distribution = test_prompts[[not r for r in rules_met]]
 
-        assert len(test_prompts) == len(self.test_prompts_in_distribution) + len(
-            self.test_prompts_out_of_distribution
+        self.hparams.test_prompts_in_distribution_len = len(
+            self.test_prompts_in_distribution
+        )
+        self.hparams.test_prompts_ood_len = len(self.test_prompts_out_of_distribution)
+
+        assert (
+            len(test_prompts)
+            == self.hparams.test_prompts_in_distribution_len
+            + self.hparams.test_prompts_ood_len
         )
 
     def training_step(self, batch, batch_idx):
