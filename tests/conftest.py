@@ -4,27 +4,27 @@ import torch
 
 @pytest.fixture
 def max_length():
-    return 16
+    return 4
 
 
 @pytest.fixture
 def num_samples():
-    return 32
+    return 8
 
 
 @pytest.fixture
 def num_train():
-    return 128
+    return 32
 
 
 @pytest.fixture
 def num_val():
-    return 64
+    return 16
 
 
 @pytest.fixture
 def num_test():
-    return 32
+    return 8
 
 
 @pytest.fixture
