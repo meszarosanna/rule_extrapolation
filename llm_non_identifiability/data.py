@@ -117,3 +117,25 @@ def check_same_number_as_bs(sequence: torch.Tensor):
     num_as = torch.sum(sequence == 0)
     num_bs = torch.sum(sequence == 1)
     return num_as == num_bs
+
+
+def check_sequence_finished(sequence: torch.Tensor):
+    """
+    Check if the sequence is finished (EOS token)
+    :param sequence:
+    :return:
+    """
+
+    # check whether there are no 0's or 1's in the sequence after the first EOS token
+
+    # find the first EOS token
+    if len(eos_tokens := torch.where(sequence == EOS_token.item())[0]) > 0:
+        first_EOS = torch.where(sequence == EOS_token.item())[0][0]
+        # check whether there are any 0's or 1's after the first EOS token
+        return (
+            torch.sum(sequence[first_EOS + 1 :] == 0)
+            + torch.sum(sequence[first_EOS + 1 :] == 1)
+            == 0
+        )
+    else:
+        return False
