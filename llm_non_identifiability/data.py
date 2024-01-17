@@ -20,7 +20,7 @@ def generate_aNbN_grammar_data(num_samples: int, max_length: int = 32) -> list:
 
     """
 
-    lengths = np.random.randint(low=1, high=max_length // 2, size=num_samples)
+    lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
 
     data = []
 
@@ -42,7 +42,7 @@ def generate_abN_grammar_data(num_samples: int, max_length: int = 32) -> list:
     :return: list of length num_samples with maximal sequences of length max_length
     """
 
-    lengths = np.random.randint(low=1, high=max_length // 2, size=num_samples)
+    lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
 
     data = []
 

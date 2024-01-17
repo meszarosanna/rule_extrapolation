@@ -103,11 +103,16 @@ class GrammarDataModule(pl.LightningDataModule):
         test_data = grammar_generator(self.hparams.num_test, self.hparams.max_length)
 
         self.test_dataset = GrammarDataset(
-            test_data, max_length=self.hparams.max_length
+            test_data,
+            max_length=self.hparams.max_length + 2,  # +2 for SOS and EOS tokens
         )
-        self.val_dataset = GrammarDataset(val_data, max_length=self.hparams.max_length)
+        self.val_dataset = GrammarDataset(
+            val_data,
+            max_length=self.hparams.max_length + 2,  # +2 for SOS and EOS tokens
+        )
         self.train_dataset = GrammarDataset(
-            train_data, max_length=self.hparams.max_length
+            train_data,
+            max_length=self.hparams.max_length + 2,  # +2 for SOS and EOS tokens
         )
 
     def train_dataloader(self):
