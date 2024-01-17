@@ -56,6 +56,7 @@ trainer:
 model:
   num_tokens: 5
   dim_model: 8
+  dim_feedforward: 128
   num_heads: 4
   test_prompt_length: 6
   max_pred_length: 64

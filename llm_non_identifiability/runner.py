@@ -15,7 +15,11 @@ from llm_non_identifiability.data import (
     check_sequence_finished,
     generate_test_prompts,
 )
-from llm_non_identifiability.model import Transformer
+from llm_non_identifiability.model import (
+    TransformerDecoder,
+    create_pad_mask,
+    get_tgt_mask,
+)
 
 
 class LightningGrammarModule(pl.LightningModule):
@@ -27,6 +31,7 @@ class LightningGrammarModule(pl.LightningModule):
         self,
         num_tokens: int = 5,
         dim_model: int = 8,
+        dim_feedforward=256,
         num_heads: int = 4,
         num_encoder_layers: int = 2,
         num_decoder_layers: int = 2,
@@ -39,6 +44,7 @@ class LightningGrammarModule(pl.LightningModule):
     ):
         """
 
+        :param dim_feedforward:
         :param test_prompt_length:
         :param max_pred_length:
         :param offline:
@@ -49,13 +55,13 @@ class LightningGrammarModule(pl.LightningModule):
         self.save_hyperparameters()
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
-        self.model = Transformer(
+        self.model = TransformerDecoder(
             num_tokens=self.hparams.num_tokens,
             dim_model=self.hparams.dim_model,
             num_heads=self.hparams.num_heads,
-            num_encoder_layers=self.hparams.num_encoder_layers,
             num_decoder_layers=self.hparams.num_decoder_layers,
             dropout_p=self.hparams.dropout_p,
+            dim_feedforward=dim_feedforward,
         )
 
     def configure_optimizers(self):
@@ -191,16 +197,13 @@ class LightningGrammarModule(pl.LightningModule):
         y_expected = y[:, 1:]
 
         # Get mask to mask out the next words
-        sequence_length = y_input.size(1)
-        tgt_mask = self.model.get_tgt_mask(sequence_length).to(self.hparams.device)
+        causal_mask = get_tgt_mask(y_input.size(1)).to(self.hparams.device)
 
-        # Standard training except we pass in y_input and tgt_mask
+        # Standard training except we pass in y_input and causal_mask
         pred = self.model(
-            X,
-            y_input,
-            tgt_mask,
-            self.model.create_pad_mask(X, 4).to(self.hparams.device),
-            self.model.create_pad_mask(y_input, 4).to(self.hparams.device),
+            src=y_input,
+            mask=causal_mask,
+            src_key_padding_mask=create_pad_mask(y_input).to(self.hparams.device),
         )
 
         # Permute pred to have batch size first again
@@ -251,15 +254,14 @@ class LightningGrammarModule(pl.LightningModule):
         for _ in range(max_length):
             # Get mask to mask out the next words
             sequence_length = prompt.size(1)
-            tgt_mask = self.model.get_tgt_mask(sequence_length).to(self.hparams.device)  # type: ignore
+            tgt_mask = get_tgt_mask(sequence_length).to(self.hparams.device)  # type: ignore
 
             # forward pass
+
             pred = self.model(
-                src,
-                prompt,
-                tgt_mask,
-                self.model.create_pad_mask(src, 4),
-                self.model.create_pad_mask(prompt, 4),
+                src=prompt,
+                mask=tgt_mask,
+                src_key_padding_mask=create_pad_mask(prompt).to(self.hparams.device),
             )
 
             # Permute pred to have batch size first again
