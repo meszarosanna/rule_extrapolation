@@ -54,7 +54,7 @@ trainer:
   reload_dataloaders_every_n_epochs: 0
   default_root_dir: null
 model:
-  num_tokens: 4
+  num_tokens: 5
   dim_model: 8
   num_heads: 4
   test_prompt_length: 6
