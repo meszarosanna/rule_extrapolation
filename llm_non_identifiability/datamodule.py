@@ -92,6 +92,12 @@ class GrammarDataModule(pl.LightningDataModule):
 
         grammar_generator = self._select_grammar()
 
+        if self.hparams.grammar == "aNbN":
+            # include all samples only once
+            self.hparams.num_train = (
+                self.hparams.num_val
+            ) = self.hparams.num_test = self.hparams.max_length
+
         train_data = grammar_generator(self.hparams.num_train, self.hparams.max_length)
         val_data = grammar_generator(self.hparams.num_val, self.hparams.max_length)
         test_data = grammar_generator(self.hparams.num_test, self.hparams.max_length)

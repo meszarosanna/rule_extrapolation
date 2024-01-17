@@ -25,7 +25,7 @@ class LightningGrammarModule(pl.LightningModule):
 
     def __init__(
         self,
-        num_tokens: int = 4,
+        num_tokens: int = 5,
         dim_model: int = 8,
         num_heads: int = 4,
         num_encoder_layers: int = 2,

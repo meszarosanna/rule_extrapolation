@@ -23,6 +23,9 @@ def test_generate_data_correctly(num_train, num_val, num_test, max_length, gramm
     )
     data_module.prepare_data()
 
+    if grammar == "aNbN":
+        num_train = num_val = num_test = max_length
+
     assert len(data_module.train_dataset) == num_train
     assert len(data_module.val_dataset) == num_val
     assert len(data_module.test_dataset) == num_test
