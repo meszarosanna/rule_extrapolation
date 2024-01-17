@@ -8,19 +8,26 @@ PAD_token = np.array([4])
 from itertools import product
 
 
-def generate_aNbN_grammar_data(num_samples: int, max_length: int = 32) -> list:
+def generate_aNbN_grammar_data(
+    num_samples: int, max_length: int = 32, all_sequences: bool = True
+) -> list:
     """
     PCFG with two rules:
     - number of a's and b's must be the same
     - a's come first, followed by b's
 
+    :param all_sequences: generates all sequences up to max_length (i.e., the longest will have max_length // 2 a's and b's)
     :param num_samples: number of samples
     :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
     :return: list of length num_samples with maximal sequences of length max_length
 
     """
-
-    lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
+    if all_sequences is True:
+        lengths = np.linspace(
+            1, max_length // 2, max_length // 2, dtype=int, endpoint=True
+        )
+    else:
+        lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
 
     data = []
 
