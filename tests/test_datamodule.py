@@ -24,15 +24,21 @@ def test_generate_data_correctly(num_train, num_val, num_test, max_length, gramm
     data_module.prepare_data()
 
     if grammar == "aNbN":
-        num_train = num_val = num_test = max_length
+        num_train = num_val = num_test = max_length // 2
 
     assert len(data_module.train_dataset) == num_train
     assert len(data_module.val_dataset) == num_val
     assert len(data_module.test_dataset) == num_test
 
-    assert data_module.train_dataset.data.shape[1] == max_length
-    assert data_module.val_dataset.data.shape[1] == max_length
-    assert data_module.test_dataset.data.shape[1] == max_length
+    assert (
+        data_module.train_dataset.data.shape[1] == max_length + 2
+    )  # +2 for SOS and EOS tokens
+    assert (
+        data_module.val_dataset.data.shape[1] == max_length + 2
+    )  # +2 for SOS and EOS tokens
+    assert (
+        data_module.test_dataset.data.shape[1] == max_length + 2
+    )  # +2 for SOS and EOS tokens
 
 
 @pytest.mark.parametrize("grammar", ["aNbN", "abN", "aNbM"])
