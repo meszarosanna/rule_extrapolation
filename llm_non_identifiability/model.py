@@ -41,10 +41,11 @@ class PositionalEncoding(nn.Module):
         )
 
 
-def get_tgt_mask(size) -> torch.Tensor:
+def get_tgt_mask(size, device) -> torch.Tensor:
     # Generates a squeare matrix where the each row allows one word more to be seen
-    mask = torch.tril(torch.ones(size, size) == 1)  # Lower triangular matrix
-    mask = mask.float()
+    mask = torch.tril(
+        torch.ones(size, size, device=device, dtype=torch.float) == 1,
+    )  # Lower triangular matrix
     mask = mask.masked_fill(mask == 0, float("-inf"))  # Convert zeros to -inf
     mask = mask.masked_fill(mask == 1, float(0.0))  # Convert ones to 0
 

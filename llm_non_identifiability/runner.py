@@ -287,7 +287,7 @@ class LightningGrammarModule(pl.LightningModule):
         y_expected = y[:, 1:]
 
         # Get mask to mask out the next words
-        causal_mask = get_tgt_mask(y_input.size(1)).to(self.hparams.device)
+        causal_mask = get_tgt_mask(y_input.size(1), device=self.hparams.device)
 
         # Standard training except we pass in y_input and causal_mask
         pred = self.model(
@@ -347,8 +347,7 @@ class LightningGrammarModule(pl.LightningModule):
 
         for _ in range(max_length):
             # Get mask to mask out the next words
-            sequence_length = prompt.size(1)
-            tgt_mask = get_tgt_mask(sequence_length).to(self.hparams.device)  # type: ignore
+            tgt_mask = get_tgt_mask(size=(prompt.size(1)), device=self.hparams.device)
 
             # forward pass
             pred = self.model(
