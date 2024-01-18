@@ -1,7 +1,7 @@
 # Importing necessary libraries
 import subprocess
 from os.path import dirname
-from typing import Optional
+from typing import Optional, Dict, Any
 import math
 
 import pytorch_lightning as pl
@@ -123,14 +123,17 @@ class LightningGrammarModule(pl.LightningModule):
         self.log(f"{panel_name}/accuracy", accuracy)
 
         (
+            prompts,
             as_before_bs_accuracy,
             same_number_as_bs_accuracy,
             finished_accuracy,
             grammatical_accuracy,
+            ood_prompts,
             ood_as_before_bs_accuracy,
             ood_same_number_as_bs_accuracy,
             ood_finished_accuracy,
             ood_grammatical_accuracy,
+            sos_prompts,
             sos_as_before_bs_accuracy,
             sos_same_number_as_bs_accuracy,
             sos_finished_accuracy,
@@ -157,7 +160,28 @@ class LightningGrammarModule(pl.LightningModule):
         self.log(f"{panel_name}/sos_finished_accuracy", sos_finished_accuracy)
         self.log(f"{panel_name}/sos_grammatical_accuracy", sos_grammatical_accuracy)
 
-        return loss
+    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
+        (
+            prompts,
+            as_before_bs_accuracy,
+            same_number_as_bs_accuracy,
+            finished_accuracy,
+            grammatical_accuracy,
+            ood_prompts,
+            ood_as_before_bs_accuracy,
+            ood_same_number_as_bs_accuracy,
+            ood_finished_accuracy,
+            ood_grammatical_accuracy,
+            sos_prompts,
+            sos_as_before_bs_accuracy,
+            sos_same_number_as_bs_accuracy,
+            sos_finished_accuracy,
+            sos_grammatical_accuracy,
+        ) = self._eval_prompt_prediction()
+
+        checkpoint["prompts"] = prompts.cpu().numpy()
+        checkpoint["ood_prompts"] = ood_prompts.cpu().numpy()
+        checkpoint["sos_prompts"] = sos_prompts.cpu().numpy()
 
     @property
     def test_prompts_src(self):
@@ -169,6 +193,7 @@ class LightningGrammarModule(pl.LightningModule):
             max_length = self.hparams.max_pred_length
 
         (
+            prompts,
             as_before_bs_accuracy,
             finished_accuracy,
             same_number_as_bs_accuracy,
@@ -178,6 +203,7 @@ class LightningGrammarModule(pl.LightningModule):
         )
 
         (
+            ood_prompts,
             ood_as_before_bs_accuracy,
             ood_finished_accuracy,
             ood_same_number_as_bs_accuracy,
@@ -196,6 +222,7 @@ class LightningGrammarModule(pl.LightningModule):
             * SOS_token.item()
         )
         (
+            sos_prompts,
             sos_as_before_bs_accuracy,
             sos_finished_accuracy,
             sos_same_number_as_bs_accuracy,
@@ -203,14 +230,17 @@ class LightningGrammarModule(pl.LightningModule):
         ) = self._calc_prompt_pred_metrics(sos_prompts, max_length)
 
         return (
+            prompts,
             as_before_bs_accuracy,
             same_number_as_bs_accuracy,
             finished_accuracy,
             grammatical_accuracy,
+            ood_prompts,
             ood_as_before_bs_accuracy,
             ood_same_number_as_bs_accuracy,
             ood_finished_accuracy,
             ood_grammatical_accuracy,
+            sos_prompts,
             sos_as_before_bs_accuracy,
             sos_same_number_as_bs_accuracy,
             sos_finished_accuracy,
@@ -234,6 +264,7 @@ class LightningGrammarModule(pl.LightningModule):
         finished_accuracy = sum(finished) / len(finished)
         grammatical_accuracy = sum(grammatical) / len(grammatical)
         return (
+            prompts,
             as_before_bs_accuracy,
             finished_accuracy,
             same_number_as_bs_accuracy,
