@@ -171,25 +171,17 @@ class LightningGrammarModule(pl.LightningModule):
         )
 
     def _calc_prompt_pred_metrics(self, prompts, max_length):
-        as_before_bs = []
-        same_number_as_bs = []
-        finished = []
-        grammar_rules = self.trainer.datamodule.grammar_rules
-        grammatical = []
-
         prompt_pred = self._predict(
             max_length=max_length,
             src=self.test_prompts_src,
             prompt=prompts,
         )
-        prompt_pred = torch.tensor(
-            prompt_pred, device=self.hparams.device, dtype=torch.long
-        )
-        as_before_bs.append(check_as_before_bs(prompt_pred))
-        same_number_as_bs.append(check_same_number_as_bs(prompt_pred))
-        grammatical.append(grammar_rules(prompt_pred))
 
-        finished.append(check_sequence_finished(prompt_pred))
+        as_before_bs = [check_as_before_bs(p) for p in prompt_pred]
+        same_number_as_bs = [check_same_number_as_bs(p) for p in prompt_pred]
+        grammatical = [self.trainer.datamodule.grammar_rules(p) for p in prompt_pred]
+        finished = [check_sequence_finished(p) for p in prompt_pred]
+
         as_before_bs_accuracy = sum(as_before_bs) / len(as_before_bs)
         same_number_as_bs_accuracy = sum(same_number_as_bs) / len(same_number_as_bs)
         finished_accuracy = sum(finished) / len(finished)
@@ -278,7 +270,6 @@ class LightningGrammarModule(pl.LightningModule):
             tgt_mask = get_tgt_mask(sequence_length).to(self.hparams.device)  # type: ignore
 
             # forward pass
-
             pred = self.model(
                 src=prompt,
                 mask=tgt_mask,
@@ -299,7 +290,7 @@ class LightningGrammarModule(pl.LightningModule):
             # Stop if model predicts end of sentence
             if torch.all(finished) is True:
                 break
-        return prompt
+        return prompt.long().to(self.hparams.device)
 
     def _pick_most_likely_tokens(self, pred: torch.Tensor) -> torch.Tensor:
         _, next_items = torch.max(pred, dim=1)
