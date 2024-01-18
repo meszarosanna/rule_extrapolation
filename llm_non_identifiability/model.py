@@ -63,7 +63,7 @@ def create_pad_mask(
 ) -> torch.Tensor:
     # If matrix = [1,2,3,0,0,0] where pad_token=0, the result mask is
     # [False, False, False, True, True, True]
-    return matrix == pad_token
+    return torch.as_tensor(matrix == pad_token, device=matrix.device)
 
 
 class TransformerDecoder(nn.Module):
