@@ -96,9 +96,13 @@ class LightningGrammarModule(pl.LightningModule):
         if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
             # log entropy of the test prompts = entropy of the distribution of the prompt lengths
             # log as a summary item
-            self.logger.experiment.summary["train_prompts_entropy"] = math.log(
-                self.trainer.datamodule.max_length, base=math.e
-            )
+            self.logger.experiment.summary[
+                "train_prompts_entropy"
+            ] = self.train_prompts_entropy
+
+    @property
+    def train_prompts_entropy(self):
+        return math.log(self.trainer.datamodule.max_length, base=math.e)
 
     def training_step(self, batch, batch_idx):
         panel_name = "Train"
