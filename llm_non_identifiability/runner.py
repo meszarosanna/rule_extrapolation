@@ -177,20 +177,19 @@ class LightningGrammarModule(pl.LightningModule):
         grammar_rules = self.trainer.datamodule.grammar_rules
         grammatical = []
 
-        for idx, prompt in enumerate(prompts):
-            prompt_pred = self._predict(
-                max_length=max_length,
-                src=self.test_prompts_src.unsqueeze(0),
-                prompt=prompt.unsqueeze(0),
-            )
-            prompt_pred = torch.tensor(
-                prompt_pred, device=self.hparams.device, dtype=torch.long
-            )
-            as_before_bs.append(check_as_before_bs(prompt_pred))
-            same_number_as_bs.append(check_same_number_as_bs(prompt_pred))
-            grammatical.append(grammar_rules(prompt_pred))
+        prompt_pred = self._predict(
+            max_length=max_length,
+            src=self.test_prompts_src,
+            prompt=prompts,
+        )
+        prompt_pred = torch.tensor(
+            prompt_pred, device=self.hparams.device, dtype=torch.long
+        )
+        as_before_bs.append(check_as_before_bs(prompt_pred))
+        same_number_as_bs.append(check_same_number_as_bs(prompt_pred))
+        grammatical.append(grammar_rules(prompt_pred))
 
-            finished.append(check_sequence_finished(prompt_pred))
+        finished.append(check_sequence_finished(prompt_pred))
         as_before_bs_accuracy = sum(as_before_bs) / len(as_before_bs)
         same_number_as_bs_accuracy = sum(same_number_as_bs) / len(same_number_as_bs)
         finished_accuracy = sum(finished) / len(finished)
@@ -263,12 +262,16 @@ class LightningGrammarModule(pl.LightningModule):
         :param prompt: optional prompt to start the prediction
         :return:
         """
+
         if prompt is None:
             prompt = torch.tensor(
                 [[0, 0, 0, 1]],
                 dtype=torch.long,
                 device=self.hparams.device,  # type: ignore
             )
+
+        finished = torch.BoolTensor([False] * prompt.size(0)).to(self.hparams.device)
+
         for _ in range(max_length):
             # Get mask to mask out the next words
             sequence_length = prompt.size(1)
@@ -285,16 +288,18 @@ class LightningGrammarModule(pl.LightningModule):
             # Permute pred to have batch size first again
             pred = pred.permute(1, 2, 0)
 
-            _, next_item = torch.max(pred[0, :, -1].view(-1), dim=-1)
-            next_item = torch.tensor([[next_item]], device=self.hparams.device)  # type: ignore
+            # pick the prediction for the last token only
+            next_items = self._pick_most_likely_tokens(pred)[:, -1].view(-1, 1)
 
             # Concatenate previous input with predicted best word
-            prompt = torch.cat((prompt, next_item), dim=1)
+            prompt = torch.cat((prompt, next_items), dim=1)
 
+            # save if model predicts end of sentence
+            finished.logical_or_(next_items.view(-1) == EOS_token.item())
             # Stop if model predicts end of sentence
-            if next_item.view(-1).item() == EOS_token.item():
+            if torch.all(finished) is True:
                 break
-        return prompt.view(-1).tolist()
+        return prompt
 
     def _pick_most_likely_tokens(self, pred: torch.Tensor) -> torch.Tensor:
         _, next_items = torch.max(pred, dim=1)
