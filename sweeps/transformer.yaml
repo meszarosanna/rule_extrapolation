@@ -12,20 +12,28 @@ metric:
   name: Val/loss
 parameters:
   trainer.max_epochs:
-      value: 2000
+      value: 10000
   model.dim_model:
-    value: 8
+    values: [8, 32]
   model.num_heads:
     value: 4
-  model.num_encoder_layers:
-    value: 2
+  model.dim_feedforward:
+    values: [128, 512]
   model.num_decoder_layers:
     value: 2
   model.dropout_p:
     value: 0.1
+  model.test_prompt_length:
+    value: 7
+  model.max_pred_length:
+    value: 1024
   model.lr:
     values: [0.003, 0.01]
+  model.layer_norm_eps:
+    values: [1e-4, 1e-3, 3e-3]
+  data.max_length:
+    value: 1024
   data.batch_size:
-    values: [64, 256]
+    values: [128, 512]
   seed_everything:
     values: [ 42, 64, 982, 5748, 23567 ]
