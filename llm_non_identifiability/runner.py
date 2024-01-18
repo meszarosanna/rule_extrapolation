@@ -43,10 +43,12 @@ class LightningGrammarModule(pl.LightningModule):
         lr: float = 0.01,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
         offline: bool = False,
-        next_token_pick_mode: str = "max",  # "max" or "sample"
+        next_token_pick_mode: str = "max",
+        layer_norm_eps=2e-4,
     ):
         """
 
+        :param layer_norm_eps:
         :param next_token_pick_mode:
         :param dim_feedforward:
         :param test_prompt_length:
@@ -66,6 +68,7 @@ class LightningGrammarModule(pl.LightningModule):
             num_decoder_layers=self.hparams.num_decoder_layers,
             dropout_p=self.hparams.dropout_p,
             dim_feedforward=self.hparams.dim_feedforward,
+            layer_norm_eps=layer_norm_eps,
         )
 
     @property

@@ -76,6 +76,7 @@ class TransformerDecoder(nn.Module):
         num_decoder_layers,
         dropout_p,
         dim_feedforward,
+        layer_norm_eps,
     ):
         super().__init__()
 
@@ -92,6 +93,7 @@ class TransformerDecoder(nn.Module):
             nhead=num_heads,
             dropout=dropout_p,
             dim_feedforward=dim_feedforward,
+            layer_norm_eps=layer_norm_eps,
         )
         self.decoder = nn.TransformerEncoder(layers, num_decoder_layers)
 
