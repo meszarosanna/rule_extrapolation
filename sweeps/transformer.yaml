@@ -32,7 +32,7 @@ parameters:
   model.layer_norm_eps:
     values: [1e-4, 1e-3, 3e-3]
   data.max_length:
-    value: 1024
+    value: 512
   data.batch_size:
     values: [128, 512]
   seed_everything:
