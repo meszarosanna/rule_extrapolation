@@ -2,6 +2,7 @@
 import subprocess
 from os.path import dirname
 from typing import Optional
+import math
 
 import pytorch_lightning as pl
 import torch
@@ -91,6 +92,13 @@ class LightningGrammarModule(pl.LightningModule):
             == self.hparams.test_prompts_in_distribution_len
             + self.hparams.test_prompts_ood_len
         )
+
+        if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
+            # log entropy of the test prompts = entropy of the distribution of the prompt lengths
+            # log as a summary item
+            self.logger.experiment.summary["train_prompts_entropy"] = math.log(
+                self.trainer.datamodule.max_length, base=math.e
+            )
 
     def training_step(self, batch, batch_idx):
         panel_name = "Train"
