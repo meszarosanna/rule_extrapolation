@@ -41,10 +41,11 @@ class PositionalEncoding(nn.Module):
         )
 
 
-def get_tgt_mask(size) -> torch.Tensor:
+def get_tgt_mask(size, device) -> torch.Tensor:
     # Generates a squeare matrix where the each row allows one word more to be seen
-    mask = torch.tril(torch.ones(size, size) == 1)  # Lower triangular matrix
-    mask = mask.float()
+    mask = torch.tril(
+        torch.ones(size, size, device=device, dtype=torch.float) == 1,
+    )  # Lower triangular matrix
     mask = mask.masked_fill(mask == 0, float("-inf"))  # Convert zeros to -inf
     mask = mask.masked_fill(mask == 1, float(0.0))  # Convert ones to 0
 
@@ -63,7 +64,7 @@ def create_pad_mask(
 ) -> torch.Tensor:
     # If matrix = [1,2,3,0,0,0] where pad_token=0, the result mask is
     # [False, False, False, True, True, True]
-    return matrix == pad_token
+    return torch.as_tensor(matrix == pad_token, device=matrix.device)
 
 
 class TransformerDecoder(nn.Module):
@@ -76,6 +77,7 @@ class TransformerDecoder(nn.Module):
         num_decoder_layers,
         dropout_p,
         dim_feedforward,
+        layer_norm_eps,
     ):
         super().__init__()
 
@@ -92,6 +94,7 @@ class TransformerDecoder(nn.Module):
             nhead=num_heads,
             dropout=dropout_p,
             dim_feedforward=dim_feedforward,
+            layer_norm_eps=layer_norm_eps,
         )
         self.decoder = nn.TransformerEncoder(layers, num_decoder_layers)
 

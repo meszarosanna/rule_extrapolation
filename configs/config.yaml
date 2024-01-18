@@ -64,6 +64,7 @@ model:
   num_decoder_layers: 2
   dropout_p: 0.1
   lr: 0.01
+  layer_norm_eps: 2e-4
 data:
   num_train: 9000
   num_val: 3000
