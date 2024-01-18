@@ -27,9 +27,11 @@ class GrammarDataModule(pl.LightningDataModule):
         max_length: int = 32,
         batch_size: int = 64,
         grammar: str = "aNbN",
+        max_num_workers: int = 4,
     ):
         """
 
+        :param max_num_workers:
         :param num_train:
         :param num_val:
         :param num_test:
@@ -120,7 +122,7 @@ class GrammarDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.hparams.batch_size,
             shuffle=True,
-            num_workers=os.cpu_count(),
+            num_workers=min(os.cpu_count(), self.hparams.max_num_workers),
             persistent_workers=True,
         )
 
@@ -129,7 +131,7 @@ class GrammarDataModule(pl.LightningDataModule):
             self.val_dataset,
             batch_size=self.hparams.batch_size,
             shuffle=False,
-            num_workers=os.cpu_count(),
+            num_workers=min(os.cpu_count(), self.hparams.max_num_workers),
             persistent_workers=True,
         )
 
@@ -138,7 +140,7 @@ class GrammarDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.hparams.batch_size,
             shuffle=False,
-            num_workers=os.cpu_count(),
+            num_workers=min(os.cpu_count(), self.hparams.max_num_workers),
             persistent_workers=True,
         )
 
@@ -147,6 +149,6 @@ class GrammarDataModule(pl.LightningDataModule):
             self.test_dataset,
             batch_size=self.hparams.batch_size,
             shuffle=False,
-            num_workers=os.cpu_count(),
+            num_workers=min(os.cpu_count(), self.hparams.max_num_workers),
             persistent_workers=True,
         )
