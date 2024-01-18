@@ -111,13 +111,16 @@ class LightningGrammarModule(pl.LightningModule):
             as_before_bs_accuracy,
             same_number_as_bs_accuracy,
             finished_accuracy,
+            grammatical_accuracy,
             ood_as_before_bs_accuracy,
             ood_same_number_as_bs_accuracy,
             ood_finished_accuracy,
+            ood_grammatical_accuracy,
         ) = self._eval_prompt_prediction()
         self.log(f"{panel_name}/as_before_bs_accuracy", as_before_bs_accuracy)
         self.log(f"{panel_name}/same_number_as_bs_accuracy", same_number_as_bs_accuracy)
         self.log(f"{panel_name}/finished_accuracy", finished_accuracy)
+        self.log(f"{panel_name}/grammatical_accuracy", grammatical_accuracy)
 
         self.log(f"{panel_name}/ood_as_before_bs_accuracy", ood_as_before_bs_accuracy)
         self.log(
@@ -125,6 +128,7 @@ class LightningGrammarModule(pl.LightningModule):
             ood_same_number_as_bs_accuracy,
         )
         self.log(f"{panel_name}/ood_finished_accuracy", ood_finished_accuracy)
+        self.log(f"{panel_name}/ood_grammatical_accuracy", ood_grammatical_accuracy)
 
         return loss
 
@@ -141,6 +145,7 @@ class LightningGrammarModule(pl.LightningModule):
             as_before_bs_accuracy,
             finished_accuracy,
             same_number_as_bs_accuracy,
+            grammatical_accuracy,
         ) = self._calc_prompt_pred_metrics(
             self.test_prompts_in_distribution, max_length
         )
@@ -149,6 +154,7 @@ class LightningGrammarModule(pl.LightningModule):
             ood_as_before_bs_accuracy,
             ood_finished_accuracy,
             ood_same_number_as_bs_accuracy,
+            ood_grammatical_accuracy,
         ) = self._calc_prompt_pred_metrics(
             self.test_prompts_out_of_distribution, max_length
         )
@@ -157,15 +163,20 @@ class LightningGrammarModule(pl.LightningModule):
             as_before_bs_accuracy,
             same_number_as_bs_accuracy,
             finished_accuracy,
+            grammatical_accuracy,
             ood_as_before_bs_accuracy,
             ood_same_number_as_bs_accuracy,
             ood_finished_accuracy,
+            ood_grammatical_accuracy,
         )
 
     def _calc_prompt_pred_metrics(self, prompts, max_length):
         as_before_bs = []
         same_number_as_bs = []
         finished = []
+        grammar_rules = self.trainer.datamodule.grammar_rules
+        grammatical = []
+
         for idx, prompt in enumerate(prompts):
             prompt_pred = self._predict(
                 max_length=max_length,
@@ -177,12 +188,19 @@ class LightningGrammarModule(pl.LightningModule):
             )
             as_before_bs.append(check_as_before_bs(prompt_pred))
             same_number_as_bs.append(check_same_number_as_bs(prompt_pred))
+            grammatical.append(grammar_rules(prompt_pred))
 
             finished.append(check_sequence_finished(prompt_pred))
         as_before_bs_accuracy = sum(as_before_bs) / len(as_before_bs)
         same_number_as_bs_accuracy = sum(same_number_as_bs) / len(same_number_as_bs)
         finished_accuracy = sum(finished) / len(finished)
-        return as_before_bs_accuracy, finished_accuracy, same_number_as_bs_accuracy
+        grammatical_accuracy = sum(grammatical) / len(grammatical)
+        return (
+            as_before_bs_accuracy,
+            finished_accuracy,
+            same_number_as_bs_accuracy,
+            grammatical_accuracy,
+        )
 
     def _forward(self, batch):
         """
