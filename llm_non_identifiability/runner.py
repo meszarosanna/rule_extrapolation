@@ -116,6 +116,8 @@ class LightningGrammarModule(pl.LightningModule):
         X, y, y_expected, pred, loss = self._forward(batch)
         self.log(f"{panel_name}/loss", loss)
 
+        self.log(f"{panel_name}/kl", loss - self.train_prompts_entropy)
+
         # pick most likely token and calculate and log accuracy
         pred_tokens = self._pick_next_tokens(pred)
         accuracy = torch.sum(pred_tokens == y_expected) / y_expected.numel()
