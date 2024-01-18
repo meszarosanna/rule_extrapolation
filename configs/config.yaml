@@ -22,7 +22,7 @@ trainer:
         save_top_k: 1
         mode: min
   fast_dev_run: false
-  max_epochs: 250
+  max_epochs: 5000
   min_epochs: null
   max_steps: -1
   min_steps: null
@@ -60,17 +60,16 @@ model:
   num_heads: 4
   test_prompt_length: 6
   max_pred_length: 64
-  num_encoder_layers: 2
   num_decoder_layers: 2
   dropout_p: 0.1
   lr: 0.01
   layer_norm_eps: 2e-4
 data:
-  num_train: 9000
-  num_val: 3000
-  num_test: 1024
-  max_length: 32
-  batch_size: 64
+  num_train: 512
+  num_val: 512
+  num_test: 512
+  max_length: 512
+  batch_size: 128
   grammar: aNbN
 notes: null
 tags: null
