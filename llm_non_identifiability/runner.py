@@ -31,7 +31,7 @@ class LightningGrammarModule(pl.LightningModule):
         self,
         num_tokens: int = 5,
         dim_model: int = 8,
-        dim_feedforward=256,
+        dim_feedforward: int = 256,
         num_heads: int = 4,
         num_encoder_layers: int = 2,
         num_decoder_layers: int = 2,
@@ -41,9 +41,11 @@ class LightningGrammarModule(pl.LightningModule):
         lr: float = 0.01,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
         offline: bool = False,
+        next_token_pick_mode: str = "max",  # "max" or "sample"
     ):
         """
 
+        :param next_token_pick_mode:
         :param dim_feedforward:
         :param test_prompt_length:
         :param max_pred_length:
@@ -61,7 +63,7 @@ class LightningGrammarModule(pl.LightningModule):
             num_heads=self.hparams.num_heads,
             num_decoder_layers=self.hparams.num_decoder_layers,
             dropout_p=self.hparams.dropout_p,
-            dim_feedforward=dim_feedforward,
+            dim_feedforward=self.hparams.dim_feedforward,
         )
 
     def configure_optimizers(self):
@@ -103,7 +105,7 @@ class LightningGrammarModule(pl.LightningModule):
         self.log(f"{panel_name}/loss", loss)
 
         # pick most likely token and calculate and log accuracy
-        pred_tokens = self._pick_most_likely_tokens(pred)
+        pred_tokens = self._pick_next_tokens(pred)
         accuracy = torch.sum(pred_tokens == y_expected) / y_expected.numel()
         self.log(f"{panel_name}/accuracy", accuracy)
 
@@ -280,7 +282,7 @@ class LightningGrammarModule(pl.LightningModule):
             pred = pred.permute(1, 2, 0)
 
             # pick the prediction for the last token only
-            next_items = self._pick_most_likely_tokens(pred)[:, -1].view(-1, 1)
+            next_items = self._pick_next_tokens(pred)[:, -1].view(-1, 1)
 
             # Concatenate previous input with predicted best word
             prompt = torch.cat((prompt, next_items), dim=1)
@@ -292,9 +294,18 @@ class LightningGrammarModule(pl.LightningModule):
                 break
         return prompt.long().to(self.hparams.device)
 
-    def _pick_most_likely_tokens(self, pred: torch.Tensor) -> torch.Tensor:
-        _, next_items = torch.max(pred, dim=1)
-        return next_items.to(self.hparams.device)  # type: ignore
+    def _pick_next_tokens(self, pred: torch.Tensor) -> torch.Tensor:
+        if self.hparams.next_token_pick_mode == "max":
+            _, next_items = torch.max(pred, dim=1)
+        elif self.hparams.next_token_pick_mode == "sample":
+            next_items = torch.multinomial(
+                torch.softmax(pred.squeeze(), dim=1).T, num_samples=1
+            ).T
+        else:
+            raise ValueError(
+                f"Unknown next_token_pick_mode: {self.hparams.next_token_pick_mode}, should be 'max' or 'sample'"
+            )
+        return next_items.to(self.hparams.device)
 
     def on_fit_end(self) -> None:
         self._sync_wandb()
