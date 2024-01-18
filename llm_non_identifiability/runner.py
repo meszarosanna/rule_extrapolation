@@ -11,6 +11,7 @@ import torch.nn as nn
 from llm_non_identifiability.data import (
     check_same_number_as_bs,
     check_as_before_bs,
+    SOS_token,
     EOS_token,
     PAD_token,
     check_sequence_finished,
@@ -67,6 +68,10 @@ class LightningGrammarModule(pl.LightningModule):
             dim_feedforward=self.hparams.dim_feedforward,
         )
 
+    @property
+    def data_entropy(self):
+        return math.log(self.trainer.datamodule.hparams.max_length, math.e)
+
     def configure_optimizers(self):
         return torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr)
 
@@ -96,13 +101,7 @@ class LightningGrammarModule(pl.LightningModule):
         if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
             # log entropy of the test prompts = entropy of the distribution of the prompt lengths
             # log as a summary item
-            self.logger.experiment.summary[
-                "train_prompts_entropy"
-            ] = self.train_prompts_entropy
-
-    @property
-    def train_prompts_entropy(self):
-        return math.log(self.trainer.datamodule.max_length, base=math.e)
+            self.logger.experiment.summary["data_entropy"] = self.data_entropy
 
     def training_step(self, batch, batch_idx):
         panel_name = "Train"
@@ -116,7 +115,7 @@ class LightningGrammarModule(pl.LightningModule):
         X, y, y_expected, pred, loss = self._forward(batch)
         self.log(f"{panel_name}/loss", loss)
 
-        self.log(f"{panel_name}/kl", loss - self.train_prompts_entropy)
+        self.log(f"{panel_name}/kl", loss - self.data_entropy)
 
         # pick most likely token and calculate and log accuracy
         pred_tokens = self._pick_next_tokens(pred)
@@ -132,6 +131,10 @@ class LightningGrammarModule(pl.LightningModule):
             ood_same_number_as_bs_accuracy,
             ood_finished_accuracy,
             ood_grammatical_accuracy,
+            sos_as_before_bs_accuracy,
+            sos_same_number_as_bs_accuracy,
+            sos_finished_accuracy,
+            sos_grammatical_accuracy,
         ) = self._eval_prompt_prediction()
         self.log(f"{panel_name}/as_before_bs_accuracy", as_before_bs_accuracy)
         self.log(f"{panel_name}/same_number_as_bs_accuracy", same_number_as_bs_accuracy)
@@ -145,6 +148,14 @@ class LightningGrammarModule(pl.LightningModule):
         )
         self.log(f"{panel_name}/ood_finished_accuracy", ood_finished_accuracy)
         self.log(f"{panel_name}/ood_grammatical_accuracy", ood_grammatical_accuracy)
+
+        self.log(f"{panel_name}/sos_as_before_bs_accuracy", sos_as_before_bs_accuracy)
+        self.log(
+            f"{panel_name}/sos_same_number_as_bs_accuracy",
+            sos_same_number_as_bs_accuracy,
+        )
+        self.log(f"{panel_name}/sos_finished_accuracy", sos_finished_accuracy)
+        self.log(f"{panel_name}/sos_grammatical_accuracy", sos_grammatical_accuracy)
 
         return loss
 
@@ -175,6 +186,22 @@ class LightningGrammarModule(pl.LightningModule):
             self.test_prompts_out_of_distribution, max_length
         )
 
+        # prompt prediction for a batch of SOS tokens
+        sos_prompts = (
+            torch.ones(
+                (self.trainer.datamodule.hparams.batch_size, 1),
+                dtype=torch.long,
+                device=self.hparams.device,
+            )
+            * SOS_token.item()
+        )
+        (
+            sos_as_before_bs_accuracy,
+            sos_finished_accuracy,
+            sos_same_number_as_bs_accuracy,
+            sos_grammatical_accuracy,
+        ) = self._calc_prompt_pred_metrics(sos_prompts, max_length)
+
         return (
             as_before_bs_accuracy,
             same_number_as_bs_accuracy,
@@ -184,6 +211,10 @@ class LightningGrammarModule(pl.LightningModule):
             ood_same_number_as_bs_accuracy,
             ood_finished_accuracy,
             ood_grammatical_accuracy,
+            sos_as_before_bs_accuracy,
+            sos_same_number_as_bs_accuracy,
+            sos_finished_accuracy,
+            sos_grammatical_accuracy,
         )
 
     def _calc_prompt_pred_metrics(self, prompts, max_length):
