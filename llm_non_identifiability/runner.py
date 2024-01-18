@@ -68,7 +68,7 @@ class LightningGrammarModule(pl.LightningModule):
             num_decoder_layers=self.hparams.num_decoder_layers,
             dropout_p=self.hparams.dropout_p,
             dim_feedforward=self.hparams.dim_feedforward,
-            layer_norm_eps=layer_norm_eps,
+            layer_norm_eps=self.hparams.layer_norm_eps,
         )
 
     @property
