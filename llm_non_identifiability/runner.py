@@ -253,11 +253,7 @@ class LightningGrammarModule(pl.LightningModule):
         )
 
     def _calc_prompt_pred_metrics(self, prompts, max_length):
-        prompt_pred = self._predict(
-            max_length=max_length,
-            src=self.test_prompts_src,
-            prompt=prompts,
-        )
+        prompt_pred = self._predict(max_length=max_length, prompt=prompts)
 
         as_before_bs = [check_as_before_bs(p) for p in prompt_pred]
         same_number_as_bs = [check_same_number_as_bs(p) for p in prompt_pred]
@@ -322,17 +318,11 @@ class LightningGrammarModule(pl.LightningModule):
         """
         X, y = batch
 
-        return self._predict(X[0].view(1, -1), max_length, prompt)
+        return self._predict(max_length, prompt)
 
-    def _predict(
-        self,
-        src: torch.Tensor,
-        max_length: int = 32,
-        prompt: Optional[torch.Tensor] = None,
-    ):
+    def _predict(self, max_length: int = 32, prompt: Optional[torch.Tensor] = None):
         """
         Inner method for predicting a sequence.
-        :param src: tensor of sequence(s) to "condition" the prediction on
         :param max_length: maximum sequence length for the prediction
         :param prompt: optional prompt to start the prediction
         :return:
@@ -378,9 +368,19 @@ class LightningGrammarModule(pl.LightningModule):
         if self.hparams.next_token_pick_mode == "max":
             _, next_items = torch.max(pred, dim=1)
         elif self.hparams.next_token_pick_mode == "sample":
-            next_items = torch.multinomial(
-                torch.softmax(pred.squeeze(), dim=1).T, num_samples=1
-            ).T
+            if len(pred.shape) > 2 and len(pred.squeeze().shape) != 2:
+                next_items = torch.cat(
+                    [
+                        torch.multinomial(
+                            torch.softmax(p.squeeze(), dim=1).T, num_samples=1
+                        ).T
+                        for p in pred
+                    ]
+                )
+            else:
+                next_items = torch.multinomial(
+                    torch.softmax(pred.squeeze(), dim=1).T, num_samples=1
+                ).T
         else:
             raise ValueError(
                 f"Unknown next_token_pick_mode: {self.hparams.next_token_pick_mode}, should be 'max' or 'sample'"
