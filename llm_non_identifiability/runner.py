@@ -73,7 +73,9 @@ class LightningGrammarModule(pl.LightningModule):
 
     @property
     def data_entropy(self):
-        return math.log(self.trainer.datamodule.hparams.max_length // 2, math.e)
+        return (
+            math.log(n := (self.trainer.datamodule.hparams.max_length // 2), math.e) / n
+        )
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr)
