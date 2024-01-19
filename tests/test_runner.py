@@ -24,25 +24,25 @@ def test_predict_inner(max_length, device, next_token_pick_mode):
 
     # Here we test some examples to observe how the model predicts
     examples = [
-        torch.tensor(
-            [[SOS_token.item(), 0, 0, 0, 0, 1, 1, 1, 1, EOS_token.item()]],
-            dtype=torch.long,
-            device=device,
-        ),
+        # torch.tensor(
+        #     [[SOS_token.item(), 0, 0, 0, 0, 1, 1, 1, 1, ]],
+        #     dtype=torch.long,
+        #     device=device,
+        # ),
         torch.tensor(
             [
-                [SOS_token.item(), 0, 0, 0, 1, 1, 1, EOS_token.item()],
-                [SOS_token.item(), 0, 0, 1, 0, 1, 1, EOS_token.item()],
+                [SOS_token.item(), 0, 0, 0, 1, 1, 1],
+                [SOS_token.item(), 0, 0, 1, 0, 1, 1],
             ],
             dtype=torch.long,
             device=device,
         ),
-        torch.tensor(
-            [[SOS_token.item(), 0, 1, EOS_token.item()]],
-            dtype=torch.long,
-            device=device,
-        ),
+        # torch.tensor(
+        #     [[SOS_token.item(), 0, 1, ]],
+        #     dtype=torch.long,
+        #     device=device,
+        # ),
     ]
 
-    for idx, example in enumerate(examples):
-        runner._predict(max_length=max_length)
+    for example in examples:
+        runner._predict(prompt=example, max_length=max_length)

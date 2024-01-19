@@ -368,9 +368,19 @@ class LightningGrammarModule(pl.LightningModule):
         if self.hparams.next_token_pick_mode == "max":
             _, next_items = torch.max(pred, dim=1)
         elif self.hparams.next_token_pick_mode == "sample":
-            next_items = torch.multinomial(
-                torch.softmax(pred.squeeze(), dim=1).T, num_samples=1
-            ).T
+            if len(pred.shape) > 2 and len(pred.squeeze().shape) != 2:
+                next_items = torch.cat(
+                    [
+                        torch.multinomial(
+                            torch.softmax(p.squeeze(), dim=1).T, num_samples=1
+                        ).T
+                        for p in pred
+                    ]
+                )
+            else:
+                next_items = torch.multinomial(
+                    torch.softmax(pred.squeeze(), dim=1).T, num_samples=1
+                ).T
         else:
             raise ValueError(
                 f"Unknown next_token_pick_mode: {self.hparams.next_token_pick_mode}, should be 'max' or 'sample'"
