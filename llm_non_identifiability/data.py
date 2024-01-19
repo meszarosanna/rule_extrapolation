@@ -140,6 +140,17 @@ def check_same_number_as_bs(sequence: torch.Tensor):
     return num_as == num_bs
 
 
+def check_more_as_than_bs(sequence: torch.Tensor):
+    """
+    Check if there are more a's than b's
+    :param sequence:
+    :return:
+    """
+    num_as = torch.sum(sequence == 0)
+    num_bs = torch.sum(sequence == 1)
+    return num_as >= num_bs
+
+
 def check_sequence_finished(sequence: torch.Tensor):
     """
     Check if the sequence is finished (EOS token)
