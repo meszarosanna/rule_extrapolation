@@ -26,14 +26,14 @@ parameters:
   model.test_prompt_length:
     value: 7
   model.max_pred_length:
-    value: 514
+    value: 258
   model.lr:
     value: 0.003
   model.layer_norm_eps:
     values: [3e-3, 1e-2]
   data.max_length:
-    value: 512
-  data.batch_size:
     value: 256
+  data.batch_size:
+    value: 128
   seed_everything:
     values: [ 42, 64, 982, 5748, 23567 ]
