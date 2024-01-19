@@ -45,4 +45,4 @@ def test_predict_inner(max_length, device, next_token_pick_mode):
     ]
 
     for idx, example in enumerate(examples):
-        runner._predict(max_length=max_length, src=example)
+        runner._predict(max_length=max_length)

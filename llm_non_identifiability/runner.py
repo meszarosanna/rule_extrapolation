@@ -253,11 +253,7 @@ class LightningGrammarModule(pl.LightningModule):
         )
 
     def _calc_prompt_pred_metrics(self, prompts, max_length):
-        prompt_pred = self._predict(
-            max_length=max_length,
-            src=self.test_prompts_src,
-            prompt=prompts,
-        )
+        prompt_pred = self._predict(max_length=max_length, prompt=prompts)
 
         as_before_bs = [check_as_before_bs(p) for p in prompt_pred]
         same_number_as_bs = [check_same_number_as_bs(p) for p in prompt_pred]
@@ -322,17 +318,11 @@ class LightningGrammarModule(pl.LightningModule):
         """
         X, y = batch
 
-        return self._predict(X[0].view(1, -1), max_length, prompt)
+        return self._predict(max_length, prompt)
 
-    def _predict(
-        self,
-        src: torch.Tensor,
-        max_length: int = 32,
-        prompt: Optional[torch.Tensor] = None,
-    ):
+    def _predict(self, max_length: int = 32, prompt: Optional[torch.Tensor] = None):
         """
         Inner method for predicting a sequence.
-        :param src: tensor of sequence(s) to "condition" the prediction on
         :param max_length: maximum sequence length for the prediction
         :param prompt: optional prompt to start the prediction
         :return:
