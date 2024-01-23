@@ -146,9 +146,36 @@ class LightningGrammarModule(pl.LightningModule):
             sos_prompts,
             sos_metrics,
         ) = self.eval_prompt_prediction()
+
         self._log_dict(name=f"{panel_name}/ID", dictionary=metrics.to_dict())
         self._log_dict(name=f"{panel_name}/OOD", dictionary=ood_metrics.to_dict())
         self._log_dict(name=f"{panel_name}/SOS", dictionary=sos_metrics.to_dict())
+
+        if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
+            logger: pl.loggers.wandb.WandbLogger = self.logger
+
+            # log the prompts
+            prompts2str = lambda prompts: [
+                "".join([str(t.item()) for t in p])
+                for p in prompts.cpu().numpy().tolist()
+            ]
+            # convert the prompt tensors to strings
+            prompts_str = prompts2str(prompts)
+            ood_prompts_str = prompts2str(ood_prompts)
+            sos_prompts_str = prompts2str(sos_prompts)
+
+            columns = ["completion"]
+
+            # data should be a list of lists
+            logger.log_text(
+                key="id_prompt_completions", columns=columns, data=prompts_str
+            )
+            logger.log_text(
+                key="ood_prompt_completions", columns=columns, data=ood_prompts_str
+            )
+            logger.log_text(
+                key="sos_prompt_completions", columns=columns, data=sos_prompts_str
+            )
 
     def _log_dict(self, name, dictionary):
         for key, value in dictionary.items():
@@ -279,7 +306,9 @@ class LightningGrammarModule(pl.LightningModule):
 
         return self._predict(max_length, prompt)
 
-    def _predict(self, max_length: int = 32, prompt: Optional[torch.Tensor] = None):
+    def _predict(
+        self, max_length: int = 32, prompt: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         """
         Inner method for predicting a sequence.
         :param max_length: maximum sequence length for the prediction
