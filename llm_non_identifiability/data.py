@@ -79,6 +79,41 @@ def generate_aNbN_grammar_data(
     return data
 
 
+def generate_aNbNaN_grammar_data(
+    num_samples: int,
+    max_length: int = 32,
+) -> list:
+    """
+    PCFG with two rules:
+    - number of a's is twice the number of b's
+    - N a's come first, followed by N b's, then N a's again
+
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+
+    """
+
+    lengths = np.random.randint(low=1, high=max_length // 3 + 1, size=num_samples)
+
+    data = []
+
+    for length in lengths:
+        data.append(
+            np.concatenate(
+                (
+                    SOS_token,
+                    np.zeros(length),
+                    np.ones(length),
+                    np.zeros(length),
+                    EOS_token,
+                )
+            )
+        )
+
+    return data
+
+
 def generate_abN_grammar_data(num_samples: int, max_length: int = 32) -> list:
     """
     PCFG with one rule:
