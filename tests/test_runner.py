@@ -7,9 +7,10 @@ from llm_non_identifiability.datamodule import GrammarDataModule
 from llm_non_identifiability.runner import LightningGrammarModule
 
 
-def test_fit_and_predict(num_train, num_val, num_test):
+@pytest.mark.parametrize("adversarial_training", [True, False])
+def test_fit_and_predict(num_train, num_val, num_test, adversarial_training):
     trainer = Trainer(fast_dev_run=True)
-    runner = LightningGrammarModule()
+    runner = LightningGrammarModule(adversarial_training=adversarial_training)
     dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
     trainer.fit(runner, datamodule=dm)
 
@@ -22,11 +23,23 @@ def test_predict_inner(max_length, device, next_token_pick_mode):
 
     # Here we test some examples to observe how the model predicts
     examples = [
-        # torch.tensor(
-        #     [[SOS_token.item(), 0, 0, 0, 0, 1, 1, 1, 1, ]],
-        #     dtype=torch.long,
-        #     device=device,
-        # ),
+        torch.tensor(
+            [
+                [
+                    SOS_token.item(),
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1,
+                    1,
+                ]
+            ],
+            dtype=torch.long,
+            device=device,
+        ),
         torch.tensor(
             [
                 [SOS_token.item(), 0, 0, 0, 1, 1, 1],
@@ -35,11 +48,6 @@ def test_predict_inner(max_length, device, next_token_pick_mode):
             dtype=torch.long,
             device=device,
         ),
-        # torch.tensor(
-        #     [[SOS_token.item(), 0, 1, ]],
-        #     dtype=torch.long,
-        #     device=device,
-        # ),
     ]
 
     for example in examples:

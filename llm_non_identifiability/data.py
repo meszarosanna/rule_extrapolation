@@ -222,6 +222,12 @@ def generate_test_prompts(length: int = 6):
     symbols = [0, 1]
     prompts = torch.tensor(list(product(symbols, repeat=length)), dtype=torch.long)
 
+    # add SOS
+    prompts = torch.cat(
+        (torch.ones((prompts.shape[0], 1), dtype=torch.long) * SOS_token, prompts),
+        dim=1,
+    )
+
     return prompts
 
 
