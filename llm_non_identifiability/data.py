@@ -7,6 +7,20 @@ PAD_token = np.array([4])
 
 from itertools import product
 
+import dataclasses
+from typing import Dict
+
+
+@dataclasses.dataclass
+class GrammarMetrics:
+    as_before_bs_accuracy: float = 0.0
+    same_number_as_bs_accuracy: float = 0.0
+    finished_accuracy: float = 0.0
+    grammatical_accuracy: float = 0.0
+
+    def to_dict(self) -> Dict[str, float]:
+        return dataclasses.asdict(self)
+
 
 def generate_aNbN_grammar_data(
     num_samples: int, max_length: int = 32, all_sequences: bool = True
