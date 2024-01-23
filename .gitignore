@@ -1,8 +1,10 @@
 *.png
 *.svg
 
+
 wandb/*
 */wandb/*
+notebooks/artifacts/*
 *.sif
 *.egg-info/*
 
