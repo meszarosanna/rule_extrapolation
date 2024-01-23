@@ -17,21 +17,37 @@ from llm_non_identifiability.data import (
 
 
 def test_aNbN_grammar_equal_as_bs(num_samples, max_length):
-    sequences = generate_aNbN_grammar_data(num_samples, max_length)
+    sequences = generate_aNbN_grammar_data(num_samples, max_length, all_sequences=False)
     for sequence in sequences:
-        num_as = np.sum(sequence == 0)
-        num_bs = np.sum(sequence == 1)
-        assert num_as == num_bs
+        assert check_same_number_as_bs(sequence)
 
 
 def test_aNbN_grammar_as_before_bs(num_samples, max_length):
-    sequences = generate_aNbN_grammar_data(num_samples, max_length)
+    sequences = generate_aNbN_grammar_data(num_samples, max_length, all_sequences=False)
     for sequence in sequences:
-        # find the first b
-        first_b = np.where(sequence == 1)[0][0]
-        # find the last a
-        last_a = np.where(sequence == 0)[0][-1]
-        assert first_b > last_a
+        assert check_as_before_bs(sequence)
+
+
+def test_aNbN_grammar_all_sequences(num_samples, max_length):
+    sequences = generate_aNbN_grammar_data(num_samples, max_length, all_sequences=True)
+    lengths = sorted([len(sequence) - 2 for sequence in sequences])
+    assert lengths == list(range(2, max_length + 1, 2))
+
+
+def test_aNbN_grammar_only_even(num_samples, max_length):
+    sequences = generate_aNbN_grammar_data(
+        num_samples, max_length, only_even=True, all_sequences=False
+    )
+    lengths = sorted([len(sequence) - 2 for sequence in sequences])
+    assert lengths == list(range(4, max_length + 1, 4))
+
+
+def test_aNbN_grammar_only_odd(num_samples, max_length):
+    sequences = generate_aNbN_grammar_data(
+        num_samples, max_length, only_odd=True, all_sequences=False
+    )
+    lengths = sorted([len(sequence) - 2 for sequence in sequences])
+    assert lengths == list(range(2, max_length + 1, 4))
 
 
 def test_abN_equal_as_bs(num_samples, max_length):
@@ -45,13 +61,7 @@ def test_abN_equal_as_bs(num_samples, max_length):
 def test_aNbM_grammar_as_before_bs(num_samples, max_length):
     sequences = generate_aNbM_grammar_data(num_samples, max_length)
     for sequence in sequences:
-        # check only if there is an a
-        if np.sum(sequence == 0) > 0:
-            # find the first b
-            first_b = np.where(sequence == 1)[0][0]
-            # find the last a
-            last_a = np.where(sequence == 0)[0][-1]
-            assert first_b > last_a
+        assert check_as_before_bs(sequence)
 
 
 def test_pad_varying_sequence_lengths():

@@ -23,23 +23,37 @@ class GrammarMetrics:
 
 
 def generate_aNbN_grammar_data(
-    num_samples: int, max_length: int = 32, all_sequences: bool = True
+    num_samples: int,
+    max_length: int = 32,
+    all_sequences: bool = True,
+    only_even: bool = False,
+    only_odd: bool = False,
 ) -> list:
     """
     PCFG with two rules:
     - number of a's and b's must be the same
     - a's come first, followed by b's
 
+    :param only_even: generates only sequences with even number of a's and b's
+    :param only_odd: generates only sequences with odd number of a's and b's
     :param all_sequences: generates all sequences up to max_length (i.e., the longest will have max_length // 2 a's and b's)
     :param num_samples: number of samples
     :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
     :return: list of length num_samples with maximal sequences of length max_length
 
     """
+
+    if all_sequences + only_even + only_odd > 1:
+        raise ValueError("Only one of all_sequences, only_even, only_odd can be True")
+
     if all_sequences is True:
         lengths = np.linspace(
-            1, max_length // 2, max_length // 2, dtype=int, endpoint=True
+            start=1, stop=max_length // 2, num=max_length // 2, dtype=int, endpoint=True
         )
+    elif only_even is True:
+        lengths = np.array(list(range(2, max_length // 2 + 1, 2)))
+    elif only_odd is True:
+        lengths = np.array(list(range(1, max_length // 2 + 1, 2)))
     else:
         lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
 
@@ -128,6 +142,9 @@ def check_as_before_bs(sequence: torch.Tensor):
     :return:
     """
 
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
     if len(a_tokens := torch.where(sequence == 0)[0]) > 0:
         # find the last a
         last_a = a_tokens[-1]
@@ -149,6 +166,9 @@ def check_same_number_as_bs(sequence: torch.Tensor):
     :param sequence:
     :return:
     """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
     num_as = torch.sum(sequence == 0)
     num_bs = torch.sum(sequence == 1)
     return num_as == num_bs
@@ -160,6 +180,9 @@ def check_more_as_than_bs(sequence: torch.Tensor):
     :param sequence:
     :return:
     """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
     num_as = torch.sum(sequence == 0)
     num_bs = torch.sum(sequence == 1)
     return num_as >= num_bs
@@ -171,6 +194,8 @@ def check_sequence_finished(sequence: torch.Tensor):
     :param sequence:
     :return:
     """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
 
     # check whether there are no 0's or 1's in the sequence after the first EOS token
 
