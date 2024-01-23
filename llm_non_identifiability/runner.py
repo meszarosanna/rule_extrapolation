@@ -183,9 +183,8 @@ class LightningGrammarModule(pl.LightningModule):
             logger: pl.loggers.wandb.WandbLogger = self.logger
 
             # log the prompts
-            prompts2str = lambda prompts: [
-                "".join([str(t.item()) for t in p])
-                for p in prompts.cpu().numpy().tolist()
+            prompts2str = lambda data: [
+                ["".join([str(t) for t in p])] for p in data.cpu().numpy().tolist()
             ]
             # convert the prompt tensors to strings
             prompts_str = prompts2str(prompts)
