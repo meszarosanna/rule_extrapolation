@@ -1,15 +1,12 @@
-# Importing necessary libraries
+import math
 import subprocess
 from os.path import dirname
 from typing import Optional, Dict, Any
-import math
 
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 
-
-import llm_non_identifiability.data
 from llm_non_identifiability.data import (
     check_same_number_as_bs,
     check_as_before_bs,
@@ -53,9 +50,11 @@ class LightningGrammarModule(pl.LightningModule):
         grammar: str = "aNbN",
         max_data_length: int = 256,
         batch_size: int = 64,
+        adversarial_training: bool = False,
     ):
         """
 
+        :param adversarial_training:
         :param batch_size:
         :param max_data_length:
         :param grammar:
@@ -119,10 +118,37 @@ class LightningGrammarModule(pl.LightningModule):
             # log as a summary item
             self.logger.experiment.summary["data_entropy"] = self.data_entropy
 
+        self.__setup_adversarial_prompts()
+
+    def __setup_adversarial_prompts(self) -> None:
+        """
+        Setup the prompts for adversarial training from the OOD test prompts
+        """
+
+        if self.hparams.adversarial_training is True:
+            self.adversarial_prompts = torch.cat(
+                (
+                    self.test_prompts_out_of_distribution,
+                    torch.ones(
+                        (self.test_prompts_out_of_distribution.shape[0], 1),
+                        dtype=torch.long,
+                        device=self.hparams.device,
+                    )
+                    * EOS_token,
+                ),
+                dim=1,
+            )
+
     def training_step(self, batch, batch_idx):
         panel_name = "Train"
         _, _, _, loss = self._forward(batch)
         self.log(f"{panel_name}/loss", loss)
+
+        if self.hparams.adversarial_training is True:
+            _, _, _, loss_adversarial = self._forward(self.adversarial_prompts)
+            self.log(f"{panel_name}/loss_adversarial", loss_adversarial)
+
+            loss += loss_adversarial
 
         return loss
 
