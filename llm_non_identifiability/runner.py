@@ -53,10 +53,6 @@ class LightningGrammarModule(pl.LightningModule):
         relu_rescale: float = 1.0,
         adversarial_training: bool = False,
     ):
-        
-
-
-        
         """
         :param relu_rescale:
         :param adversarial_training:
