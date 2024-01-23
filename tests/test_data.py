@@ -1,5 +1,8 @@
+import numpy as np
 import pytest
+import torch
 
+from llm_non_identifiability.data import check_as_before_bs, check_same_number_as_bs
 from llm_non_identifiability.data import (
     generate_aNbN_grammar_data,
     generate_abN_grammar_data,
@@ -11,12 +14,6 @@ from llm_non_identifiability.data import (
     generate_test_prompts,
     grammar_rules,
 )
-
-import numpy as np
-
-import torch
-
-from llm_non_identifiability.data import check_as_before_bs, check_same_number_as_bs
 
 
 def test_aNbN_grammar_equal_as_bs(num_samples, max_length):

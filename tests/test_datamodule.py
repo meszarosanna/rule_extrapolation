@@ -1,16 +1,6 @@
-from llm_non_identifiability.datamodule import GrammarDataModule
-
-from llm_non_identifiability.data import (
-    generate_aNbN_grammar_data,
-    generate_abN_grammar_data,
-    generate_aNbM_grammar_data,
-    pad,
-    grammar_rules,
-)
-
 import pytest
 
-import torch
+from llm_non_identifiability.datamodule import GrammarDataModule
 
 
 @pytest.mark.parametrize("grammar", ["aNbN", "abN", "aNbM"])
