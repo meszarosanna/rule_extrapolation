@@ -1,3 +1,5 @@
+import pytest
+
 from llm_non_identifiability.data import (
     generate_aNbN_grammar_data,
     generate_abN_grammar_data,
@@ -7,6 +9,7 @@ from llm_non_identifiability.data import (
     check_sequence_finished,
     EOS_token,
     generate_test_prompts,
+    grammar_rules,
 )
 
 import numpy as np
@@ -119,3 +122,25 @@ def test_generate_test_prompts():
     prompts = generate_test_prompts(6)
 
     assert prompts.shape == (2**6, 6)
+
+
+@pytest.mark.parametrize("grammar", ["aNbN", "abN", "aNbM"])
+def test_grammar_rules(max_length, grammar, num_samples):
+    rules = grammar_rules(grammar)
+
+    aNbN_data = torch.from_numpy(
+        pad(generate_aNbN_grammar_data(num_samples=num_samples, max_length=max_length))
+    ).long()
+    abN_data = torch.from_numpy(
+        pad(generate_abN_grammar_data(num_samples=num_samples, max_length=max_length))
+    ).long()
+    aNbM_data = torch.from_numpy(
+        pad(generate_aNbM_grammar_data(num_samples=num_samples, max_length=max_length))
+    ).long()
+
+    if grammar == "aNbN":
+        assert torch.all(torch.tensor([rules(d) for d in aNbN_data]))
+    elif grammar == "abN":
+        assert torch.all(torch.tensor([rules(d) for d in abN_data]))
+    elif grammar == "aNbM":
+        assert torch.all(torch.tensor([rules(d) for d in aNbM_data]))
