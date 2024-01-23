@@ -16,10 +16,9 @@ class GrammarDataset(Dataset):
         # pad the data
         self.max_length = max_length
         self.data = torch.from_numpy(pad(data, max_seq_length=self.max_length)).long()
-        self.labels = self.data.clone()
 
     def __len__(self) -> int:
         return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx], self.labels[idx]
+        return self.data[idx]

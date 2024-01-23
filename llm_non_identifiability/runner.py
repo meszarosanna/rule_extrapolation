@@ -121,21 +121,21 @@ class LightningGrammarModule(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         panel_name = "Train"
-        _, _, _, _, loss = self._forward(batch)
+        _, _, _, loss = self._forward(batch)
         self.log(f"{panel_name}/loss", loss)
 
         return loss
 
     def validation_step(self, batch, batch_idx):
         panel_name = "Val"
-        X, y, y_expected, pred, loss = self._forward(batch)
+        X, X_expected, pred, loss = self._forward(batch)
         self.log(f"{panel_name}/loss", loss)
 
         self.log(f"{panel_name}/kl", loss - self.data_entropy)
 
         # pick most likely token and calculate and log accuracy
         pred_tokens = self._pick_next_tokens(pred)
-        accuracy = torch.sum(pred_tokens == y_expected) / y_expected.numel()
+        accuracy = torch.sum(pred_tokens == X_expected) / X_expected.numel()
         self.log(f"{panel_name}/accuracy", accuracy)
 
         (
@@ -258,34 +258,33 @@ class LightningGrammarModule(pl.LightningModule):
 
         return (prompts, metrics)
 
-    def _forward(self, batch):
+    def _forward(self, X):
         """
         Forward pass for calculating the model predictions and the loss.
-        :param batch:
+        :param X:
         :return:
         """
-        X, y = batch
 
         # Now we shift the tgt by one so with the <SOS> we predict the token at pos 1
-        y_input = y[:, :-1]
-        y_expected = y[:, 1:]
+        X_input = X[:, :-1]
+        X_expected = X[:, 1:]
 
         # Get mask to mask out the next words
-        causal_mask = get_tgt_mask(y_input.size(1), device=self.hparams.device)
+        causal_mask = get_tgt_mask(X_input.size(1), device=self.hparams.device)
 
-        # Standard training except we pass in y_input and causal_mask
+        # Standard training except we pass in X_input and causal_mask
         pred = self.model(
-            src=y_input,
+            src=X_input,
             mask=causal_mask,
-            src_key_padding_mask=create_pad_mask(y_input),
+            src_key_padding_mask=create_pad_mask(X_input),
         )
 
         # Permute pred to have batch size first again
         pred = pred.permute(1, 2, 0)
 
-        loss = self.hparams.loss_fn(pred, y_expected)
+        loss = self.hparams.loss_fn(pred, X_expected)
 
-        return X, y, y_expected, pred, loss
+        return X, X_expected, pred, loss
 
     def predict_step(  # type: ignore
         self,
@@ -302,7 +301,6 @@ class LightningGrammarModule(pl.LightningModule):
         :param max_length: maximum sequence length for the prediction
         :return:
         """
-        X, y = batch
 
         return self._predict(max_length, prompt)
 
