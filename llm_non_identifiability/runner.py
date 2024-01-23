@@ -8,6 +8,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 
+
 import llm_non_identifiability.data
 from llm_non_identifiability.data import (
     check_same_number_as_bs,
@@ -19,6 +20,7 @@ from llm_non_identifiability.data import (
     generate_test_prompts,
     grammar_rules,
     prompt_grammar_rules,
+    GrammarMetrics,
 )
 from llm_non_identifiability.model import (
     TransformerDecoder,
@@ -138,59 +140,28 @@ class LightningGrammarModule(pl.LightningModule):
 
         (
             prompts,
-            as_before_bs_accuracy,
-            same_number_as_bs_accuracy,
-            finished_accuracy,
-            grammatical_accuracy,
+            metrics,
             ood_prompts,
-            ood_as_before_bs_accuracy,
-            ood_same_number_as_bs_accuracy,
-            ood_finished_accuracy,
-            ood_grammatical_accuracy,
+            ood_metrics,
             sos_prompts,
-            sos_as_before_bs_accuracy,
-            sos_same_number_as_bs_accuracy,
-            sos_finished_accuracy,
-            sos_grammatical_accuracy,
+            sos_metrics,
         ) = self._eval_prompt_prediction()
-        self.log(f"{panel_name}/as_before_bs_accuracy", as_before_bs_accuracy)
-        self.log(f"{panel_name}/same_number_as_bs_accuracy", same_number_as_bs_accuracy)
-        self.log(f"{panel_name}/finished_accuracy", finished_accuracy)
-        self.log(f"{panel_name}/grammatical_accuracy", grammatical_accuracy)
+        self._log_dict(name=f"{panel_name}/ID", dictionary=metrics.to_dict())
+        self._log_dict(name=f"{panel_name}/OOD", dictionary=ood_metrics.to_dict())
+        self._log_dict(name=f"{panel_name}/SOS", dictionary=sos_metrics.to_dict())
 
-        self.log(f"{panel_name}/ood_as_before_bs_accuracy", ood_as_before_bs_accuracy)
-        self.log(
-            f"{panel_name}/ood_same_number_as_bs_accuracy",
-            ood_same_number_as_bs_accuracy,
-        )
-        self.log(f"{panel_name}/ood_finished_accuracy", ood_finished_accuracy)
-        self.log(f"{panel_name}/ood_grammatical_accuracy", ood_grammatical_accuracy)
-
-        self.log(f"{panel_name}/sos_as_before_bs_accuracy", sos_as_before_bs_accuracy)
-        self.log(
-            f"{panel_name}/sos_same_number_as_bs_accuracy",
-            sos_same_number_as_bs_accuracy,
-        )
-        self.log(f"{panel_name}/sos_finished_accuracy", sos_finished_accuracy)
-        self.log(f"{panel_name}/sos_grammatical_accuracy", sos_grammatical_accuracy)
+    def _log_dict(self, name, dictionary):
+        for key, value in dictionary.items():
+            self.log(f"{name}/{key}", value)
 
     def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
         (
             prompts,
-            as_before_bs_accuracy,
-            same_number_as_bs_accuracy,
-            finished_accuracy,
-            grammatical_accuracy,
+            metrics,
             ood_prompts,
-            ood_as_before_bs_accuracy,
-            ood_same_number_as_bs_accuracy,
-            ood_finished_accuracy,
-            ood_grammatical_accuracy,
+            ood_metrics,
             sos_prompts,
-            sos_as_before_bs_accuracy,
-            sos_same_number_as_bs_accuracy,
-            sos_finished_accuracy,
-            sos_grammatical_accuracy,
+            sos_metrics,
         ) = self._eval_prompt_prediction()
 
         checkpoint["prompts"] = prompts.cpu().numpy()
@@ -208,20 +179,14 @@ class LightningGrammarModule(pl.LightningModule):
 
         (
             prompts,
-            as_before_bs_accuracy,
-            finished_accuracy,
-            same_number_as_bs_accuracy,
-            grammatical_accuracy,
+            metrics,
         ) = self._calc_prompt_pred_metrics(
             self.test_prompts_in_distribution, max_length
         )
 
         (
             ood_prompts,
-            ood_as_before_bs_accuracy,
-            ood_finished_accuracy,
-            ood_same_number_as_bs_accuracy,
-            ood_grammatical_accuracy,
+            ood_metrics,
         ) = self._calc_prompt_pred_metrics(
             self.test_prompts_out_of_distribution, max_length
         )
@@ -237,28 +202,16 @@ class LightningGrammarModule(pl.LightningModule):
         )
         (
             sos_prompts,
-            sos_as_before_bs_accuracy,
-            sos_finished_accuracy,
-            sos_same_number_as_bs_accuracy,
-            sos_grammatical_accuracy,
+            sos_metrics,
         ) = self._calc_prompt_pred_metrics(sos_prompts, max_length)
 
         return (
             prompts,
-            as_before_bs_accuracy,
-            same_number_as_bs_accuracy,
-            finished_accuracy,
-            grammatical_accuracy,
+            metrics,
             ood_prompts,
-            ood_as_before_bs_accuracy,
-            ood_same_number_as_bs_accuracy,
-            ood_finished_accuracy,
-            ood_grammatical_accuracy,
+            ood_metrics,
             sos_prompts,
-            sos_as_before_bs_accuracy,
-            sos_same_number_as_bs_accuracy,
-            sos_finished_accuracy,
-            sos_grammatical_accuracy,
+            sos_metrics,
         )
 
     def _calc_prompt_pred_metrics(self, prompts, max_length):
@@ -269,17 +222,14 @@ class LightningGrammarModule(pl.LightningModule):
         grammatical = [self.grammar_rules(p) for p in prompt_pred]
         finished = [check_sequence_finished(p) for p in prompt_pred]
 
-        as_before_bs_accuracy = sum(as_before_bs) / len(as_before_bs)
-        same_number_as_bs_accuracy = sum(same_number_as_bs) / len(same_number_as_bs)
-        finished_accuracy = sum(finished) / len(finished)
-        grammatical_accuracy = sum(grammatical) / len(grammatical)
-        return (
-            prompts,
-            as_before_bs_accuracy,
-            finished_accuracy,
-            same_number_as_bs_accuracy,
-            grammatical_accuracy,
+        metrics = GrammarMetrics(
+            as_before_bs_accuracy=sum(as_before_bs) / len(as_before_bs),
+            same_number_as_bs_accuracy=sum(same_number_as_bs) / len(same_number_as_bs),
+            finished_accuracy=sum(finished) / len(finished),
+            grammatical_accuracy=sum(grammatical) / len(grammatical),
         )
+
+        return (prompts, metrics)
 
     def _forward(self, batch):
         """
