@@ -51,9 +51,9 @@ def generate_aNbN_grammar_data(
             start=1, stop=max_length // 2, num=max_length // 2, dtype=int, endpoint=True
         )
     elif only_even is True:
-        lengths = list(range(2, max_length // 2 + 1, 2))
+        lengths = np.array(list(range(2, max_length // 2 + 1, 2)))
     elif only_odd is True:
-        lengths = list(range(1, max_length // 2 + 1, 2))
+        lengths = np.array(list(range(1, max_length // 2 + 1, 2)))
     else:
         lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
 
