@@ -12,7 +12,7 @@ metric:
   name: Val/loss
 parameters:
   trainer.max_epochs:
-      value: 25000
+      value: 35000
   model.dim_model:
     value:  8
   model.num_heads:
