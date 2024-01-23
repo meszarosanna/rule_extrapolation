@@ -78,12 +78,12 @@ class TransformerDecoder(nn.Module):
         dropout_p,
         dim_feedforward,
         layer_norm_eps,
-        relu_rescale: float = 0.0,
+        relu_rescale: float = 1.0,
     ):
         super().__init__()
 
         self.dim_model = dim_model
-        self.relu_rescale = relu_rescale
+        self.relu_rescale = nn.Parameter(torch.tensor(relu_rescale))
 
         # LAYERS
         self.positional_encoder = PositionalEncoding(
@@ -99,7 +99,7 @@ class TransformerDecoder(nn.Module):
             layer_norm_eps=layer_norm_eps,
         )
 
-        if self.relu_rescale > 0:
+        if self.relu_rescale > 0 and self.relu_rescale != 1.0:
             layer.activation = (
                 lambda x: F.relu(x * self.relu_rescale) / self.relu_rescale
             )

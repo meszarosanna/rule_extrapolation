@@ -53,7 +53,7 @@ class LightningGrammarModule(pl.LightningModule):
         grammar: str = "aNbN",
         max_data_length: int = 256,
         batch_size: int = 64,
-        relu_rescale: float = 0.0,
+        relu_rescale: float = 1.0,
     ):
         """
 

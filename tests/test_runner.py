@@ -1,12 +1,10 @@
+import pytest
+import torch
 from pytorch_lightning.trainer import Trainer
 
+from llm_non_identifiability.data import SOS_token
 from llm_non_identifiability.datamodule import GrammarDataModule
 from llm_non_identifiability.runner import LightningGrammarModule
-from llm_non_identifiability.data import EOS_token, SOS_token
-
-import torch
-
-import pytest
 
 
 def test_fit_and_predict(num_train, num_val, num_test):
