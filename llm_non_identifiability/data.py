@@ -7,6 +7,20 @@ PAD_token = np.array([4])
 
 from itertools import product
 
+import dataclasses
+from typing import Dict
+
+
+@dataclasses.dataclass
+class GrammarMetrics:
+    as_before_bs_accuracy: float = 0.0
+    same_number_as_bs_accuracy: float = 0.0
+    finished_accuracy: float = 0.0
+    grammatical_accuracy: float = 0.0
+
+    def to_dict(self) -> Dict[str, float]:
+        return dataclasses.asdict(self)
+
 
 def generate_aNbN_grammar_data(
     num_samples: int, max_length: int = 32, all_sequences: bool = True
@@ -184,3 +198,38 @@ def generate_test_prompts(length: int = 6):
     prompts = torch.tensor(list(product(symbols, repeat=length)), dtype=torch.long)
 
     return prompts
+
+
+def grammar_rules(grammar):
+    """
+    Selects the rules the grammar needs to satisfy.
+    :param grammar:
+    """
+    if grammar == "aNbN":
+        return lambda x: check_same_number_as_bs(x) and check_as_before_bs(x)
+    elif grammar == "abN":
+        return lambda x: check_same_number_as_bs(x)
+    elif grammar == "aNbM":
+        return lambda x: check_as_before_bs(x)
+    else:
+        raise ValueError(f"Unknown grammar {grammar}")
+
+
+def prompt_grammar_rules(grammar):
+    """
+    Selects the rules that check whether a prompt can be completed as such that it satisfies the rules of the grammar.
+    It is used to split the test_prompts into in-distribution and out-of-distribution.
+
+    NOTE: these rules are LESS strict than the grammar_rules, because even if the prompt does not satisfy the grammar rules,
+    it might be completed as such that it does.
+    :param grammar:
+
+    """
+    if grammar == "aNbN":
+        return lambda x: check_as_before_bs(x) and check_more_as_than_bs(x)
+    elif grammar == "abN":
+        return lambda x: True
+    elif grammar == "aNbM":
+        return lambda x: check_as_before_bs(x)
+    else:
+        raise ValueError(f"Unknown grammar {grammar}")
