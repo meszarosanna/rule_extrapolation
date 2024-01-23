@@ -50,10 +50,15 @@ class LightningGrammarModule(pl.LightningModule):
         grammar: str = "aNbN",
         max_data_length: int = 256,
         batch_size: int = 64,
+        relu_rescale: float = 1.0,
         adversarial_training: bool = False,
     ):
-        """
+        
 
+
+        
+        """
+        :param relu_rescale:
         :param adversarial_training:
         :param batch_size:
         :param max_data_length:
@@ -79,6 +84,7 @@ class LightningGrammarModule(pl.LightningModule):
             dropout_p=self.hparams.dropout_p,
             dim_feedforward=self.hparams.dim_feedforward,
             layer_norm_eps=self.hparams.layer_norm_eps,
+            relu_rescale=self.hparams.relu_rescale,
         )
 
         self.grammar_rules = grammar_rules(self.hparams.grammar)

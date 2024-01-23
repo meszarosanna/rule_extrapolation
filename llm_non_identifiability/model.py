@@ -2,6 +2,8 @@ import math
 
 import torch
 from torch import nn as nn
+import torch.nn.functional as F
+
 
 from llm_non_identifiability.data import PAD_token
 
@@ -76,10 +78,12 @@ class TransformerDecoder(nn.Module):
         dropout_p,
         dim_feedforward,
         layer_norm_eps,
+        relu_rescale: float = 1.0,
     ):
         super().__init__()
 
         self.dim_model = dim_model
+        self.relu_rescale = nn.Parameter(torch.tensor(relu_rescale))
 
         # LAYERS
         self.positional_encoder = PositionalEncoding(
@@ -87,14 +91,20 @@ class TransformerDecoder(nn.Module):
         )
         self.embedding = nn.Embedding(num_tokens, dim_model)
 
-        layers = nn.TransformerEncoderLayer(
+        layer = nn.TransformerEncoderLayer(
             d_model=dim_model,
             nhead=num_heads,
             dropout=dropout_p,
             dim_feedforward=dim_feedforward,
             layer_norm_eps=layer_norm_eps,
         )
-        self.decoder = nn.TransformerEncoder(layers, num_decoder_layers)
+
+        if self.relu_rescale > 0 and self.relu_rescale != 1.0:
+            layer.activation = (
+                lambda x: F.relu(x * self.relu_rescale) / self.relu_rescale
+            )
+
+        self.decoder = nn.TransformerEncoder(layer, num_decoder_layers)
 
         self.out = nn.Linear(dim_model, num_tokens)
 
