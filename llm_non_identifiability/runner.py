@@ -145,7 +145,7 @@ class LightningGrammarModule(pl.LightningModule):
             ood_metrics,
             sos_prompts,
             sos_metrics,
-        ) = self._eval_prompt_prediction()
+        ) = self.eval_prompt_prediction()
         self._log_dict(name=f"{panel_name}/ID", dictionary=metrics.to_dict())
         self._log_dict(name=f"{panel_name}/OOD", dictionary=ood_metrics.to_dict())
         self._log_dict(name=f"{panel_name}/SOS", dictionary=sos_metrics.to_dict())
@@ -162,7 +162,7 @@ class LightningGrammarModule(pl.LightningModule):
             ood_metrics,
             sos_prompts,
             sos_metrics,
-        ) = self._eval_prompt_prediction()
+        ) = self.eval_prompt_prediction()
 
         checkpoint["prompts"] = prompts.cpu().numpy()
         checkpoint["ood_prompts"] = ood_prompts.cpu().numpy()
@@ -173,7 +173,7 @@ class LightningGrammarModule(pl.LightningModule):
         ds = self.trainer.datamodule.test_dataset.data.view(-1)
         return ds[ds != PAD_token.item()].long().to(self.hparams.device)
 
-    def _eval_prompt_prediction(self, max_length: Optional[int] = None):
+    def eval_prompt_prediction(self, max_length: Optional[int] = None):
         if max_length is None:
             max_length = self.hparams.max_pred_length
 
