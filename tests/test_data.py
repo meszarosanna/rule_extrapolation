@@ -126,9 +126,10 @@ def test_check_sequence_finished():
 
 
 def test_generate_test_prompts():
-    prompts = generate_test_prompts(6)
+    length = 6
+    prompts = generate_test_prompts(length)
 
-    assert prompts.shape == (2**6, 6)
+    assert prompts.shape == (2**length, length + 1)
 
 
 @pytest.mark.parametrize("grammar", ["aNbN", "abN", "aNbM"])
