@@ -37,7 +37,6 @@ class LightningGrammarModule(pl.LightningModule):
         dim_model: int = 8,
         dim_feedforward: int = 256,
         num_heads: int = 4,
-        num_encoder_layers: int = 2,
         num_decoder_layers: int = 2,
         max_pred_length: int = 64,
         test_prompt_length: int = 6,
