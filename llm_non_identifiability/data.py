@@ -287,6 +287,26 @@ def check_more_as_than_bs(sequence: torch.Tensor):
     return num_as >= num_bs
 
 
+def check_more_as_before_bs(sequence: torch.Tensor):
+    """
+    Check if there are more a's than b's
+    :param sequence:
+    :return:
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+        first_b = b_tokens[0]
+
+        num_as = torch.sum(sequence[:first_b] == 0)
+        num_bs = torch.sum(sequence == 1)
+        return num_as >= num_bs
+
+    else:
+        return True
+
+
 def check_sequence_finished(sequence: torch.Tensor):
     """
     Check if the sequence is finished (EOS token)
@@ -341,6 +361,12 @@ def grammar_rules(grammar):
         return lambda x: check_same_number_as_bs(x)
     elif grammar == "aNbM":
         return lambda x: check_as_before_bs(x)
+    elif grammar == "aNbNaN":
+        return (
+            lambda x: check_twice_many_as_than_bs(x)
+            and check_bs_in_the_middle(x)
+            and check_bs_together(x)
+        )
     else:
         raise ValueError(f"Unknown grammar {grammar}")
 
@@ -361,5 +387,7 @@ def prompt_grammar_rules(grammar):
         return lambda x: True
     elif grammar == "aNbM":
         return lambda x: check_as_before_bs(x)
+    elif grammar == "aNbNaN":
+        return lambda x: check_as_before_bs(x) and check_bs_together(x)
     else:
         raise ValueError(f"Unknown grammar {grammar}")

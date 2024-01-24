@@ -14,6 +14,7 @@ from llm_non_identifiability.data import (
     check_twice_many_as_than_bs,
     check_bs_in_the_middle,
     check_bs_together,
+    check_more_as_before_bs,
     EOS_token,
     generate_test_prompts,
     grammar_rules,
@@ -126,6 +127,23 @@ def test_check_as_before_bs():
 
     sequence = torch.tensor([0, 0])
     assert check_as_before_bs(sequence) == True
+
+
+def test_check_more_as_before_bs():
+    sequence = torch.tensor([0, 0, 1, 0, 1])
+    assert check_more_as_before_bs(sequence) == True
+
+    sequence = torch.tensor([0, 1, 0, 1, 0, 0])
+    assert check_more_as_before_bs(sequence) == False
+
+    sequence = torch.tensor([0, 0, 1, 1])
+    assert check_more_as_before_bs(sequence) == True
+
+    sequence = torch.tensor([1, 1])
+    assert check_more_as_before_bs(sequence) == False
+
+    sequence = torch.tensor([0, 0])
+    assert check_more_as_before_bs(sequence) == True
 
 
 def test_check_bs_together():
