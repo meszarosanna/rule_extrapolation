@@ -71,19 +71,23 @@ class TransformerDecoder(nn.Module):
     # Constructor
     def __init__(
         self,
-        num_tokens,
-        dim_model,
-        num_heads,
-        num_decoder_layers,
-        dropout_p,
-        dim_feedforward,
-        layer_norm_eps,
+        num_tokens: int = 5,
+        dim_model: int = 8,
+        num_heads: int = 4,
+        num_decoder_layers: int = 2,
+        dropout_p: float = 0.1,
+        dim_feedforward: int = 256,
+        layer_norm_eps: float = 2e-4,
         relu_rescale: float = 1.0,
     ):
         super().__init__()
 
         self.dim_model = dim_model
-        self.relu_rescale = nn.Parameter(torch.tensor(relu_rescale))
+        if relu_rescale <= 0:
+            raise ValueError("relu_rescale must be positive")
+        self.relu_rescale = nn.Parameter(
+            torch.tensor(relu_rescale), requires_grad=False
+        )
 
         # LAYERS
         self.positional_encoder = PositionalEncoding(
