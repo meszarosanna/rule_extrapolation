@@ -199,6 +199,52 @@ def check_as_before_bs(sequence: torch.Tensor):
         return False
 
 
+def check_bs_in_the_middle(sequence: torch.Tensor):
+    """
+    Check if the b's are in the middle
+    :param sequence:
+    :return:
+    """
+
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+        # find the first b
+        first_b = b_tokens[0]
+        last_b = b_tokens[-1]
+
+        if len(sequence[:first_b]) == len(sequence[last_b + 1 :]):
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
+def check_bs_together(sequence: torch.Tensor):
+    """
+    Check if the b's are in the middle
+    :param sequence:
+    :return:
+    """
+
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+        # find the first b
+        first_b = b_tokens[0]
+        last_b = b_tokens[-1]
+
+        if (b_subsequence := sequence[first_b:last_b]).sum() == len(b_subsequence):
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
 def check_same_number_as_bs(sequence: torch.Tensor):
     """
     Check if the number of a's and b's is the same
@@ -211,6 +257,20 @@ def check_same_number_as_bs(sequence: torch.Tensor):
     num_as = torch.sum(sequence == 0)
     num_bs = torch.sum(sequence == 1)
     return num_as == num_bs
+
+
+def check_twice_many_as_than_bs(sequence: torch.Tensor):
+    """
+    Check if the number of a's and b's is the same
+    :param sequence:
+    :return:
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    num_as = torch.sum(sequence == 0)
+    num_bs = torch.sum(sequence == 1)
+    return num_as == 2 * num_bs
 
 
 def check_more_as_than_bs(sequence: torch.Tensor):
