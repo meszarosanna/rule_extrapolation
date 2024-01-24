@@ -283,7 +283,7 @@ class LightningGrammarModule(pl.LightningModule):
             grammatical_accuracy=sum(grammatical) / len(grammatical),
         )
 
-        return (prompts, metrics)
+        return prompt_pred, metrics
 
     def _forward(self, X):
         """
