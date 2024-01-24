@@ -8,6 +8,7 @@ from llm_non_identifiability.data import (
     generate_aNbN_grammar_data,
     generate_abN_grammar_data,
     generate_aNbM_grammar_data,
+    generate_aNbNaN_grammar_data,
 )
 from llm_non_identifiability.dataset import GrammarDataset
 
@@ -49,6 +50,8 @@ class GrammarDataModule(pl.LightningDataModule):
             return generate_abN_grammar_data
         elif self.hparams.grammar == "aNbM":
             return generate_aNbM_grammar_data
+        elif self.hparams.grammar == "aNbNaN":
+            return generate_aNbNaN_grammar_data
         else:
             raise ValueError(f"Unknown grammar {self.hparams.grammar}")
 
@@ -59,7 +62,7 @@ class GrammarDataModule(pl.LightningDataModule):
 
         grammar_generator = self._select_grammar()
 
-        if self.hparams.grammar == "aNbN":
+        if self.hparams.grammar in ["aNbN", "aNbNaN"]:
             # include all samples only once
             self.hparams.num_train = (
                 self.hparams.num_val

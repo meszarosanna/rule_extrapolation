@@ -3,7 +3,7 @@ import pytest
 from llm_non_identifiability.datamodule import GrammarDataModule
 
 
-@pytest.mark.parametrize("grammar", ["aNbN", "abN", "aNbM"])
+@pytest.mark.parametrize("grammar", ["aNbN", "abN", "aNbM", "aNbNaN"])
 def test_generate_data_correctly(num_train, num_val, num_test, max_length, grammar):
     data_module = GrammarDataModule(
         num_train=num_train,
@@ -16,6 +16,8 @@ def test_generate_data_correctly(num_train, num_val, num_test, max_length, gramm
 
     if grammar == "aNbN":
         num_train = num_val = num_test = max_length // 2
+    elif grammar == "aNbNaN":
+        num_train = num_val = num_test = max_length // 3
 
     assert len(data_module.train_dataset) == num_train
     assert len(data_module.val_dataset) == num_val

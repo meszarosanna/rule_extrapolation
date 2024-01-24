@@ -67,6 +67,45 @@ def generate_aNbN_grammar_data(
     return data
 
 
+def generate_aNbNaN_grammar_data(
+    num_samples: int, max_length: int = 32, all_sequences=True
+) -> list:
+    """
+    PCFG with two rules:
+    - number of a's is twice the number of b's
+    - N a's come first, followed by N b's, then N a's again
+
+    :param all_sequences:
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+
+    """
+    if all_sequences is True:
+        lengths = np.linspace(
+            start=1, stop=max_length // 3, num=max_length // 3, dtype=int, endpoint=True
+        )
+    else:
+        lengths = np.random.randint(low=1, high=max_length // 3 + 1, size=num_samples)
+
+    data = []
+
+    for length in lengths:
+        data.append(
+            np.concatenate(
+                (
+                    SOS_token,
+                    np.zeros(length),
+                    np.ones(length),
+                    np.zeros(length),
+                    EOS_token,
+                )
+            )
+        )
+
+    return data
+
+
 def generate_abN_grammar_data(num_samples: int, max_length: int = 32) -> list:
     """
     PCFG with one rule:
@@ -160,6 +199,52 @@ def check_as_before_bs(sequence: torch.Tensor):
         return False
 
 
+def check_bs_in_the_middle(sequence: torch.Tensor):
+    """
+    Check if the b's are in the middle
+    :param sequence:
+    :return:
+    """
+
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+        # find the first b
+        first_b = b_tokens[0]
+        last_b = b_tokens[-1]
+
+        if len(sequence[:first_b]) == len(sequence[last_b + 1 :]):
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
+def check_bs_together(sequence: torch.Tensor):
+    """
+    Check if the b's are in the middle
+    :param sequence:
+    :return:
+    """
+
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+        # find the first b
+        first_b = b_tokens[0]
+        last_b = b_tokens[-1]
+
+        if (b_subsequence := sequence[first_b:last_b]).sum() == len(b_subsequence):
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
 def check_same_number_as_bs(sequence: torch.Tensor):
     """
     Check if the number of a's and b's is the same
@@ -174,6 +259,20 @@ def check_same_number_as_bs(sequence: torch.Tensor):
     return num_as == num_bs
 
 
+def check_twice_many_as_than_bs(sequence: torch.Tensor):
+    """
+    Check if the number of a's and b's is the same
+    :param sequence:
+    :return:
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    num_as = torch.sum(sequence == 0)
+    num_bs = torch.sum(sequence == 1)
+    return num_as == 2 * num_bs
+
+
 def check_more_as_than_bs(sequence: torch.Tensor):
     """
     Check if there are more a's than b's
@@ -186,6 +285,26 @@ def check_more_as_than_bs(sequence: torch.Tensor):
     num_as = torch.sum(sequence == 0)
     num_bs = torch.sum(sequence == 1)
     return num_as >= num_bs
+
+
+def check_more_as_before_bs(sequence: torch.Tensor):
+    """
+    Check if there are more a's than b's
+    :param sequence:
+    :return:
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+        first_b = b_tokens[0]
+
+        num_as = torch.sum(sequence[:first_b] == 0)
+        num_bs = torch.sum(sequence == 1)
+        return num_as >= num_bs
+
+    else:
+        return True
 
 
 def check_sequence_finished(sequence: torch.Tensor):
@@ -242,6 +361,12 @@ def grammar_rules(grammar):
         return lambda x: check_same_number_as_bs(x)
     elif grammar == "aNbM":
         return lambda x: check_as_before_bs(x)
+    elif grammar == "aNbNaN":
+        return (
+            lambda x: check_twice_many_as_than_bs(x)
+            and check_bs_in_the_middle(x)
+            and check_bs_together(x)
+        )
     else:
         raise ValueError(f"Unknown grammar {grammar}")
 
@@ -262,5 +387,7 @@ def prompt_grammar_rules(grammar):
         return lambda x: True
     elif grammar == "aNbM":
         return lambda x: check_as_before_bs(x)
+    elif grammar == "aNbNaN":
+        return lambda x: check_as_before_bs(x) and check_bs_together(x)
     else:
         raise ValueError(f"Unknown grammar {grammar}")

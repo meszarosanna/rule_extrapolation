@@ -7,9 +7,14 @@ from llm_non_identifiability.data import (
     generate_aNbN_grammar_data,
     generate_abN_grammar_data,
     generate_aNbM_grammar_data,
+    generate_aNbNaN_grammar_data,
     pad,
     PAD_token,
     check_sequence_finished,
+    check_twice_many_as_than_bs,
+    check_bs_in_the_middle,
+    check_bs_together,
+    check_more_as_before_bs,
     EOS_token,
     generate_test_prompts,
     grammar_rules,
@@ -48,6 +53,38 @@ def test_aNbN_grammar_only_odd(num_samples, max_length):
     )
     lengths = sorted([len(sequence) - 2 for sequence in sequences])
     assert lengths == list(range(2, max_length + 1, 4))
+
+
+def test_aNbNaN_grammar_twice_many_as_than_bs(num_samples, max_length):
+    sequences = generate_aNbNaN_grammar_data(
+        num_samples, max_length, all_sequences=False
+    )
+    for sequence in sequences:
+        assert check_twice_many_as_than_bs(sequence)
+
+
+def test_aNbNaN_grammar_bs_together(num_samples, max_length):
+    sequences = generate_aNbNaN_grammar_data(
+        num_samples, max_length, all_sequences=False
+    )
+    for sequence in sequences:
+        assert check_bs_together(sequence)
+
+
+def test_aNbNaN_grammar_bs_in_the_middle(num_samples, max_length):
+    sequences = generate_aNbNaN_grammar_data(
+        num_samples, max_length, all_sequences=False
+    )
+    for sequence in sequences:
+        assert check_bs_in_the_middle(sequence)
+
+
+def test_aNbNaN_grammar_all_sequences(num_samples, max_length):
+    sequences = generate_aNbNaN_grammar_data(
+        num_samples, max_length, all_sequences=True
+    )
+    lengths = sorted([len(sequence) - 2 for sequence in sequences])
+    assert lengths == list(range(3, max_length + 1, 3))
 
 
 def test_abN_equal_as_bs(num_samples, max_length):
@@ -92,6 +129,51 @@ def test_check_as_before_bs():
     assert check_as_before_bs(sequence) == True
 
 
+def test_check_more_as_before_bs():
+    sequence = torch.tensor([0, 0, 1, 0, 1])
+    assert check_more_as_before_bs(sequence) == True
+
+    sequence = torch.tensor([0, 1, 0, 1, 0, 0])
+    assert check_more_as_before_bs(sequence) == False
+
+    sequence = torch.tensor([0, 0, 1, 1])
+    assert check_more_as_before_bs(sequence) == True
+
+    sequence = torch.tensor([1, 1])
+    assert check_more_as_before_bs(sequence) == False
+
+    sequence = torch.tensor([0, 0])
+    assert check_more_as_before_bs(sequence) == True
+
+
+def test_check_bs_together():
+    sequence = torch.tensor([0, 0, 1, 0, 1])
+    assert check_bs_together(sequence) == False
+
+    sequence = torch.tensor([0, 0, 1, 1, 0, 0])
+    assert check_bs_together(sequence) == True
+
+    sequence = torch.tensor([1, 1])
+    assert check_bs_together(sequence) == True
+
+    sequence = torch.tensor([0, 0])
+    assert check_bs_together(sequence) == False
+
+
+def test_check_bs_in_the_middle():
+    sequence = torch.tensor([0, 0, 1, 0, 1])
+    assert check_bs_in_the_middle(sequence) == False
+
+    sequence = torch.tensor([0, 0, 1, 1, 0, 0])
+    assert check_bs_in_the_middle(sequence) == True
+
+    sequence = torch.tensor([1, 1])
+    assert check_bs_in_the_middle(sequence) == True
+
+    sequence = torch.tensor([0, 0])
+    assert check_bs_in_the_middle(sequence) == False
+
+
 def test_check_same_number_as_bs():
     sequence = torch.tensor([0, 0, 1, 0, 1])
     assert check_same_number_as_bs(sequence) == False
@@ -104,6 +186,17 @@ def test_check_same_number_as_bs():
 
     sequence = torch.tensor([1, 1, 0, 0])
     assert check_same_number_as_bs(sequence) == True
+
+
+def test_check_twice_many_as_than_bs():
+    sequence = torch.tensor([0, 0, 1, 0, 1])
+    assert check_twice_many_as_than_bs(sequence) == False
+
+    sequence = torch.tensor([0, 0, 1, 1, 0, 0])
+    assert check_twice_many_as_than_bs(sequence) == True
+
+    sequence = torch.tensor([1, 0, 0, 0, 0, 1])
+    assert check_twice_many_as_than_bs(sequence) == True
 
 
 def test_check_sequence_finished():
