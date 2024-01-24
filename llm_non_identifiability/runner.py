@@ -136,7 +136,7 @@ class LightningGrammarModule(pl.LightningModule):
                         dtype=torch.long,
                         device=self.hparams.device,
                     )
-                    * EOS_token,
+                    * EOS_token.item(),
                 ),
                 dim=1,
             )
