@@ -96,7 +96,11 @@ def sweep2df(
                 max_pred_length = config["model.max_pred_length"]
                 lr = config["model.lr"]
                 layer_norm_eps = config["model.layer_norm_eps"]
-                adversarial_training = config["model.adversarial_training"]
+
+                try:
+                    adversarial_training = config["model.adversarial_training"]
+                except:
+                    adversarial_training = False
                 max_length = config["data.max_length"]
                 batch_size = config["data.batch_size"]
                 seed_everything = config["seed_everything"]
@@ -132,10 +136,6 @@ def sweep2df(
                 )
 
                 val_accuracy_histories.append(val_accuracy_history["Val/accuracy"])
-
-                train_log_likelihood_histories.append(
-                    train_loss_history["train_log_likelihood"]
-                )
 
                 data.append(
                     [
@@ -184,6 +184,14 @@ def sweep2df(
             "adversarial_training",
             "max_length",
             "batch_size",
+            "max_val_accuracy",
+            "max_val_accuracy_step",
+            "min_train_loss",
+            "min_train_loss_step",
+            "min_val_loss",
+            "min_val_loss_step",
+            "min_val_kl",
+            "min_val_kl_step",
         ],
     ).fillna(0)
 
