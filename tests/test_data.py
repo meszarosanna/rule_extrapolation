@@ -123,7 +123,7 @@ def test_check_as_before_bs():
     assert check_as_before_bs(sequence) == True
 
     sequence = torch.tensor([1, 1])
-    assert check_as_before_bs(sequence) == False
+    assert check_as_before_bs(sequence) == True
 
     sequence = torch.tensor([0, 0])
     assert check_as_before_bs(sequence) == True

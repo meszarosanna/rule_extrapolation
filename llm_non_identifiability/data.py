@@ -198,7 +198,7 @@ def check_as_before_bs(sequence: torch.Tensor):
         else:
             return True
     else:
-        return False
+        return True
 
 
 def check_bs_in_the_middle(sequence: torch.Tensor):
