@@ -247,15 +247,26 @@ class LightningGrammarModule(pl.LightningModule):
         (
             prompts,
             metrics,
+            prompts_finished,
+            metrics_finished,
             ood_prompts,
             ood_metrics,
+            ood_prompts_finished,
+            ood_metrics_finished,
             sos_prompts,
             sos_metrics,
+            sos_prompts_finished,
+            sos_metrics_finished,
         ) = self.eval_prompt_prediction()
 
         checkpoint["prompts"] = prompts.cpu().numpy()
+        checkpoint["prompts_finished"] = prompts_finished.cpu().numpy()
+
         checkpoint["ood_prompts"] = ood_prompts.cpu().numpy()
+        checkpoint["ood_prompts_finished"] = ood_prompts_finished.cpu().numpy()
+
         checkpoint["sos_prompts"] = sos_prompts.cpu().numpy()
+        checkpoint["sos_prompts_finished"] = sos_prompts_finished.cpu().numpy()
 
     @property
     def test_prompts_src(self):
