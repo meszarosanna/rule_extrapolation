@@ -321,7 +321,11 @@ class LightningGrammarModule(pl.LightningModule):
         metrics, finished = self._calc_grammar_metrics(prompt_pred)
 
         # filter out finsihed prompts only
-        prompt_pred_finished = [p for p, f in zip(prompt_pred, finished) if f is True]
+        prompt_pred_finished = torch.tensor(
+            [p for p, f in zip(prompt_pred, finished) if f is True],
+            dtype=torch.long,
+            device=self.hparams.device,
+        )
 
         metrics_finished, _ = self._calc_grammar_metrics(prompt_pred_finished)
 
