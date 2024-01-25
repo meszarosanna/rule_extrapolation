@@ -59,20 +59,67 @@ def sweep2df(
         val_kl_histories = npy_data["val_kl_history"]
         val_accuracy_histories = npy_data["val_accuracy_history"]
 
+        finised_histories = npy_data["finised_history"]
+        ood_finised_histories = npy_data["ood_finised_history"]
+        sos_finised_histories = npy_data["sos_finised_history"]
+
+        as_before_bs_histories = npy_data["as_before_bs_history"]
+        same_as_bs_histories = npy_data["same_as_bs_history"]
+        grammatical_histories = npy_data["grammatical_history"]
+
+        ood_as_before_bs_histories = npy_data["ood_as_before_bs_history"]
+        ood_as_before_bs_completion_histories = npy_data[
+            "ood_as_before_bs_completion_history"
+        ]
+        ood_same_as_bs_histories = npy_data["ood_same_as_bs_history"]
+        ood_grammatical_histories = npy_data["ood_grammatical_history"]
+
+        sos_as_before_bs_histories = npy_data["sos_as_before_bs_history"]
+        sos_same_as_bs_histories = npy_data["sos_same_as_bs_history"]
+        sos_grammatical_histories = npy_data["sos_grammatical_history"]
+
         return (
             pd.read_csv(csv_name),
             train_loss_histories,
             val_loss_histories,
             val_kl_histories,
             val_accuracy_histories,
+            finised_histories,
+            ood_finised_histories,
+            sos_finised_histories,
+            as_before_bs_histories,
+            same_as_bs_histories,
+            grammatical_histories,
+            ood_as_before_bs_histories,
+            ood_as_before_bs_completion_histories,
+            ood_same_as_bs_histories,
+            ood_grammatical_histories,
+            sos_as_before_bs_histories,
+            sos_same_as_bs_histories,
+            sos_grammatical_histories,
         )
 
     data = []
-    train_log_likelihood_histories = []
     train_loss_histories = []
     val_loss_histories = []
     val_kl_histories = []
     val_accuracy_histories = []
+
+    as_before_bs_histories = []
+    same_as_bs_histories = []
+    finised_histories = []
+    grammatical_histories = []
+
+    ood_as_before_bs_histories = []
+    ood_as_before_bs_completion_histories = []
+    ood_same_as_bs_histories = []
+    ood_finised_histories = []
+    ood_grammatical_histories = []
+
+    sos_as_before_bs_histories = []
+    sos_same_as_bs_histories = []
+    sos_finised_histories = []
+    sos_grammatical_histories = []
 
     for run in sweep_runs:
         # .summary contains the output keys/values for metrics like accuracy.
@@ -136,6 +183,75 @@ def sweep2df(
                 )
 
                 val_accuracy_histories.append(val_accuracy_history["Val/accuracy"])
+
+                finised_histories.append(
+                    run.history(keys=[f"Val/ID/finished_accuracy"])[
+                        f"Val/ID/finished_accuracy"
+                    ]
+                )
+                ood_finised_histories.append(
+                    run.history(keys=[f"Val/OOD/finished_accuracy"])[
+                        f"Val/OOD/finished_accuracy"
+                    ]
+                )
+                sos_finised_histories.append(
+                    run.history(keys=[f"Val/SOS/finished_accuracy"])[
+                        f"Val/SOS/finished_accuracy"
+                    ]
+                )
+
+                as_before_bs_histories.append(
+                    run.history(keys=[f"Val/ID/finished/as_before_bs_accuracy"])[
+                        f"Val/ID/finished/as_before_bs_accuracy"
+                    ]
+                )
+                same_as_bs_histories.append(
+                    run.history(keys=[f"Val/ID/finished/same_number_as_bs_accuracy"])[
+                        f"Val/ID/finished/same_number_as_bs_accuracy"
+                    ]
+                )
+                grammatical_histories.append(
+                    run.history(keys=[f"Val/ID/finished/grammatical_accuracy"])[
+                        f"Val/ID/finished/grammatical_accuracy"
+                    ]
+                )
+
+                ood_as_before_bs_histories.append(
+                    run.history(keys=[f"Val/OOD/finished/as_before_bs_accuracy"])[
+                        f"Val/OOD/finished/as_before_bs_accuracy"
+                    ]
+                )
+                ood_as_before_bs_completion_histories.append(
+                    run.history(
+                        keys=[f"Val/OOD/finished/as_before_bs_completion_accuracy"]
+                    )[f"Val/OOD/finished/as_before_bs_completion_accuracy"]
+                )
+                ood_same_as_bs_histories.append(
+                    run.history(keys=[f"Val/OOD/finished/same_number_as_bs_accuracy"])[
+                        f"Val/OOD/finished/same_number_as_bs_accuracy"
+                    ]
+                )
+                ood_grammatical_histories.append(
+                    run.history(keys=[f"Val/OOD/finished/grammatical_accuracy"])[
+                        f"Val/OOD/finished/grammatical_accuracy"
+                    ]
+                )
+
+                sos_as_before_bs_histories.append(
+                    run.history(keys=[f"Val/SOS/finished/as_before_bs_accuracy"])[
+                        f"Val/SOS/finished/as_before_bs_accuracy"
+                    ]
+                )
+                sos_same_as_bs_histories.append(
+                    run.history(keys=[f"Val/SOS/finished/same_number_as_bs_accuracy"])[
+                        f"Val/SOS/finished/same_number_as_bs_accuracy"
+                    ]
+                )
+                sos_grammatical_histories.append(
+                    run.history(keys=[f"Val/SOS/finished/grammatical_accuracy"])[
+                        f"Val/SOS/finished/grammatical_accuracy"
+                    ]
+                )
 
                 data.append(
                     [
@@ -208,6 +324,19 @@ def sweep2df(
             val_loss_history=val_loss_histories,
             val_kl_history=val_kl_histories,
             val_accuracy_history=val_accuracy_histories,
+            finised_histories=finised_histories,
+            ood_finised_histories=ood_finised_histories,
+            sos_finised_histories=sos_finised_histories,
+            as_before_bs_histories=as_before_bs_histories,
+            same_as_bs_histories=same_as_bs_histories,
+            grammatical_histories=grammatical_histories,
+            ood_as_before_bs_histories=ood_as_before_bs_histories,
+            ood_as_before_bs_completion_histories=ood_as_before_bs_completion_histories,
+            ood_same_as_bs_histories=ood_same_as_bs_histories,
+            ood_grammatical_histories=ood_grammatical_histories,
+            sos_as_before_bs_histories=sos_as_before_bs_histories,
+            sos_same_as_bs_histories=sos_same_as_bs_histories,
+            sos_grammatical_histories=sos_grammatical_histories,
         )
 
     return (
@@ -216,6 +345,19 @@ def sweep2df(
         val_loss_histories,
         val_kl_histories,
         val_accuracy_histories,
+        finised_histories,
+        ood_finised_histories,
+        sos_finised_histories,
+        as_before_bs_histories,
+        same_as_bs_histories,
+        grammatical_histories,
+        ood_as_before_bs_histories,
+        ood_as_before_bs_completion_histories,
+        ood_same_as_bs_histories,
+        ood_grammatical_histories,
+        sos_as_before_bs_histories,
+        sos_same_as_bs_histories,
+        sos_grammatical_histories,
     )
 
 
