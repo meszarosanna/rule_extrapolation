@@ -333,7 +333,7 @@ class LightningGrammarModule(pl.LightningModule):
 
         # filter out finsihed prompts only
         prompt_pred_finished = torch.tensor(
-            [p for p, f in zip(prompt_pred, finished) if f is True],
+            [p for p, f in zip(prompt_pred, finished) if f.item() is True],
             dtype=torch.long,
             device=self.hparams.device,
         )
@@ -353,7 +353,9 @@ class LightningGrammarModule(pl.LightningModule):
         grammatical = [self.grammar_rules(p) for p in prompt_pred]
         finished = [check_sequence_finished(p) for p in prompt_pred]
         as_before_bs_completion = [
-            check_as_before_bs(p[self.hparams.test_prompt_length + 1 :])
+            check_as_before_bs(
+                p[self.hparams.test_prompt_length + 1 :]
+            )  # +1 is for the SOS token
             for p in prompt_pred
         ]
 
