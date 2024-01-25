@@ -4,3 +4,6 @@ jsonargparse[signatures]>=4.17.0
 wandb~=0.16.1
 omegaconf~=2.3.0
 numpy~=1.26.2
+tueplots
+pandas
+matplotlib
