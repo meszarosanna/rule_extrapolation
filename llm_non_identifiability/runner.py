@@ -168,15 +168,31 @@ class LightningGrammarModule(pl.LightningModule):
         (
             prompts,
             metrics,
+            prompts_finished,
+            metrics_finished,
             ood_prompts,
             ood_metrics,
+            ood_prompts_finished,
+            ood_metrics_finished,
             sos_prompts,
             sos_metrics,
+            sos_prompts_finished,
+            sos_metrics_finished,
         ) = self.eval_prompt_prediction()
 
         self._log_dict(name=f"{panel_name}/ID", dictionary=metrics.to_dict())
+        self._log_dict(
+            name=f"{panel_name}/ID/finished", dictionary=metrics_finished.to_dict()
+        )
+
         self._log_dict(name=f"{panel_name}/OOD", dictionary=ood_metrics.to_dict())
+        self._log_dict(
+            name=f"{panel_name}/OOD/finished", dictionary=ood_metrics_finished.to_dict()
+        )
         self._log_dict(name=f"{panel_name}/SOS", dictionary=sos_metrics.to_dict())
+        self._log_dict(
+            name=f"{panel_name}/SOS/finished", dictionary=sos_metrics_finished.to_dict()
+        )
 
         if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
             logger: pl.loggers.wandb.WandbLogger = self.logger
@@ -190,6 +206,10 @@ class LightningGrammarModule(pl.LightningModule):
             ood_prompts_str = prompts2str(ood_prompts)
             sos_prompts_str = prompts2str(sos_prompts)
 
+            prompts_finished_str = prompts2str(prompts_finished)
+            ood_prompts_finished_str = prompts2str(ood_prompts_finished)
+            sos_prompts_finished_str = prompts2str(sos_prompts_finished)
+
             columns = ["completion"]
 
             # data should be a list of lists
@@ -201,6 +221,22 @@ class LightningGrammarModule(pl.LightningModule):
             )
             logger.log_text(
                 key="sos_prompt_completions", columns=columns, data=sos_prompts_str
+            )
+
+            logger.log_text(
+                key="id_prompt_completions_finished",
+                columns=columns,
+                data=prompts_finished_str,
+            )
+            logger.log_text(
+                key="ood_prompt_completions_finished",
+                columns=columns,
+                data=ood_prompts_finished_str,
+            )
+            logger.log_text(
+                key="sos_prompt_completions_finished",
+                columns=columns,
+                data=sos_prompts_finished_str,
             )
 
     def _log_dict(self, name, dictionary):
@@ -233,6 +269,8 @@ class LightningGrammarModule(pl.LightningModule):
         (
             prompts,
             metrics,
+            prompts_finished,
+            metrics_finished,
         ) = self._calc_prompt_pred_metrics(
             self.test_prompts_in_distribution, max_length
         )
@@ -240,6 +278,8 @@ class LightningGrammarModule(pl.LightningModule):
         (
             ood_prompts,
             ood_metrics,
+            ood_prompts_finished,
+            ood_metrics_finished,
         ) = self._calc_prompt_pred_metrics(
             self.test_prompts_out_of_distribution, max_length
         )
@@ -256,33 +296,63 @@ class LightningGrammarModule(pl.LightningModule):
         (
             sos_prompts,
             sos_metrics,
+            sos_prompts_finished,
+            sos_metrics_finished,
         ) = self._calc_prompt_pred_metrics(sos_prompts, max_length)
 
         return (
             prompts,
             metrics,
+            prompts_finished,
+            metrics_finished,
             ood_prompts,
             ood_metrics,
+            ood_prompts_finished,
+            ood_metrics_finished,
             sos_prompts,
             sos_metrics,
+            sos_prompts_finished,
+            sos_metrics_finished,
         )
 
     def _calc_prompt_pred_metrics(self, prompts, max_length):
         prompt_pred = self._predict(max_length=max_length, prompt=prompts)
 
+        metrics, finished = self._calc_grammar_metrics(prompt_pred)
+
+        # filter out finsihed prompts only
+        prompt_pred_finished = [p for p, f in zip(prompt_pred, finished) if f is True]
+
+        metrics_finished, _ = self._calc_grammar_metrics(prompt_pred_finished)
+
+        return (
+            prompt_pred,
+            metrics,
+            prompt_pred_finished,
+            metrics_finished,
+        )
+
+    def _calc_grammar_metrics(self, prompt_pred, eps: float = 1e-8):
         as_before_bs = [check_as_before_bs(p) for p in prompt_pred]
         same_number_as_bs = [check_same_number_as_bs(p) for p in prompt_pred]
         grammatical = [self.grammar_rules(p) for p in prompt_pred]
         finished = [check_sequence_finished(p) for p in prompt_pred]
+        as_before_bs_completion = [
+            check_as_before_bs(p[self.hparams.test_prompt_length :])
+            for p in prompt_pred
+        ]
 
         metrics = GrammarMetrics(
-            as_before_bs_accuracy=sum(as_before_bs) / len(as_before_bs),
-            same_number_as_bs_accuracy=sum(same_number_as_bs) / len(same_number_as_bs),
-            finished_accuracy=sum(finished) / len(finished),
-            grammatical_accuracy=sum(grammatical) / len(grammatical),
+            as_before_bs_accuracy=sum(as_before_bs) / (len(as_before_bs) + eps),
+            same_number_as_bs_accuracy=sum(same_number_as_bs)
+            / (len(same_number_as_bs) + eps),
+            finished_accuracy=sum(finished) / (len(finished) + eps),
+            grammatical_accuracy=sum(grammatical) / (len(grammatical) + eps),
+            as_before_bs_completion_accuracy=sum(as_before_bs_completion)
+            / (len(as_before_bs_completion) + eps),
         )
 
-        return prompt_pred, metrics
+        return metrics, finished
 
     def _forward(self, X):
         """

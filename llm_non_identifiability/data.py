@@ -14,6 +14,8 @@ from typing import Dict
 @dataclasses.dataclass
 class GrammarMetrics:
     as_before_bs_accuracy: float = 0.0
+    as_before_bs_completion_accuracy: float = 0.0
+
     same_number_as_bs_accuracy: float = 0.0
     finished_accuracy: float = 0.0
     grammatical_accuracy: float = 0.0

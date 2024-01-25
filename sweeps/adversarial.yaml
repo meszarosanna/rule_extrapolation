@@ -26,7 +26,7 @@ parameters:
   model.test_prompt_length:
     value: 8
   model.max_pred_length:
-    value: 258
+    value: 300
   model.lr:
     value: 0.002
   model.layer_norm_eps:
