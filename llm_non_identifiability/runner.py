@@ -353,7 +353,7 @@ class LightningGrammarModule(pl.LightningModule):
         grammatical = [self.grammar_rules(p) for p in prompt_pred]
         finished = [check_sequence_finished(p) for p in prompt_pred]
         as_before_bs_completion = [
-            check_as_before_bs(p[self.hparams.test_prompt_length :])
+            check_as_before_bs(p[self.hparams.test_prompt_length + 1 :])
             for p in prompt_pred
         ]
 
