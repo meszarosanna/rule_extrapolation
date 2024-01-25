@@ -322,7 +322,7 @@ def check_sequence_finished(sequence: torch.Tensor):
 
     # find the first EOS token
     if len(eos_tokens := torch.where(sequence == EOS_token.item())[0]) > 0:
-        first_EOS = torch.where(sequence == EOS_token.item())[0][0]
+        first_EOS = eos_tokens[0]
         # check whether there are any 0's or 1's after the first EOS token
         return (
             torch.sum(sequence[first_EOS + 1 :] == 0)
