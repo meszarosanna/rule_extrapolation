@@ -333,7 +333,7 @@ class LightningGrammarModule(pl.LightningModule):
 
         # filter out finsihed prompts only
         prompt_pred_finished = torch.tensor(
-            [p for p, f in zip(prompt_pred, finished) if f is True],
+            [p for p, f in zip(prompt_pred, finished) if f.item() is True],
             dtype=torch.long,
             device=self.hparams.device,
         )
