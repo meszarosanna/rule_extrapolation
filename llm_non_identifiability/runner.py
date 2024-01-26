@@ -6,6 +6,7 @@ from typing import Optional, Dict, Any
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
+from transformers.optimization import get_inverse_sqrt_schedule
 
 from llm_non_identifiability.data import (
     check_same_number_as_bs,
@@ -18,14 +19,13 @@ from llm_non_identifiability.data import (
     grammar_rules,
     prompt_grammar_rules,
     GrammarMetrics,
+    pad,
 )
 from llm_non_identifiability.model import (
     TransformerDecoder,
     create_pad_mask,
     get_tgt_mask,
 )
-
-from transformers.optimization import get_inverse_sqrt_schedule
 
 
 class LightningGrammarModule(pl.LightningModule):
@@ -137,18 +137,46 @@ class LightningGrammarModule(pl.LightningModule):
         """
 
         if self.hparams.adversarial_training is True:
-            self.adversarial_prompts = torch.cat(
-                (
-                    self.test_prompts_out_of_distribution,
-                    torch.ones(
-                        (self.test_prompts_out_of_distribution.shape[0], 1),
-                        dtype=torch.long,
-                        device=self.hparams.device,
+            prompts = []
+
+            for idx, prompt in enumerate(self.test_prompts_out_of_distribution):
+                num_as = torch.sum(prompt == 0)
+                num_bs = torch.sum(prompt == 1)
+
+                if num_as >= num_bs:
+                    prompt = self._extend_prompt(
+                        prompt, num_as - num_bs + 1, value=torch.ones
                     )
-                    * EOS_token.item(),
-                ),
-                dim=1,
+                else:
+                    prompt = self._extend_prompt(
+                        prompt, num_bs - num_as + 1, value=torch.zeros
+                    )
+
+                prompts.append(prompt)
+
+            self.adversarial_prompts = (
+                torch.from_numpy(pad(prompts)).long().to(self.hparams.device)
             )
+
+    def _extend_prompt(self, prompt, length, value=torch.ones):
+        prompt = torch.cat(
+            (
+                prompt,
+                value(
+                    (length,),
+                    dtype=torch.long,
+                    device=self.hparams.device,
+                ),
+                torch.ones(
+                    (1,),
+                    dtype=torch.long,
+                    device=self.hparams.device,
+                )
+                * EOS_token.item(),
+            ),
+            dim=0,
+        )
+        return prompt
 
     def training_step(self, batch, batch_idx):
         panel_name = "Train"
@@ -156,8 +184,19 @@ class LightningGrammarModule(pl.LightningModule):
         self.log(f"{panel_name}/loss", loss)
 
         if self.hparams.adversarial_training is True:
-            _, _, _, loss_adversarial = self._forward(self.adversarial_prompts)
+            _, _, _, loss_adversarial = self._forward(
+                self.adversarial_prompts, completion_loss=True
+            )
             self.log(f"{panel_name}/loss_adversarial", loss_adversarial)
+
+            with torch.no_grad():
+                _, _, _, loss_adversarial_full = self._forward(
+                    self.adversarial_prompts, completion_loss=False
+                )
+                self.log(
+                    f"{panel_name}/loss_adversarial_prompt",
+                    loss_adversarial_full - loss_adversarial,
+                )
 
             loss += loss_adversarial
 
@@ -385,9 +424,10 @@ class LightningGrammarModule(pl.LightningModule):
 
         return metrics, finished
 
-    def _forward(self, X):
+    def _forward(self, X, completion_loss=False):
         """
         Forward pass for calculating the model predictions and the loss.
+        :param completion_loss: calculate loss only on prompt completion
         :param X:
         :return:
         """
@@ -409,7 +449,15 @@ class LightningGrammarModule(pl.LightningModule):
         # Permute pred to have batch size first again
         pred = pred.permute(1, 2, 0)
 
-        loss = self.hparams.loss_fn(pred, X_expected)
+        if completion_loss is False:
+            loss = self.hparams.loss_fn(pred, X_expected)
+        else:
+            loss = self.hparams.loss_fn(
+                pred[
+                    :, :, self.hparams.test_prompt_length + 1 :
+                ],  # +1 is for the SOS token
+                X_expected[:, self.hparams.test_prompt_length + 1 :],
+            )
 
         return X, X_expected, pred, loss
 
