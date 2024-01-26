@@ -189,37 +189,14 @@ class LightningGrammarModule(pl.LightningModule):
             )
             self.log(f"{panel_name}/loss_adversarial", loss_adversarial)
 
-            # OOD prompt should remain 0 probability
-            # only the completion should have a high probability
-            # the loss on the prompt should be infinity -> maybe log this as well
-            # completion should be deterministic: complete to the shortest possible sequence (add b's or a's which are the the lower number
-            # adversarial: make it so that eg #a = #b+1
-
-            # internal review channel CaraML
-
-            # netto leghatekonyabb a cikkben: kellene Ferinek csinalnia egy passt
-            # uj gondolat: RASP-ban lehet implementalni LLM-et, ami logitokat kopkod ki -> lehet 0 KL-t elerni aNbN-re
-            # Weiss nem tette fel a kerdest, hogy mi van ha megetetunk RASP-pal OOD promptot, akkor mit csinal
-            # toobfele aNbN RASP implementacio lehet: erdekes lehet, hogy ket kulonmboz (0 KL-u) implementacio mashogy viselkedik OOD-n
-            # a where next reszben, mint 0 shot rule extrapolation: ha nem is csinaljuk meg RASP-ban, akkor future work, hogy meg lehet nezni, hogy kulonbozo rule extrapolation behavior milyen nehez megtanulni
-            # transformernek; proxy, hogy kulonbozo extrapolation behaviort lehet-e RASP-ban implementalni (ezzel meg lehet erteni Transformerek limitaciot vizsgalni)
-            # ezt a frameworkot fel lehet hasznalni arra, hogy H0-t allitsunk fel formalis nyelvekre (pl:
-            # erdekes eredmeny: olyan aNbN implementaciot, ami jol extrapolal tudunk csinalni pl 2 reteggel, de olyat, ami nem jol, azt meg 3 reteggel
-            # pl azert extrapolal jol, mert a comp. modelbol latszik, hogy a transformernek nehezebb kifejezni bizonyos dolgokat
-            # ezt lehet kotni Kolmogorov komplexitashoz: ami leirhato RASPban annak kisebb a KC-ja
-            # a KC jo a Turing machinehoz, de az nem nagyon relevans de lehet vmi algoritmic informtion measureoket kitalalni, ami a RASP-ra epit
-            # mi a legrovidebb RASP program, ami tudja generalni az adott szekvenciat -> simplicity bias
-
-            # saturation regime mar felmerult: AR modellek = intersection of genAI + SSL -> ezek mar felmerultek
-            # genAI: cikk dontsuk el, hogy ksiebb likelihood, jobb representation, vagy jobb mintak
-            # SSL: elojott: goals and principles of represnetation learning (repre learning nem kovetkezik a pretraining lossbol, meg sem a max likelihoodbol)
-            # ez mehet intro-ba
-
-            # where next-be lehet rakni thought experiments
-            # mention empirical studies + theoretical fws that would be high value
-            # van vmi cikk, ami iterativan tanit LLM-et reward-dal (hasonlit a thought exp-hez
-
-            # approximate unlearning /untraining paper
+            with torch.no_grad():
+                _, _, _, loss_adversarial_full = self._forward(
+                    self.adversarial_prompts, completion_loss=False
+                )
+                self.log(
+                    f"{panel_name}/loss_adversarial_prompt",
+                    loss_adversarial_full - loss_adversarial,
+                )
 
             loss += loss_adversarial
 
