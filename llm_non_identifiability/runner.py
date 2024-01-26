@@ -163,7 +163,7 @@ class LightningGrammarModule(pl.LightningModule):
                         prompt, num_bs - num_as + 1, value=torch.zeros
                     )
 
-                prompts.append(prompt)
+                prompts.append(prompt.cpu().numpy())
 
             self.adversarial_prompts = (
                 torch.from_numpy(pad(prompts)).long().to(self.hparams.device)
@@ -192,7 +192,7 @@ class LightningGrammarModule(pl.LightningModule):
 
                 assert check_same_number_as_bs(prompt) == True
 
-                prompts.append(prompt)
+                prompts.append(prompt.cpu().numpy())
 
             self.extrapolation_prompts = (
                 torch.from_numpy(pad(prompts)).long().to(self.hparams.device)
