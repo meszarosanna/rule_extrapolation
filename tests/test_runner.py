@@ -17,6 +17,19 @@ def test_fit_and_predict(num_train, num_val, num_test, adversarial_training):
     trainer.predict(runner, datamodule=dm)
 
 
+def test_fit_and_predict_extrapolation(
+    num_train,
+    num_val,
+    num_test,
+):
+    trainer = Trainer(fast_dev_run=True)
+    runner = LightningGrammarModule(extrapolation_training=True)
+    dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
+    trainer.fit(runner, datamodule=dm)
+
+    trainer.predict(runner, datamodule=dm)
+
+
 @pytest.mark.parametrize("next_token_pick_mode", ["sample", "max"])
 def test_predict_inner(max_length, device, next_token_pick_mode):
     runner = LightningGrammarModule(next_token_pick_mode=next_token_pick_mode)

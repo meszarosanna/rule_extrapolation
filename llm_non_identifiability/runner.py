@@ -53,9 +53,11 @@ class LightningGrammarModule(pl.LightningModule):
         batch_size: int = 64,
         relu_rescale: float = 1.0,
         adversarial_training: bool = False,
-        num_warmup_steps=1000,
+        num_warmup_steps: int = 1000,
+        extrapolation_training: bool = False,
     ):
         """
+        :param extrapolation_training:
         :param num_warmup_steps:
         :param relu_rescale:
         :param adversarial_training:
@@ -73,6 +75,14 @@ class LightningGrammarModule(pl.LightningModule):
         """
         super().__init__()
         self.save_hyperparameters()
+
+        if (
+            self.hparams.extrapolation_training is True
+            and self.hparams.adversarial_training is True
+        ):
+            raise ValueError(
+                "Cannot train with both extrapolation and adversarial training"
+            )
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
         self.model = TransformerDecoder(
@@ -130,6 +140,7 @@ class LightningGrammarModule(pl.LightningModule):
             self.logger.experiment.summary["data_entropy"] = self.data_entropy
 
         self.__setup_adversarial_prompts()
+        self.__setup_extrapolation_prompts()
 
     def __setup_adversarial_prompts(self) -> None:
         """
@@ -155,6 +166,35 @@ class LightningGrammarModule(pl.LightningModule):
                 prompts.append(prompt)
 
             self.adversarial_prompts = (
+                torch.from_numpy(pad(prompts)).long().to(self.hparams.device)
+            )
+
+    def __setup_extrapolation_prompts(self) -> None:
+        """
+        Setup the prompts for extrapolation training from the OOD test prompts
+        """
+
+        if self.hparams.extrapolation_training is True:
+            prompts = []
+
+            for idx, prompt in enumerate(self.test_prompts_out_of_distribution):
+                num_as = torch.sum(prompt == 0)
+                num_bs = torch.sum(prompt == 1)
+
+                if num_as >= num_bs:
+                    prompt = self._extend_prompt(
+                        prompt, num_as - num_bs, value=torch.ones
+                    )
+                else:
+                    prompt = self._extend_prompt(
+                        prompt, num_bs - num_as, value=torch.zeros
+                    )
+
+                assert check_same_number_as_bs(prompt) == True
+
+                prompts.append(prompt)
+
+            self.extrapolation_prompts = (
                 torch.from_numpy(pad(prompts)).long().to(self.hparams.device)
             )
 
@@ -199,6 +239,23 @@ class LightningGrammarModule(pl.LightningModule):
                 )
 
             loss += loss_adversarial
+
+        if self.hparams.extrapolation_training is True:
+            _, _, _, loss_extrapolation = self._forward(
+                self.extrapolation_prompts, completion_loss=True
+            )
+            self.log(f"{panel_name}/loss_extrapolation", loss_extrapolation)
+
+            with torch.no_grad():
+                _, _, _, loss_extrapolation_full = self._forward(
+                    self.extrapolation_prompts, completion_loss=False
+                )
+                self.log(
+                    f"{panel_name}/loss_extrapolation_prompt",
+                    loss_extrapolation_full - loss_extrapolation,
+                )
+
+            loss += loss_extrapolation
 
         return loss
 
