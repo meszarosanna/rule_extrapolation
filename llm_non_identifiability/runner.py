@@ -25,6 +25,8 @@ from llm_non_identifiability.model import (
     get_tgt_mask,
 )
 
+from transformers.optimization import get_inverse_sqrt_schedule
+
 
 class LightningGrammarModule(pl.LightningModule):
     """
@@ -51,8 +53,10 @@ class LightningGrammarModule(pl.LightningModule):
         batch_size: int = 64,
         relu_rescale: float = 1.0,
         adversarial_training: bool = False,
+        num_warmup_steps=1000,
     ):
         """
+        :param num_warmup_steps:
         :param relu_rescale:
         :param adversarial_training:
         :param batch_size:
@@ -91,7 +95,13 @@ class LightningGrammarModule(pl.LightningModule):
         return math.log(n := (self.hparams.max_data_length // 2), math.e) / n
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(self.model.parameters(), lr=self.hparams.lr)
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.hparams.lr)
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": get_inverse_sqrt_schedule(
+                optimizer=optimizer, num_warmup_steps=self.hparams.num_warmup_steps
+            ),
+        }
 
     def _setup_test_prompts(self) -> None:
         test_prompts = generate_test_prompts(length=self.hparams.test_prompt_length).to(
