@@ -6,7 +6,7 @@ command:
   - "--config"
   - "configs/config.yaml"
   - ${args}
-method: grid
+method: random
 metric:
   goal: minimize
   name: Val/loss
@@ -36,4 +36,6 @@ parameters:
   data.batch_size:
     value: 128
   seed_everything:
-    values: [ 42, 64, 982, 5748, 23567, 726, 27235, 11872, 34897, 1996 ]
+    distribution: int_uniform
+    min: 0
+    max: 100000
