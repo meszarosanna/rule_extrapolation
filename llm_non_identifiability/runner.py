@@ -55,8 +55,10 @@ class LightningGrammarModule(pl.LightningModule):
         adversarial_training: bool = False,
         num_warmup_steps: int = 1000,
         extrapolation_training: bool = False,
+        optimizer: str = "adamw",
     ):
         """
+        :param optimizer:
         :param extrapolation_training:
         :param num_warmup_steps:
         :param relu_rescale:
@@ -105,13 +107,19 @@ class LightningGrammarModule(pl.LightningModule):
         return math.log(n := (self.hparams.max_data_length // 2), math.e) / n
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.hparams.lr)
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": get_inverse_sqrt_schedule(
-                optimizer=optimizer, num_warmup_steps=self.hparams.num_warmup_steps
-            ),
-        }
+        if self.hparams.optimizer == "adamw":
+            optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.hparams.lr)
+            return {
+                "optimizer": optimizer,
+                "lr_scheduler": get_inverse_sqrt_schedule(
+                    optimizer=optimizer, num_warmup_steps=self.hparams.num_warmup_steps
+                ),
+            }
+        elif self.hparams.optimizer == "sgd":
+            optimizer = torch.optim.SGD(self.model.parameters(), lr=self.hparams.lr)
+            return {"optimizer": optimizer}
+        else:
+            raise ValueError(f"Unknown optimizer: {self.hparams.optimizer}")
 
     def _setup_test_prompts(self) -> None:
         test_prompts = generate_test_prompts(length=self.hparams.test_prompt_length).to(

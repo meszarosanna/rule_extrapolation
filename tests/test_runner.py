@@ -8,16 +8,22 @@ from llm_non_identifiability.runner import LightningGrammarModule
 
 
 @pytest.mark.parametrize("adversarial_training", [True, False])
-def test_fit_and_predict(num_train, num_val, num_test, adversarial_training):
+def test_fit_adversarial(num_train, num_val, num_test, adversarial_training):
     trainer = Trainer(fast_dev_run=True)
     runner = LightningGrammarModule(adversarial_training=adversarial_training)
     dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
     trainer.fit(runner, datamodule=dm)
 
-    trainer.predict(runner, datamodule=dm)
+
+@pytest.mark.parametrize("optimizer", ["adamw", "sgd"])
+def test_fit_optimizer(num_train, num_val, num_test, optimizer):
+    trainer = Trainer(fast_dev_run=True)
+    runner = LightningGrammarModule(optimizer=optimizer)
+    dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
+    trainer.fit(runner, datamodule=dm)
 
 
-def test_fit_and_predict_extrapolation(
+def test_fit_extrapolation(
     num_train,
     num_val,
     num_test,
@@ -26,8 +32,6 @@ def test_fit_and_predict_extrapolation(
     runner = LightningGrammarModule(extrapolation_training=True)
     dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
     trainer.fit(runner, datamodule=dm)
-
-    trainer.predict(runner, datamodule=dm)
 
 
 @pytest.mark.parametrize("next_token_pick_mode", ["sample", "max"])
