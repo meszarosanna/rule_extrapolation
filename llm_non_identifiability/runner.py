@@ -184,7 +184,9 @@ class LightningGrammarModule(pl.LightningModule):
         self.log(f"{panel_name}/loss", loss)
 
         if self.hparams.adversarial_training is True:
-            _, _, _, loss_adversarial = self._forward(self.adversarial_prompts)
+            _, _, _, loss_adversarial = self._forward(
+                self.adversarial_prompts, completion_loss=True
+            )
             self.log(f"{panel_name}/loss_adversarial", loss_adversarial)
 
             # OOD prompt should remain 0 probability
@@ -445,9 +447,10 @@ class LightningGrammarModule(pl.LightningModule):
 
         return metrics, finished
 
-    def _forward(self, X):
+    def _forward(self, X, completion_loss=False):
         """
         Forward pass for calculating the model predictions and the loss.
+        :param completion_loss: calculate loss only on prompt completion
         :param X:
         :return:
         """
@@ -469,7 +472,15 @@ class LightningGrammarModule(pl.LightningModule):
         # Permute pred to have batch size first again
         pred = pred.permute(1, 2, 0)
 
-        loss = self.hparams.loss_fn(pred, X_expected)
+        if completion_loss is False:
+            loss = self.hparams.loss_fn(pred, X_expected)
+        else:
+            loss = self.hparams.loss_fn(
+                pred[
+                    :, :, self.hparams.test_prompt_length + 1 :
+                ],  # +1 is for the SOS token
+                X_expected[:, self.hparams.test_prompt_length + 1 :],
+            )
 
         return X, X_expected, pred, loss
 
