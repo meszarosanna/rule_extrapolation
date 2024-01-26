@@ -91,7 +91,7 @@ class LightningGrammarModule(pl.LightningModule):
         return math.log(n := (self.hparams.max_data_length // 2), math.e) / n
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr)
+        return torch.optim.AdamW(self.model.parameters(), lr=self.hparams.lr)
 
     def _setup_test_prompts(self) -> None:
         test_prompts = generate_test_prompts(length=self.hparams.test_prompt_length).to(
