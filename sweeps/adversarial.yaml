@@ -6,21 +6,21 @@ command:
   - "--config"
   - "configs/config.yaml"
   - ${args}
-method: grid
+method: random
 metric:
   goal: minimize
   name: Val/loss
 parameters:
   trainer.max_epochs:
-      value: 35000
+      value: 50000
   model.dim_model:
-    value:  8
+    value:  10
   model.num_heads:
-    value: 4
+    value: 5
   model.dim_feedforward:
     value: 1024
   model.num_decoder_layers:
-    value: 3
+    value: 5
   model.dropout_p:
     value: 0.1
   model.test_prompt_length:
@@ -38,4 +38,6 @@ parameters:
   data.batch_size:
     value: 128
   seed_everything:
-    values: [ 42, 64, 982, 5748, 23567, 726, 27235, 11872, 34897, 1996 ]
+    distribution: int_uniform
+    min: 0
+    max: 100000

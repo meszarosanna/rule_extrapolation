@@ -200,58 +200,75 @@ def sweep2df(
                     ]
                 )
 
-                as_before_bs_histories.append(
-                    run.history(keys=[f"Val/ID/finished/as_before_bs_accuracy"])[
-                        f"Val/ID/finished/as_before_bs_accuracy"
-                    ]
-                )
-                same_as_bs_histories.append(
-                    run.history(keys=[f"Val/ID/finished/same_number_as_bs_accuracy"])[
-                        f"Val/ID/finished/same_number_as_bs_accuracy"
-                    ]
-                )
-                grammatical_histories.append(
-                    run.history(keys=[f"Val/ID/finished/grammatical_accuracy"])[
-                        f"Val/ID/finished/grammatical_accuracy"
-                    ]
-                )
+                key = f"Val/ID/finished/as_before_bs_accuracy"
+                history = run.history(keys=[key])
+                as_before_bs_accuracy4min_val_loss = history.iloc[
+                    int(min_val_loss_step)
+                ][key]
+                as_before_bs_histories.append(history[key])
 
-                ood_as_before_bs_histories.append(
-                    run.history(keys=[f"Val/OOD/finished/as_before_bs_accuracy"])[
-                        f"Val/OOD/finished/as_before_bs_accuracy"
-                    ]
-                )
-                ood_as_before_bs_completion_histories.append(
-                    run.history(
-                        keys=[f"Val/OOD/finished/as_before_bs_completion_accuracy"]
-                    )[f"Val/OOD/finished/as_before_bs_completion_accuracy"]
-                )
-                ood_same_as_bs_histories.append(
-                    run.history(keys=[f"Val/OOD/finished/same_number_as_bs_accuracy"])[
-                        f"Val/OOD/finished/same_number_as_bs_accuracy"
-                    ]
-                )
-                ood_grammatical_histories.append(
-                    run.history(keys=[f"Val/OOD/finished/grammatical_accuracy"])[
-                        f"Val/OOD/finished/grammatical_accuracy"
-                    ]
-                )
+                key = f"Val/ID/finished/same_number_as_bs_accuracy"
+                history = run.history(keys=[key])
+                same_as_bs_accuracy4min_val_loss = history.iloc[int(min_val_loss_step)][
+                    key
+                ]
+                same_as_bs_histories.append(history[key])
 
-                sos_as_before_bs_histories.append(
-                    run.history(keys=[f"Val/SOS/finished/as_before_bs_accuracy"])[
-                        f"Val/SOS/finished/as_before_bs_accuracy"
-                    ]
-                )
-                sos_same_as_bs_histories.append(
-                    run.history(keys=[f"Val/SOS/finished/same_number_as_bs_accuracy"])[
-                        f"Val/SOS/finished/same_number_as_bs_accuracy"
-                    ]
-                )
-                sos_grammatical_histories.append(
-                    run.history(keys=[f"Val/SOS/finished/grammatical_accuracy"])[
-                        f"Val/SOS/finished/grammatical_accuracy"
-                    ]
-                )
+                key = f"Val/ID/finished/grammatical_accuracy"
+                history = run.history(keys=[key])
+                grammatical_accuracy4min_val_loss = history.iloc[
+                    int(min_val_loss_step)
+                ][key]
+                grammatical_histories.append(history[key])
+
+                key = f"Val/OOD/finished/as_before_bs_accuracy"
+                history = run.history(keys=[key])
+                ood_as_before_bs_accuracy4min_val_loss = history.iloc[
+                    int(min_val_loss_step)
+                ][key]
+                ood_as_before_bs_histories.append(history[key])
+
+                key = f"Val/OOD/finished/as_before_bs_completion_accuracy"
+                history = run.history(keys=[key])
+                ood_as_before_bs_completion_accuracy4min_val_loss = history.iloc[
+                    int(min_val_loss_step)
+                ][key]
+                ood_as_before_bs_completion_histories.append(history[key])
+
+                key = f"Val/OOD/finished/same_number_as_bs_accuracy"
+                history = run.history(keys=[key])
+                ood_same_as_bs_accuracy4min_val_loss = history.iloc[
+                    int(min_val_loss_step)
+                ][key]
+                ood_same_as_bs_histories.append(history[key])
+
+                key = f"Val/OOD/finished/grammatical_accuracy"
+                history = run.history(keys=[key])
+                ood_grammatical_accuracy4min_val_loss = history.iloc[
+                    int(min_val_loss_step)
+                ][key]
+                ood_grammatical_histories.append(history[key])
+
+                key = f"Val/SOS/finished/as_before_bs_accuracy"
+                history = run.history(keys=[key])
+                sos_as_before_bs_accuracy4min_val_loss = history.iloc[
+                    int(min_val_loss_step)
+                ][key]
+                sos_as_before_bs_histories.append(history[key])
+
+                key = f"Val/SOS/finished/same_number_as_bs_accuracy"
+                history = run.history(keys=[key])
+                sos_same_as_bs_accuracy4min_val_loss = history.iloc[
+                    int(min_val_loss_step)
+                ][key]
+                sos_same_as_bs_histories.append(history[key])
+
+                key = f"Val/SOS/finished/grammatical_accuracy"
+                history = run.history(keys=[key])
+                sos_grammatical_accuracy4min_val_loss = history.iloc[
+                    int(min_val_loss_step)
+                ][key]
+                sos_grammatical_histories.append(history[key])
 
                 data.append(
                     [
@@ -277,6 +294,16 @@ def sweep2df(
                         min_val_loss_step,
                         min_val_kl,
                         min_val_kl_step,
+                        as_before_bs_accuracy4min_val_loss,
+                        same_as_bs_accuracy4min_val_loss,
+                        grammatical_accuracy4min_val_loss,
+                        ood_as_before_bs_accuracy4min_val_loss,
+                        ood_as_before_bs_completion_accuracy4min_val_loss,
+                        ood_same_as_bs_accuracy4min_val_loss,
+                        ood_grammatical_accuracy4min_val_loss,
+                        sos_as_before_bs_accuracy4min_val_loss,
+                        sos_same_as_bs_accuracy4min_val_loss,
+                        sos_grammatical_accuracy4min_val_loss,
                     ]
                 )
 
@@ -308,6 +335,16 @@ def sweep2df(
             "min_val_loss_step",
             "min_val_kl",
             "min_val_kl_step",
+            "as_before_bs_accuracy4min_val_loss",
+            "same_as_bs_accuracy4min_val_loss",
+            "grammatical_accuracy4min_val_loss",
+            "ood_as_before_bs_accuracy4min_val_loss",
+            "ood_as_before_bs_completion_accuracy4min_val_loss",
+            "ood_same_as_bs_accuracy4min_val_loss",
+            "ood_grammatical_accuracy4min_val_loss",
+            "sos_as_before_bs_accuracy4min_val_loss",
+            "sos_same_as_bs_accuracy4min_val_loss",
+            "sos_grammatical_accuracy4min_val_loss",
         ],
     ).fillna(0)
 
