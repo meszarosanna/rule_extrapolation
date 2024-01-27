@@ -349,31 +349,33 @@ def sweep2df(
     ).fillna(0)
 
     # Prune histories to the minimum length
-    # min_len = np.array([len(v) for v in val_log_likelihood_histories]).min()
-
-    # val_log_likelihood_histories = np.array([v[:min_len] for v in val_log_likelihood_histories])
+    def _prune_histories(histories):
+        min_len = np.array([len(v) for v in histories]).min()
+        return np.array([v[:min_len] for v in histories])
 
     if save is True:
         runs_df.to_csv(csv_name)
         np.savez_compressed(
             npy_name,
-            train_loss_history=train_loss_histories,
-            val_loss_history=val_loss_histories,
-            val_kl_history=val_kl_histories,
-            val_accuracy_history=val_accuracy_histories,
-            finised_histories=finised_histories,
-            ood_finised_histories=ood_finised_histories,
-            sos_finised_histories=sos_finised_histories,
-            as_before_bs_histories=as_before_bs_histories,
-            same_as_bs_histories=same_as_bs_histories,
-            grammatical_histories=grammatical_histories,
-            ood_as_before_bs_histories=ood_as_before_bs_histories,
-            ood_as_before_bs_completion_histories=ood_as_before_bs_completion_histories,
-            ood_same_as_bs_histories=ood_same_as_bs_histories,
-            ood_grammatical_histories=ood_grammatical_histories,
-            sos_as_before_bs_histories=sos_as_before_bs_histories,
-            sos_same_as_bs_histories=sos_same_as_bs_histories,
-            sos_grammatical_histories=sos_grammatical_histories,
+            train_loss_history=_prune_histories(train_loss_histories),
+            val_loss_history=_prune_histories(val_loss_histories),
+            val_kl_history=_prune_histories(val_kl_histories),
+            val_accuracy_history=_prune_histories(val_accuracy_histories),
+            finised_histories=_prune_histories(finised_histories),
+            ood_finised_histories=_prune_histories(ood_finised_histories),
+            sos_finised_histories=_prune_histories(sos_finised_histories),
+            as_before_bs_histories=_prune_histories(as_before_bs_histories),
+            same_as_bs_histories=_prune_histories(same_as_bs_histories),
+            grammatical_histories=_prune_histories(grammatical_histories),
+            ood_as_before_bs_histories=_prune_histories(ood_as_before_bs_histories),
+            ood_as_before_bs_completion_histories=_prune_histories(
+                ood_as_before_bs_completion_histories
+            ),
+            ood_same_as_bs_histories=_prune_histories(ood_same_as_bs_histories),
+            ood_grammatical_histories=_prune_histories(ood_grammatical_histories),
+            sos_as_before_bs_histories=_prune_histories(sos_as_before_bs_histories),
+            sos_same_as_bs_histories=_prune_histories(sos_same_as_bs_histories),
+            sos_grammatical_histories=_prune_histories(sos_grammatical_histories),
         )
 
     return (
