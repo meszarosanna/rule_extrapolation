@@ -11,7 +11,7 @@ from llm_non_identifiability.runner import LightningGrammarModule
 
 if __name__ == "__main__":
     GRAMMAR = "aNbNaN"
-    MAX_EPOCHS = 1000
+    MAX_EPOCHS = 5000
 
     run = wandb.init(
         project="llm-non-identifiability",
@@ -33,7 +33,12 @@ if __name__ == "__main__":
 
     # To load a model along with its weights and hyperparameters use the following method
     model: LightningGrammarModule = LightningGrammarModule.load_from_checkpoint(
-        PATH, device="cuda" if torch.cuda.is_available() else "cpu", grammar=GRAMMAR
+        PATH,
+        device="cuda" if torch.cuda.is_available() else "cpu",
+        grammar=GRAMMAR,
+        max_data_length=128,
+        #   relu_rescale=100000.0,
+        layer_norm_eps=0.0,
     )
 
     datamodule = GrammarDataModule(
@@ -43,33 +48,21 @@ if __name__ == "__main__":
     )
 
     bad_model = deepcopy(model)
-    bad_model.model.relu_rescale = torch.nn.Parameter(
-        torch.tensor(10000.0), requires_grad=False
-    )
-
-    logger = WandbLogger(
-        entity="causal-representation-learning",
-        project="llm-non-identifiability",
-        name="finetune-good",
-        log_model="all",
-    )
-
-    trainer = Trainer(max_epochs=MAX_EPOCHS, logger=logger)
-    trainer.fit(
-        model,
-        datamodule=datamodule,
-    )
+    # bad_model.model.relu_rescale = torch.nn.Parameter(
+    # torch.tensor(10000.0), requires_grad=False
+    # )
 
     assert model.model.relu_rescale.requires_grad == False
 
     logger = WandbLogger(
         entity="causal-representation-learning",
         project="llm-non-identifiability",
-        name="finetune-bad",
-        log_model="all",
+        # name="finetune-bad",
+        name="finetune-good",
+        log_model=True,
     )
 
-    trainer = Trainer(max_epochs=MAX_EPOCHS, logger=logger)
+    trainer = Trainer(max_epochs=MAX_EPOCHS, logger=logger, check_val_every_n_epoch=50)
     trainer.fit(
         bad_model,
         datamodule=datamodule,
