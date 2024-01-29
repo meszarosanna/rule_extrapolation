@@ -361,21 +361,21 @@ def sweep2df(
             val_loss_history=_prune_histories(val_loss_histories),
             val_kl_history=_prune_histories(val_kl_histories),
             val_accuracy_history=_prune_histories(val_accuracy_histories),
-            finised_histories=_prune_histories(finised_histories),
-            ood_finised_histories=_prune_histories(ood_finised_histories),
-            sos_finised_histories=_prune_histories(sos_finised_histories),
-            as_before_bs_histories=_prune_histories(as_before_bs_histories),
-            same_as_bs_histories=_prune_histories(same_as_bs_histories),
-            grammatical_histories=_prune_histories(grammatical_histories),
-            ood_as_before_bs_histories=_prune_histories(ood_as_before_bs_histories),
-            ood_as_before_bs_completion_histories=_prune_histories(
+            finised_history=_prune_histories(finised_histories),
+            ood_finised_history=_prune_histories(ood_finised_histories),
+            sos_finised_history=_prune_histories(sos_finised_histories),
+            as_before_bs_history=_prune_histories(as_before_bs_histories),
+            same_as_bs_history=_prune_histories(same_as_bs_histories),
+            grammatical_history=_prune_histories(grammatical_histories),
+            ood_as_before_bs_history=_prune_histories(ood_as_before_bs_histories),
+            ood_as_before_bs_completion_history=_prune_histories(
                 ood_as_before_bs_completion_histories
             ),
-            ood_same_as_bs_histories=_prune_histories(ood_same_as_bs_histories),
-            ood_grammatical_histories=_prune_histories(ood_grammatical_histories),
-            sos_as_before_bs_histories=_prune_histories(sos_as_before_bs_histories),
-            sos_same_as_bs_histories=_prune_histories(sos_same_as_bs_histories),
-            sos_grammatical_histories=_prune_histories(sos_grammatical_histories),
+            ood_same_as_bs_history=_prune_histories(ood_same_as_bs_histories),
+            ood_grammatical_history=_prune_histories(ood_grammatical_histories),
+            sos_as_before_bs_history=_prune_histories(sos_as_before_bs_histories),
+            sos_same_as_bs_history=_prune_histories(sos_same_as_bs_histories),
+            sos_grammatical_history=_prune_histories(sos_grammatical_histories),
         )
 
     return (
