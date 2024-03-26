@@ -36,7 +36,7 @@ class LinearLLM(nn.Module):
     def __init__(
         self,
         num_tokens: int = 128,
-        vocab_size=3,
+        vocab_size=5,
         bias: bool = True,
         device=None,
         dtype=None,
