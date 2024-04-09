@@ -21,24 +21,23 @@ from llm_non_identifiability.data import (
     GrammarMetrics,
     pad,
 )
-from llm_non_identifiability.model import (
+from llm_non_identifiability.linear_model import (
     LinearLLM,
     create_pad_mask,
     get_tgt_mask,
 )
 
 
-class LightningGrammarModule(pl.LightningModule):
+class LinearLightningGrammarModule(pl.LightningModule):
     """
     LightningModule for training a Transformer on sequence data coming from a PCFG grammar.
     """
 
     def __init__(
         self,
-        num_tokens: int = 128,
-        vocab_size=5,
+        num_tokens: int = 5,
         bias: bool = True,
-        max_pred_length: int = 64,
+        # max_pred_length: int = 64,
         test_prompt_length: int = 6,
         lr: float = 0.01,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
@@ -83,8 +82,8 @@ class LightningGrammarModule(pl.LightningModule):
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
         self.model = LinearLLM(
+            max_data_length=self.hparams.max_data_length,
             num_tokens=self.hparams.num_tokens,
-            vocab_size=self.hparams.vocab_size,
             bias=self.hparams.bias,
         )
 
@@ -379,7 +378,8 @@ class LightningGrammarModule(pl.LightningModule):
 
     def eval_prompt_prediction(self, max_length: Optional[int] = None):
         if max_length is None:
-            max_length = self.hparams.max_pred_length
+            # in order to match the dimensions of the weight matrix
+            max_length = self.hparams.max_data_length - self.hparams.test_prompt_length
 
         (
             prompts,

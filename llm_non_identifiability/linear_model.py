@@ -35,8 +35,8 @@ def create_pad_mask(
 class LinearLLM(nn.Module):
     def __init__(
         self,
-        num_tokens: int = 128,
-        vocab_size=5,
+        max_data_length: int = 256,
+        num_tokens=5,
         bias: bool = True,
         device=None,
         dtype=None,
@@ -44,26 +44,36 @@ class LinearLLM(nn.Module):
         super().__init__()
 
         factory_kwargs = {"device": device, "dtype": dtype}
-        self.vocab_size = vocab_size
+        self.max_data_length = max_data_length
         self.num_tokens = num_tokens
+        # Weight matrix; +1 because the input has a SOS token at the beginning
         self.weight = torch.nn.Parameter(
             torch.empty(
-                (vocab_size, num_tokens, vocab_size, num_tokens), **factory_kwargs
+                (num_tokens, max_data_length + 1, num_tokens, max_data_length + 1),
+                **factory_kwargs
             )
         )
         if bias:
             self.bias = torch.nn.Parameter(
-                torch.empty((vocab_size, num_tokens), **factory_kwargs)
+                torch.empty((num_tokens, max_data_length + 1), **factory_kwargs)
             )
         else:
             self.register_parameter("bias", None)
         self.reset_parameters()
         self.mask = torch.tril(
-            torch.ones(num_tokens, num_tokens, device=device, dtype=torch.float)
+            torch.ones(
+                max_data_length + 1,
+                max_data_length + 1,
+                device=device,
+                dtype=torch.float,
+            )
         )
 
     def forward(self, src):
         src = torch.nn.functional.one_hot(src)
+        if src.shape[1] != (max_data_length + 1):
+            zeros_tensor = torch.zeros(src(0), max_data_length + 1 - src[1], src(2))
+            src = torch.cat((src, zeros_tensor), dim=1)
         out = torch.einsum("bsw,swtv,st->btv", src, self.weight, self.mask)
         if self.bias != None:
             out = out + self.bias[None, :, :]

@@ -9,6 +9,7 @@ import torch.nn as nn
 from transformers.optimization import get_inverse_sqrt_schedule
 
 from llm_non_identifiability.data import (
+    generate_aNbN_grammar_data,
     check_same_number_as_bs,
     check_as_before_bs,
     SOS_token,
@@ -98,6 +99,7 @@ class LightningGrammarModule(pl.LightningModule):
             relu_rescale=self.hparams.relu_rescale,
         )
 
+        # access grammar rule (e.g. check_as_before_bs)
         self.grammar_rules = grammar_rules(self.hparams.grammar)
         self.prompt_grammar_rules = prompt_grammar_rules(self.hparams.grammar)
         self._setup_test_prompts()

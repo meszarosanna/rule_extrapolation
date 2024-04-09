@@ -11,6 +11,7 @@ import dataclasses
 from typing import Dict
 
 
+# to_dict: creates a dictionary: {'as_before_bs_accuracy': 0.0, 'as_before_bs_completion_accuracy':0.0, etc}
 @dataclasses.dataclass
 class GrammarMetrics:
     as_before_bs_accuracy: float = 0.0
@@ -24,6 +25,7 @@ class GrammarMetrics:
         return dataclasses.asdict(self)
 
 
+# generates aNbN grammar: all sequences, all even, all odd or sequences of random length and num_samples number
 def generate_aNbN_grammar_data(
     num_samples: int,
     max_length: int = 32,
@@ -66,7 +68,7 @@ def generate_aNbN_grammar_data(
             np.concatenate((SOS_token, np.zeros(length), np.ones(length), EOS_token))
         )
 
-    return data
+    return data  # list containing the sequences of max length max_length+2
 
 
 def generate_aNbNaN_grammar_data(
