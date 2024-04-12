@@ -497,7 +497,6 @@ class LinearLightningGrammarModule(pl.LightningModule):
 
         # Standard training except we pass in X_input and causal_mask
         pred = self.model(src=X_input)
-        pred = pred.permute(0, 2, 1)  # to get shape [..., num_token, ...]
 
         # Batch size is already first
 
