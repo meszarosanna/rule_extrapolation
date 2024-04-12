@@ -32,5 +32,4 @@ class LSTM_LLM(nn.Module):
         lstm_out, _ = self.lstm(embedded)
         lstm_out = self.dropout(lstm_out)
         out = self.fc(lstm_out)
-        print(out.shape)
-        return out
+        return out.permute(0, 2, 1)
