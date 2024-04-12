@@ -85,6 +85,7 @@ class LinearLightningGrammarModule(pl.LightningModule):
             max_data_length=self.hparams.max_data_length,
             num_tokens=self.hparams.num_tokens,
             bias=self.hparams.bias,
+            device=self.hparams.device,
         )
 
         self.grammar_rules = grammar_rules(self.hparams.grammar)
@@ -496,6 +497,8 @@ class LinearLightningGrammarModule(pl.LightningModule):
 
         # Standard training except we pass in X_input and causal_mask
         pred = self.model(src=X_input)
+        pred = pred.permute(0, 2, 1)  # to get shape [..., num_token, ...]
+
         # Batch size is already first
 
         if completion_loss is False:

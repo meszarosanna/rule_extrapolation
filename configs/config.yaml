@@ -65,11 +65,14 @@ model:
   lr: 0.01
   layer_norm_eps: 2e-4
 linear_model:
-  max_data_length: 256,
-  num_tokens: 5,
-  bias: True,
-  device: None,
-  dtype: None,
+  max_data_length: 256
+  num_tokens: 5
+  bias: True
+lstm_model:
+  num_tokens: 5
+  embedding_dim: 32
+  hidden_dim: 100
+  dropout_lstm: 0.4
 data:
   num_train: 512
   num_val: 512

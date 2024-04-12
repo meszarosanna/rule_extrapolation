@@ -9,7 +9,6 @@ import torch.nn as nn
 from transformers.optimization import get_inverse_sqrt_schedule
 
 from llm_non_identifiability.data import (
-    generate_aNbN_grammar_data,
     check_same_number_as_bs,
     check_as_before_bs,
     SOS_token,
@@ -22,14 +21,10 @@ from llm_non_identifiability.data import (
     GrammarMetrics,
     pad,
 )
-from llm_non_identifiability.model import (
-    TransformerDecoder,
-    create_pad_mask,
-    get_tgt_mask,
-)
+from llm_non_identifiability.lstm_model import LSTM_LLM
 
 
-class LightningGrammarModule(pl.LightningModule):
+class LSTMLightningGrammarModule(pl.LightningModule):
     """
     LightningModule for training a Transformer on sequence data coming from a PCFG grammar.
     """
@@ -37,22 +32,17 @@ class LightningGrammarModule(pl.LightningModule):
     def __init__(
         self,
         num_tokens: int = 5,
-        dim_model: int = 8,
-        dim_feedforward: int = 256,
-        num_heads: int = 4,
-        num_decoder_layers: int = 2,
-        max_pred_length: int = 64,
+        embedding_dim: int = 32,
+        hidden_dim: int = 100,
+        dropout_lstm: float = 0.4,
         test_prompt_length: int = 6,
-        dropout_p: float = 0.1,
         lr: float = 0.01,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
         offline: bool = False,
         next_token_pick_mode: str = "max",
-        layer_norm_eps: float = 2e-4,
         grammar: str = "aNbN",
         max_data_length: int = 256,
         batch_size: int = 64,
-        relu_rescale: float = 1.0,
         adversarial_training: bool = False,
         num_warmup_steps: int = 1000,
         extrapolation_training: bool = False,
@@ -88,18 +78,14 @@ class LightningGrammarModule(pl.LightningModule):
             )
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
-        self.model = TransformerDecoder(
+        self.model = LSTM_LLM(
             num_tokens=self.hparams.num_tokens,
-            dim_model=self.hparams.dim_model,
-            num_heads=self.hparams.num_heads,
-            num_decoder_layers=self.hparams.num_decoder_layers,
-            dropout_p=self.hparams.dropout_p,
-            dim_feedforward=self.hparams.dim_feedforward,
-            layer_norm_eps=self.hparams.layer_norm_eps,
-            relu_rescale=self.hparams.relu_rescale,
+            embedding_dim=self.hparams.embedding_dim,
+            hidden_dim=self.hparams.hidden_dim,
+            dropout_lstm=self.hparams.dropout_lstm,
+            device=self.hparams.device,
         )
 
-        # access grammar rule (e.g. check_as_before_bs)
         self.grammar_rules = grammar_rules(self.hparams.grammar)
         self.prompt_grammar_rules = prompt_grammar_rules(self.hparams.grammar)
         self._setup_test_prompts()
@@ -391,7 +377,8 @@ class LightningGrammarModule(pl.LightningModule):
 
     def eval_prompt_prediction(self, max_length: Optional[int] = None):
         if max_length is None:
-            max_length = self.hparams.max_pred_length
+            # in order to match the dimensions of the weight matrix
+            max_length = self.hparams.max_data_length - self.hparams.test_prompt_length
 
         (
             prompts,
@@ -503,15 +490,10 @@ class LightningGrammarModule(pl.LightningModule):
         X_input = X[:, :-1]
         X_expected = X[:, 1:]
 
-        # Get mask to mask out the next words
-        causal_mask = get_tgt_mask(X_input.size(1), device=self.hparams.device)
-
         # Standard training except we pass in X_input and causal_mask
-        pred = self.model(
-            src=X_input,
-            mask=causal_mask,
-            src_key_padding_mask=create_pad_mask(X_input),
-        )
+        pred = self.model(src=X_input)
+
+        # Batch size is already first
 
         if completion_loss is False:
             loss = self.hparams.loss_fn(pred, X_expected)
@@ -563,15 +545,10 @@ class LightningGrammarModule(pl.LightningModule):
         finished = torch.BoolTensor([False] * prompt.size(0)).to(self.hparams.device)
 
         for _ in range(max_length):
-            # Get mask to mask out the next words
-            tgt_mask = get_tgt_mask(size=(prompt.size(1)), device=self.hparams.device)
-
             # forward pass
-            pred = self.model(
-                src=prompt,
-                mask=tgt_mask,
-                src_key_padding_mask=create_pad_mask(prompt),
-            )
+            pred = self.model(src=prompt)
+
+            # Batch size is already first
 
             # pick the prediction for the last token only
             next_items = self._pick_next_tokens(pred)[:, -1].view(-1, 1)

@@ -46,16 +46,17 @@ class LinearLLM(nn.Module):
         factory_kwargs = {"device": device, "dtype": dtype}
         self.max_data_length = max_data_length
         self.num_tokens = num_tokens
+        self.device = device
         # Weight matrix; +1 because the input has a SOS token at the beginning
         self.weight = torch.nn.Parameter(
             torch.empty(
-                (num_tokens, max_data_length + 1, num_tokens, max_data_length + 1),
+                (max_data_length + 1, num_tokens, max_data_length + 1, num_tokens),
                 **factory_kwargs
             )
         )
         if bias:
             self.bias = torch.nn.Parameter(
-                torch.empty((num_tokens, max_data_length + 1), **factory_kwargs)
+                torch.empty((max_data_length + 1, num_tokens), **factory_kwargs)
             )
         else:
             self.register_parameter("bias", None)
@@ -68,13 +69,25 @@ class LinearLLM(nn.Module):
                 dtype=torch.float,
             )
         )
+        self.mask.to(device)
+
+    def reset_parameters(self):
+        # Initialize parameters as desired
+        nn.init.xavier_uniform_(self.weight)
+        if self.bias is not None:
+            nn.init.zeros_(self.bias)
 
     def forward(self, src):
-        src = torch.nn.functional.one_hot(src)
-        if src.shape[1] != (max_data_length + 1):
-            zeros_tensor = torch.zeros(src(0), max_data_length + 1 - src[1], src(2))
+        src = torch.nn.functional.one_hot(src, num_classes=self.num_tokens)
+        if src.shape[1] != (self.max_data_length + 1):
+            zeros_tensor = torch.zeros(
+                src.shape[0],
+                self.max_data_length + 1 - src.shape[1],
+                src.shape[2],
+                device=self.device,
+            )
             src = torch.cat((src, zeros_tensor), dim=1)
-        out = torch.einsum("bsw,swtv,st->btv", src, self.weight, self.mask)
+        out = torch.einsum("bsw,swtv,st->btv", src.float(), self.weight, self.mask)
         if self.bias != None:
             out = out + self.bias[None, :, :]
         return out

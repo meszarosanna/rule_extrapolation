@@ -2,6 +2,8 @@ from pytorch_lightning.cli import LightningCLI
 
 from llm_non_identifiability.datamodule import GrammarDataModule
 from llm_non_identifiability.linear_runner import LinearLightningGrammarModule
+from llm_non_identifiability.runner import LightningGrammarModule
+from llm_non_identifiability.lstm_runner import LSTMLightningGrammarModule
 
 
 class LLMLightningCLI(LightningCLI):
@@ -21,14 +23,13 @@ class LLMLightningCLI(LightningCLI):
         )
 
         parser.link_arguments("data.grammar", "model.grammar")
-        # parser.link_arguments("data.max_length", "model.max_data_length")
-        parser.link_arguments("data.max_length", "linear_model.max_data_length")
+        parser.link_arguments("data.max_length", "model.max_data_length")
         parser.link_arguments("data.batch_size", "model.batch_size")
 
 
 if __name__ == "__main__":
     cli = LLMLightningCLI(
-        LinearLightningGrammarModule,
+        LightningGrammarModule,
         GrammarDataModule,
         save_config_callback=None,
         run=True,
