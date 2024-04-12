@@ -29,7 +29,7 @@ class LLMLightningCLI(LightningCLI):
 
 if __name__ == "__main__":
     cli = LLMLightningCLI(
-        LightningGrammarModule,
+        LinearLightningGrammarModule,
         GrammarDataModule,
         save_config_callback=None,
         run=True,

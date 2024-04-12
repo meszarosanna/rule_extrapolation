@@ -34,6 +34,7 @@ class LSTMLightningGrammarModule(pl.LightningModule):
         num_tokens: int = 5,
         embedding_dim: int = 32,
         hidden_dim: int = 100,
+        num_layers: int = 3,
         dropout_lstm: float = 0.4,
         test_prompt_length: int = 6,
         lr: float = 0.01,
@@ -82,6 +83,7 @@ class LSTMLightningGrammarModule(pl.LightningModule):
             num_tokens=self.hparams.num_tokens,
             embedding_dim=self.hparams.embedding_dim,
             hidden_dim=self.hparams.hidden_dim,
+            num_layers=self.hparams.num_layers,
             dropout_lstm=self.hparams.dropout_lstm,
             device=self.hparams.device,
         )
@@ -493,7 +495,7 @@ class LSTMLightningGrammarModule(pl.LightningModule):
         # Standard training except we pass in X_input and causal_mask
         pred = self.model(src=X_input)
 
-        # Batch size is already first
+        pred = pred.permute(0, 2, 1)
 
         if completion_loss is False:
             loss = self.hparams.loss_fn(pred, X_expected)
@@ -548,7 +550,7 @@ class LSTMLightningGrammarModule(pl.LightningModule):
             # forward pass
             pred = self.model(src=prompt)
 
-            # Batch size is already first
+            pred = pred.permute(0, 2, 1)
 
             # pick the prediction for the last token only
             next_items = self._pick_next_tokens(pred)[:, -1].view(-1, 1)

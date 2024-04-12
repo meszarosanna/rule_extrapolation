@@ -1,0 +1,7 @@
+
+model:
+  num_tokens: 5
+  embedding_dim: 32
+  hidden_dim: 100
+  num_layers: 3
+  dropout_lstm: 0.4

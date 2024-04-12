@@ -15,7 +15,7 @@ class LSTM_LLM(nn.Module):
         num_tokens: int = 5,
         embedding_dim: int = 32,
         hidden_dim: int = 128,
-        num_layers: int = 3,
+        num_layers: int = 4,
         dropout_lstm: float = 0.4,
         device=None,
     ):
@@ -32,5 +32,4 @@ class LSTM_LLM(nn.Module):
         lstm_out, _ = self.lstm(embedded)
         lstm_out = self.dropout(lstm_out)
         out = self.fc(lstm_out)
-        print(out.shape)
         return out
