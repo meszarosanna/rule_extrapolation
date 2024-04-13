@@ -21,10 +21,10 @@ from llm_non_identifiability.data import (
     GrammarMetrics,
     pad,
 )
+from llm_non_identifiability.model import get_tgt_mask
+
 from llm_non_identifiability.linear_model import (
     LinearLLM,
-    create_pad_mask,
-    get_tgt_mask,
 )
 
 
