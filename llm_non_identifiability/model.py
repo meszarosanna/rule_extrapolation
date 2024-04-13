@@ -126,7 +126,7 @@ class TransformerDecoder(nn.Module):
         src = src.permute(1, 0, 2)
 
         # Transformer blocks - Out size = (sequence length, batch_size, num_tokens)
-        transformer_out =  self.decoder(
+        transformer_out = self.decoder(
             src=src,
             mask=mask,
             src_key_padding_mask=src_key_padding_mask,
@@ -134,4 +134,3 @@ class TransformerDecoder(nn.Module):
         )
         out = self.out(transformer_out)
         return out.permute(1, 2, 0)
-
