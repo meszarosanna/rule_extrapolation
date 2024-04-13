@@ -90,4 +90,4 @@ class LinearLLM(nn.Module):
         out = torch.einsum("bsw,swtv,st->btv", src.float(), self.weight, self.mask)
         if self.bias != None:
             out = out + self.bias[None, :, :]
-        return out
+        return out.permute(0, 2, 1)

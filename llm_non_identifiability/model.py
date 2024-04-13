@@ -133,4 +133,5 @@ class TransformerDecoder(nn.Module):
             is_causal=True,
         )
         out = self.out(transformer_out)
-        return out
+        return out.permute(1, 2, 0)
+
