@@ -34,7 +34,9 @@ def test_fit_model(num_train, num_val, num_test, model, max_length):
         runner = LinearLightningGrammarModule(max_data_length=max_length)
     elif model == "lstm":
         runner = LSTMLightningGrammarModule(max_data_length=max_length)
-    dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test, max_length=max_length)
+    dm = GrammarDataModule(
+        num_train=num_train, num_val=num_val, num_test=num_test, max_length=max_length
+    )
     trainer.fit(runner, datamodule=dm)
 
 

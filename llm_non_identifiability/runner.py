@@ -513,7 +513,6 @@ class LightningGrammarModule(pl.LightningModule):
             src_key_padding_mask=create_pad_mask(X_input),
         )
 
-
         if completion_loss is False:
             loss = self.hparams.loss_fn(pred, X_expected)
         else:

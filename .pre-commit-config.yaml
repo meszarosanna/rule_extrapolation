@@ -9,7 +9,7 @@ repos:
         # supported by your project here, or alternatively use
         # pre-commit's default_language_version, see
         # https://pre-commit.com/#top_level-default_language_version
-        language_version: python3.10.12
+        language_version: python3.10
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
     hooks:
@@ -17,5 +17,5 @@ repos:
         entry: mypy
         types_or: [ python, pyi ]
         language: python
-        language_version: python3.10.12
+        language_version: python3.10
         args: [ "--ignore-missing-imports", "--scripts-are-modules" ]
