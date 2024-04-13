@@ -495,11 +495,12 @@ class LinearLightningGrammarModule(pl.LightningModule):
         # Get mask to mask out the next words
         causal_mask = get_tgt_mask(X_input.size(1), device=self.hparams.device)
 
+        print("-------")
+
         # Standard training except we pass in X_input and causal_mask
         pred = self.model(src=X_input)
 
-        # Batch size is already first
-
+        print("------")
         if completion_loss is False:
             loss = self.hparams.loss_fn(pred, X_expected)
         else:

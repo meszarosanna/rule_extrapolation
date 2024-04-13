@@ -513,6 +513,9 @@ class LightningGrammarModule(pl.LightningModule):
             src_key_padding_mask=create_pad_mask(X_input),
         )
 
+        # Batch size first
+        pred = pred.permute(1, 2, 0)
+
         if completion_loss is False:
             loss = self.hparams.loss_fn(pred, X_expected)
         else:
@@ -573,6 +576,8 @@ class LightningGrammarModule(pl.LightningModule):
                 src_key_padding_mask=create_pad_mask(prompt),
             )
 
+            # Batch size first
+            pred = pred.permute(1, 2, 0)
             # pick the prediction for the last token only
             next_items = self._pick_next_tokens(pred)[:, -1].view(-1, 1)
 
