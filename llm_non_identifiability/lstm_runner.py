@@ -495,7 +495,6 @@ class LSTMLightningGrammarModule(pl.LightningModule):
         # Standard training except we pass in X_input and causal_mask
         pred = self.model(src=X_input)
 
-        pred = pred.permute(0, 2, 1)
 
         if completion_loss is False:
             loss = self.hparams.loss_fn(pred, X_expected)
@@ -550,7 +549,6 @@ class LSTMLightningGrammarModule(pl.LightningModule):
             # forward pass
             pred = self.model(src=prompt)
 
-            pred = pred.permute(0, 2, 1)
 
             # pick the prediction for the last token only
             next_items = self._pick_next_tokens(pred)[:, -1].view(-1, 1)
