@@ -9,6 +9,7 @@ class LinearLLM(nn.Module):
         self,
         max_data_length: int = 256,
         num_tokens=5,
+        embedding_dim: int = 32,
         bias: bool = True,
         device=None,
         dtype=None,
@@ -19,10 +20,12 @@ class LinearLLM(nn.Module):
         self.max_data_length = max_data_length
         self.num_tokens = num_tokens
         self.device = device
+        self.embedding = nn.Embedding(num_tokens, embedding_dim)
+
         # Weight matrix; +1 because the input has a SOS token at the beginning
         self.weight = torch.nn.Parameter(
             torch.empty(
-                (max_data_length + 1, num_tokens, max_data_length + 1, num_tokens),
+                (max_data_length + 1, embedding_dim, max_data_length + 1, num_tokens),
                 **factory_kwargs
             )
         )
@@ -50,7 +53,7 @@ class LinearLLM(nn.Module):
             nn.init.zeros_(self.bias)
 
     def forward(self, src, apply_pad_mask: bool = True):
-        src = torch.nn.functional.one_hot(src, num_classes=self.num_tokens)
+        src = self.embedding(src)
         if src.shape[1] != (self.max_data_length + 1):
             zeros_tensor = torch.zeros(
                 src.shape[0],
