@@ -23,7 +23,7 @@ class LSTM_LLM(nn.Module):
 
         self.embedding = nn.Embedding(num_tokens, embedding_dim)
         self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers, batch_first=True)
-        self.dropout = nn.Dropout(dropout_lstm)
+        self.dropout =  nn.Dropout(dropout_lstm)
         self.fc = nn.Linear(hidden_dim, num_tokens)
 
     def forward(self, src):
