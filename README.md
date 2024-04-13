@@ -1,12 +1,12 @@
 <div align="center">    
  
-# Non-identifiability in Large Language Models
+# Rule Extrapolation in Large Language Models
 
 [//]: # ([![Paper]&#40;http://img.shields.io/badge/arxiv-cs.LG:2311.18048-B31B1B.svg&#41;]&#40;https://arxiv.org/abs/2311.18048&#41;)
 
 [//]: # ([![Conference]&#40;http://img.shields.io/badge/CI4TS@UAI-2023.svg&#41;]&#40;https://sites.google.com/view/ci4ts2023/accepted-papers?authuser=0&#41;)
 
-![CI testing](https://github.com/rpatrik96/llm-non-identifiability/workflows/CI%20testing/badge.svg?branch=main&event=push)
+![CI testing](https://github.com/meszarosanna/rule_extrapolation/workflows/CI%20testing/badge.svg?branch=main&event=push)
 
 </div>
  
@@ -19,7 +19,7 @@
 
 ```bash
 # clone the repo with submodules  
-git clone --recurse-submodules https://github.com/rpatrik96/llm-non-identifiability
+git clone --recurse-submodules https://github.com/meszarosanna/rule_extrapolation
 
 
 # install the package   
