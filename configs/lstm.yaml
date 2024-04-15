@@ -5,3 +5,4 @@ model:
   hidden_dim: 100
   num_layers: 3
   dropout: 0.4
+  model: lstm

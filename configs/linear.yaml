@@ -2,3 +2,4 @@ model:
   max_data_length: 256
   num_tokens: 5
   bias: True
+  model: linear
