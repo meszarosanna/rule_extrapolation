@@ -134,3 +134,101 @@ class TransformerDecoder(nn.Module):
         )
         out = self.out(transformer_out)
         return out.permute(1, 2, 0)
+
+
+class LinearLLM(nn.Module):
+    def __init__(
+        self,
+        max_data_length: int = 256,
+        num_tokens=5,
+        embedding_dim: int = 32,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+    ):
+        super().__init__()
+
+        factory_kwargs = {"device": device, "dtype": dtype}
+        self.max_data_length = max_data_length
+        self.num_tokens = num_tokens
+        self.device = device
+        self.embedding = nn.Embedding(num_tokens, embedding_dim)
+
+        # Weight matrix; +1 because the input has a SOS token at the beginning
+        self.weight = torch.nn.Parameter(
+            torch.empty(
+                (max_data_length + 1, embedding_dim, max_data_length + 1, num_tokens),
+                **factory_kwargs
+            )
+        )
+        if bias:
+            self.bias = torch.nn.Parameter(
+                torch.empty((max_data_length + 1, num_tokens), **factory_kwargs)
+            )
+        else:
+            self.register_parameter("bias", None)
+        self.reset_parameters()
+        self.mask = torch.tril(
+            torch.ones(
+                max_data_length + 1,
+                max_data_length + 1,
+                device=device,
+                dtype=torch.float,
+            )
+        )
+        self.mask.to(device)
+
+    def reset_parameters(self):
+        # Initialize parameters as desired
+        nn.init.xavier_uniform_(self.weight)
+        if self.bias is not None:
+            nn.init.zeros_(self.bias)
+
+    def forward(self, src, apply_pad_mask: bool = True):
+        src = self.embedding(src)
+        if src.shape[1] != (self.max_data_length + 1):
+            zeros_tensor = torch.zeros(
+                src.shape[0],
+                self.max_data_length + 1 - src.shape[1],
+                src.shape[2],
+                device=self.device,
+            )
+            src = torch.cat((src, zeros_tensor), dim=1)
+
+        if apply_pad_mask:
+            src = (
+                src * create_pad_mask(src).logical_not()
+            )  # logical not needed as we want to mask the pad tokens
+
+        out = torch.einsum("bsw,swtv,st->btv", src.float(), self.weight, self.mask)
+        if self.bias != None:
+            out = out + self.bias[None, :, :]
+        return out.permute(0, 2, 1)
+
+
+class LSTM_LLM(nn.Module):
+    # Constructor
+    def __init__(
+        self,
+        num_tokens: int = 5,
+        embedding_dim: int = 32,
+        hidden_dim: int = 128,
+        num_layers: int = 4,
+        dropout_lstm: float = 0.4,
+        device=None,
+    ):
+        super(LSTM_LLM, self).__init__()
+
+        self.embedding = nn.Embedding(num_tokens, embedding_dim)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers, batch_first=True)
+        self.dropout = nn.Dropout(dropout_lstm)
+        self.fc = nn.Linear(hidden_dim, num_tokens)
+
+    def forward(self, src):
+        src = src.to(self.embedding.weight.device)
+        embedded = self.embedding(src)
+        lstm_out, _ = self.lstm(embedded)
+        lstm_out = self.dropout(lstm_out)
+        out = self.fc(lstm_out)
+
+        return out.permute(0, 2, 1)

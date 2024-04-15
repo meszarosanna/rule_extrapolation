@@ -5,8 +5,6 @@ from pytorch_lightning.trainer import Trainer
 from llm_non_identifiability.data import SOS_token
 from llm_non_identifiability.datamodule import GrammarDataModule
 from llm_non_identifiability.runner import LightningGrammarModule
-from llm_non_identifiability.linear_runner import LinearLightningGrammarModule
-from llm_non_identifiability.lstm_runner import LSTMLightningGrammarModule
 
 
 @pytest.mark.parametrize("adversarial_training", [True, False])
@@ -28,12 +26,7 @@ def test_fit_optimizer(num_train, num_val, num_test, optimizer):
 @pytest.mark.parametrize("model", ["transformer", "linear", "lstm"])
 def test_fit_model(num_train, num_val, num_test, model, max_length):
     trainer = Trainer(fast_dev_run=True)
-    if model == "transformer":
-        runner = LightningGrammarModule()
-    elif model == "linear":
-        runner = LinearLightningGrammarModule(max_data_length=max_length)
-    elif model == "lstm":
-        runner = LSTMLightningGrammarModule(max_data_length=max_length)
+    runner = LightningGrammarModule(max_data_length=max_length, model=model)
     dm = GrammarDataModule(
         num_train=num_train, num_val=num_val, num_test=num_test, max_length=max_length
     )

@@ -26,6 +26,8 @@ from llm_non_identifiability.model import (
     TransformerDecoder,
     create_pad_mask,
     get_tgt_mask,
+    LinearLLM,
+    LSTM_LLM,
 )
 
 
@@ -38,9 +40,8 @@ class LightningGrammarModule(pl.LightningModule):
         self,
         num_tokens: int = 5,
         dim_model: int = 8,
-        dim_feedforward: int = 256,
         num_heads: int = 4,
-        num_decoder_layers: int = 2,
+        num_layers: int = 2,
         max_pred_length: int = 64,
         test_prompt_length: int = 6,
         dropout_p: float = 0.1,
@@ -57,6 +58,10 @@ class LightningGrammarModule(pl.LightningModule):
         num_warmup_steps: int = 1000,
         extrapolation_training: bool = False,
         optimizer: str = "adamw",
+        hidden_dim=256,
+        model="transformer",
+        bias=True,
+        dropout=0.4,
     ):
         """
         :param optimizer:
@@ -88,16 +93,36 @@ class LightningGrammarModule(pl.LightningModule):
             )
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
-        self.model = TransformerDecoder(
-            num_tokens=self.hparams.num_tokens,
-            dim_model=self.hparams.dim_model,
-            num_heads=self.hparams.num_heads,
-            num_decoder_layers=self.hparams.num_decoder_layers,
-            dropout_p=self.hparams.dropout_p,
-            dim_feedforward=self.hparams.dim_feedforward,
-            layer_norm_eps=self.hparams.layer_norm_eps,
-            relu_rescale=self.hparams.relu_rescale,
-        )
+
+        if self.hparams.model == "transformer":
+            self.model: nn.Module = TransformerDecoder(
+                num_tokens=self.hparams.num_tokens,
+                dim_model=self.hparams.dim_model,
+                num_heads=self.hparams.num_heads,
+                num_decoder_layers=self.hparams.num_layers,
+                dropout_p=self.hparams.dropout_p,
+                dim_feedforward=self.hparams.hidden_dim,
+                layer_norm_eps=self.hparams.layer_norm_eps,
+                relu_rescale=self.hparams.relu_rescale,
+            )
+        elif self.hparams.model == "linear":
+            self.model: nn.Module = LinearLLM(  # type: ignore
+                max_data_length=self.hparams.max_data_length,
+                num_tokens=self.hparams.num_tokens,
+                bias=self.hparams.bias,
+                device=self.hparams.device,
+                embedding_dim=self.hparams.dim_model,
+            )
+
+        elif self.hparams.model == "lstm":
+            self.model: nn.Module = LSTM_LLM(  # type: ignore
+                num_tokens=self.hparams.num_tokens,
+                embedding_dim=self.hparams.dim_model,
+                hidden_dim=self.hparams.hidden_dim,
+                num_layers=self.hparams.num_layers,
+                dropout_lstm=self.hparams.dropout,
+                device=self.hparams.device,
+            )
 
         # access grammar rule (e.g. check_as_before_bs)
         self.grammar_rules = grammar_rules(self.hparams.grammar)
@@ -507,11 +532,15 @@ class LightningGrammarModule(pl.LightningModule):
         causal_mask = get_tgt_mask(X_input.size(1), device=self.hparams.device)
 
         # Standard training except we pass in X_input and causal_mask
-        pred = self.model(
-            src=X_input,
-            mask=causal_mask,
-            src_key_padding_mask=create_pad_mask(X_input),
-        )
+
+        if self.hparams.model == "transformer":
+            pred = self.model(
+                src=X_input,
+                mask=causal_mask,
+                src_key_padding_mask=create_pad_mask(X_input),
+            )
+        elif self.hparams.model == "linear" or self.hparams.model == "lstm":
+            pred = self.model(src=X_input)
 
         if completion_loss is False:
             loss = self.hparams.loss_fn(pred, X_expected)
@@ -562,16 +591,23 @@ class LightningGrammarModule(pl.LightningModule):
 
         finished = torch.BoolTensor([False] * prompt.size(0)).to(self.hparams.device)
 
+        if self.hparams.model == "linear":
+            max_length = self.hparams.max_data_length - prompt.shape[1]
+
         for _ in range(max_length):
             # Get mask to mask out the next words
             tgt_mask = get_tgt_mask(size=(prompt.size(1)), device=self.hparams.device)
 
             # forward pass
-            pred = self.model(
-                src=prompt,
-                mask=tgt_mask,
-                src_key_padding_mask=create_pad_mask(prompt),
-            )
+            if self.hparams.model == "transformer":
+                pred = self.model(
+                    src=prompt,
+                    mask=tgt_mask,
+                    src_key_padding_mask=create_pad_mask(prompt),
+                )
+
+            elif self.hparams.model == "linear" or self.hparams.model == "lstm":
+                pred = self.model(src=prompt)
 
             # pick the prediction for the last token only
             next_items = self._pick_next_tokens(pred)[:, -1].view(-1, 1)

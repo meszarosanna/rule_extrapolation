@@ -56,11 +56,11 @@ trainer:
 model:
   num_tokens: 5
   dim_model: 8
-  dim_feedforward: 128
+  hidden_dim: 128
   num_heads: 4
   test_prompt_length: 6
   max_pred_length: 64
-  num_decoder_layers: 2
+  num_layers: 2
   dropout_p: 0.1
   lr: 0.01
   layer_norm_eps: 2e-4
