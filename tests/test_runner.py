@@ -28,12 +28,7 @@ def test_fit_optimizer(num_train, num_val, num_test, optimizer):
 @pytest.mark.parametrize("model", ["transformer", "linear", "lstm"])
 def test_fit_model(num_train, num_val, num_test, model, max_length):
     trainer = Trainer(fast_dev_run=True)
-    if model == "transformer":
-        runner = LightningGrammarModule()
-    elif model == "linear":
-        runner = LinearLightningGrammarModule(max_data_length=max_length)
-    elif model == "lstm":
-        runner = LSTMLightningGrammarModule(max_data_length=max_length)
+    runner = LightningGrammarModule(max_data_length=max_length, model=model)
     dm = GrammarDataModule(
         num_train=num_train, num_val=num_val, num_test=num_test, max_length=max_length
     )
