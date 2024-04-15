@@ -95,7 +95,7 @@ class LightningGrammarModule(pl.LightningModule):
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
 
         if self.hparams.model == "transformer":
-            self.model = TransformerDecoder(
+            self.model: nn.Module = TransformerDecoder(
                 num_tokens=self.hparams.num_tokens,
                 dim_model=self.hparams.dim_model,
                 num_heads=self.hparams.num_heads,
@@ -106,7 +106,7 @@ class LightningGrammarModule(pl.LightningModule):
                 relu_rescale=self.hparams.relu_rescale,
             )
         elif self.hparams.model == "linear":
-            self.model = LinearLLM(
+            self.model: nn.Module = LinearLLM(  # type: ignore
                 max_data_length=self.hparams.max_data_length,
                 num_tokens=self.hparams.num_tokens,
                 bias=self.hparams.bias,
@@ -115,7 +115,7 @@ class LightningGrammarModule(pl.LightningModule):
             )
 
         elif self.hparams.model == "lstm":
-            self.model = LSTM_LLM(
+            self.model: nn.Module = LSTM_LLM(  # type: ignore
                 num_tokens=self.hparams.num_tokens,
                 embedding_dim=self.hparams.dim_model,
                 hidden_dim=self.hparams.hidden_dim,
