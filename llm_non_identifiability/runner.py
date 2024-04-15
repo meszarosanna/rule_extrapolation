@@ -26,13 +26,9 @@ from llm_non_identifiability.model import (
     TransformerDecoder,
     create_pad_mask,
     get_tgt_mask,
-)
-
-from llm_non_identifiability.linear_model import (
     LinearLLM,
+    LSTM_LLM,
 )
-
-from llm_non_identifiability.lstm_model import LSTM_LLM
 
 
 class LightningGrammarModule(pl.LightningModule):

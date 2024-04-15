@@ -1,9 +1,7 @@
 from pytorch_lightning.cli import LightningCLI
 
 from llm_non_identifiability.datamodule import GrammarDataModule
-from llm_non_identifiability.linear_runner import LinearLightningGrammarModule
 from llm_non_identifiability.runner import LightningGrammarModule
-from llm_non_identifiability.lstm_runner import LSTMLightningGrammarModule
 
 
 class LLMLightningCLI(LightningCLI):
@@ -29,7 +27,7 @@ class LLMLightningCLI(LightningCLI):
 
 if __name__ == "__main__":
     cli = LLMLightningCLI(
-        LinearLightningGrammarModule,
+        LightningGrammarModule,
         GrammarDataModule,
         save_config_callback=None,
         run=True,

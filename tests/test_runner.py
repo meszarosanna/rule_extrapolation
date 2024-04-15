@@ -5,8 +5,6 @@ from pytorch_lightning.trainer import Trainer
 from llm_non_identifiability.data import SOS_token
 from llm_non_identifiability.datamodule import GrammarDataModule
 from llm_non_identifiability.runner import LightningGrammarModule
-from llm_non_identifiability.linear_runner import LinearLightningGrammarModule
-from llm_non_identifiability.lstm_runner import LSTMLightningGrammarModule
 
 
 @pytest.mark.parametrize("adversarial_training", [True, False])
