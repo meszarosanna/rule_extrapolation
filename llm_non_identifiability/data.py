@@ -395,3 +395,47 @@ def prompt_grammar_rules(grammar):
         return lambda x: check_as_before_bs(x) and check_bs_together(x)
     else:
         raise ValueError(f"Unknown grammar {grammar}")
+
+
+import random
+
+
+def generate_matched_parentheses_and_brackets(n):
+    """
+    Generate a word of length n with paired () and [].
+    """
+    if n == 0:
+        return ""
+    else:
+        word = ""
+        stack = []
+        while len(word) < n:  # Each pair of parentheses or brackets adds 2 characters
+            if len(stack) == 0:
+                choice = random.choice([1, 2])
+            elif stack[-1] == "(":
+                choice = random.choice([1, 2, 3])
+                if len(word) + len(stack) >= n:
+                    choice = 3
+
+            elif stack[-1] == "[":
+                choice = random.choice([1, 2, 4])
+                if len(word) + len(stack) >= n:
+                    choice = 4
+
+            if choice == 1:
+                word += "("
+                stack.append("(")
+            elif choice == 2:
+                word += "["
+                stack.append("[")
+            elif choice == 3:
+                word += ")"
+                stack.pop()
+            elif choice == 4:
+                word += "]"
+                stack.pop()
+
+            if len(stack) == 0:
+                break
+
+        return word
