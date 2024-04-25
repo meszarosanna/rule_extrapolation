@@ -527,3 +527,53 @@ def generate_matched_brackets(n):
                 break
 
         return np.concatenate(word)
+
+
+def generate_matched_parenthesis_data(num_samples: int, max_length: int = 32) -> list:
+    """
+
+
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+    """
+
+    lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
+
+    data = [generate_matched_parentheses(l) for l in lengths]
+
+    return data
+
+
+def generate_matched_brackets_data(num_samples: int, max_length: int = 32) -> list:
+    """
+
+
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+    """
+
+    lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
+
+    data = [generate_matched_brackets_data(l) for l in lengths]
+
+    return data
+
+
+def generate_matched_parentheses_and_brackets_data(
+    num_samples: int, max_length: int = 32
+) -> list:
+    """
+
+
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+    """
+
+    lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
+
+    data = [generate_matched_parentheses_and_brackets(l) for l in lengths]
+
+    return data
