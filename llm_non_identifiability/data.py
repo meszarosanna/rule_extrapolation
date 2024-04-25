@@ -4,6 +4,10 @@ import torch
 SOS_token = np.array([2])
 EOS_token = np.array([3])
 PAD_token = np.array([4])
+OPENING_PARENTHESIS_token = np.array([7])
+CLOSING_PARENTHESIS_token = np.array([8])
+OPENING_BRACKET_token = np.array([9])
+CLOSING_BRACKET_token = np.array([10])
 
 from itertools import product
 
@@ -406,8 +410,10 @@ def generate_matched_parentheses_and_brackets(n):
     """
     if n == 0:
         return ""
+    elif n % 2 == 1:
+        raise ValueError("Length can only be even")
     else:
-        word = ""
+        word = []
         stack = []
         while len(word) < n:  # Each pair of parentheses or brackets adds 2 characters
             if len(stack) == 0:
@@ -438,7 +444,7 @@ def generate_matched_parentheses_and_brackets(n):
             if len(stack) == 0:
                 break
 
-        return word
+        return np.concatenate(word)
 
 
 def generate_matched_parentheses(n):
@@ -447,8 +453,10 @@ def generate_matched_parentheses(n):
     """
     if n == 0:
         return ""
+    elif n % 2 == 1:
+        raise ValueError("Length can only be even")
     else:
-        word = ""
+        word = []
         stack = []
         while len(word) < n:  # Each pair of parentheses or brackets adds 2 characters
             if len(stack) == 0:
@@ -459,17 +467,17 @@ def generate_matched_parentheses(n):
                     choice = 3
 
             if choice == 1:
-                word += "("
+                word.append(OPENING_PARENTHESIS_token)
                 stack.append("(")
 
             elif choice == 3:
-                word += ")"
+                word.append(CLOSING_PARENTHESIS_token)
                 stack.pop()
 
             if len(stack) == 0:
                 break
 
-        return word
+        return np.concatenate(word)
 
 
 def generate_matched_brackets(n):
@@ -478,8 +486,10 @@ def generate_matched_brackets(n):
     """
     if n == 0:
         return ""
+    elif n % 2 == 1:
+        raise ValueError("Length can only be even")
     else:
-        word = ""
+        word = []
         stack = []
         while len(word) < n:  # Each pair of parentheses or brackets adds 2 characters
             if len(stack) == 0:
@@ -491,13 +501,13 @@ def generate_matched_brackets(n):
                     choice = 4
 
             if choice == 2:
-                word += "["
+                word.append(OPENING_BRACKET_token)
                 stack.append("[")
             elif choice == 4:
-                word += "]"
+                word.append(CLOSING_BRACKET_token)
                 stack.pop()
 
             if len(stack) == 0:
                 break
 
-        return word
+        return np.concatenate(word)
