@@ -458,7 +458,7 @@ def generate_matched_parentheses_and_brackets(n):
             if len(stack) == 0:
                 break
 
-        return np.concatenate(word)
+        return np.concatenate((SOS_token, *word, EOS_token))
 
 
 def generate_matched_parentheses(n):
@@ -493,7 +493,7 @@ def generate_matched_parentheses(n):
             if len(stack) == 0:
                 break
 
-        return np.concatenate(word)
+        return np.concatenate((SOS_token, *word, EOS_token))
 
 
 def generate_matched_brackets(n):
@@ -526,7 +526,7 @@ def generate_matched_brackets(n):
             if len(stack) == 0:
                 break
 
-        return np.concatenate(word)
+        return np.concatenate((SOS_token, *word, EOS_token))
 
 
 def generate_matched_parenthesis_data(num_samples: int, max_length: int = 32) -> list:
