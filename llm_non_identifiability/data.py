@@ -470,3 +470,34 @@ def generate_matched_parentheses(n):
                 break
 
         return word
+
+
+def generate_matched_brackets(n):
+    """
+    Generate a word of length n with paired [].
+    """
+    if n == 0:
+        return ""
+    else:
+        word = ""
+        stack = []
+        while len(word) < n:  # Each pair of parentheses or brackets adds 2 characters
+            if len(stack) == 0:
+                choice = 2
+
+            elif stack[-1] == "[":
+                choice = random.choice([2, 4])
+                if len(word) + len(stack) >= n:
+                    choice = 4
+
+            if choice == 2:
+                word += "["
+                stack.append("[")
+            elif choice == 4:
+                word += "]"
+                stack.pop()
+
+            if len(stack) == 0:
+                break
+
+        return word
