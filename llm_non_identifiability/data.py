@@ -417,28 +417,42 @@ def generate_matched_parentheses_and_brackets(n):
         stack = []
         while len(word) < n:  # Each pair of parentheses or brackets adds 2 characters
             if len(stack) == 0:
-                choice = random.choice([1, 2])
-            elif stack[-1] == "(":
-                choice = random.choice([1, 2, 3])
+                choice = random.choice(
+                    [OPENING_PARENTHESIS_token, OPENING_BRACKET_token]
+                )
+            elif stack[-1] == OPENING_PARENTHESIS_token:
+                choice = random.choice(
+                    [
+                        OPENING_PARENTHESIS_token,
+                        OPENING_BRACKET_token,
+                        CLOSING_PARENTHESIS_token,
+                    ]
+                )
                 if len(word) + len(stack) >= n:
-                    choice = 3
+                    choice = CLOSING_PARENTHESIS_token
 
-            elif stack[-1] == "[":
-                choice = random.choice([1, 2, 4])
+            elif stack[-1] == OPENING_BRACKET_token:
+                choice = random.choice(
+                    [
+                        OPENING_PARENTHESIS_token,
+                        OPENING_BRACKET_token,
+                        CLOSING_BRACKET_token,
+                    ]
+                )
                 if len(word) + len(stack) >= n:
-                    choice = 4
+                    choice = CLOSING_BRACKET_token
 
-            if choice == 1:
-                word += "("
-                stack.append("(")
-            elif choice == 2:
-                word += "["
-                stack.append("[")
-            elif choice == 3:
-                word += ")"
+            if choice == OPENING_PARENTHESIS_token:
+                word.append(OPENING_PARENTHESIS_token)
+                stack.append(OPENING_PARENTHESIS_token)
+            elif choice == OPENING_BRACKET_token:
+                word.append(OPENING_BRACKET_token)
+                stack.append(OPENING_BRACKET_token)
+            elif choice == CLOSING_PARENTHESIS_token:
+                word.append(CLOSING_PARENTHESIS_token)
                 stack.pop()
-            elif choice == 4:
-                word += "]"
+            elif choice == CLOSING_BRACKET_token:
+                word.append(CLOSING_BRACKET_token)
                 stack.pop()
 
             if len(stack) == 0:
@@ -460,17 +474,19 @@ def generate_matched_parentheses(n):
         stack = []
         while len(word) < n:  # Each pair of parentheses or brackets adds 2 characters
             if len(stack) == 0:
-                choice = 1
-            elif stack[-1] == "(":
-                choice = random.choice([1, 3])
+                choice = OPENING_PARENTHESIS_token
+            elif stack[-1] == OPENING_PARENTHESIS_token:
+                choice = random.choice(
+                    [OPENING_PARENTHESIS_token, CLOSING_PARENTHESIS_token]
+                )
                 if len(word) + len(stack) >= n:
-                    choice = 3
+                    choice = CLOSING_PARENTHESIS_token
 
-            if choice == 1:
+            if choice == OPENING_PARENTHESIS_token:
                 word.append(OPENING_PARENTHESIS_token)
-                stack.append("(")
+                stack.append(OPENING_PARENTHESIS_token)
 
-            elif choice == 3:
+            elif choice == CLOSING_PARENTHESIS_token:
                 word.append(CLOSING_PARENTHESIS_token)
                 stack.pop()
 
@@ -493,17 +509,17 @@ def generate_matched_brackets(n):
         stack = []
         while len(word) < n:  # Each pair of parentheses or brackets adds 2 characters
             if len(stack) == 0:
-                choice = 2
+                choice = OPENING_BRACKET_token
 
-            elif stack[-1] == "[":
-                choice = random.choice([2, 4])
+            elif stack[-1] == OPENING_BRACKET_token:
+                choice = random.choice([2, CLOSING_BRACKET_token])
                 if len(word) + len(stack) >= n:
-                    choice = 4
+                    choice = CLOSING_BRACKET_token
 
-            if choice == 2:
+            if choice == OPENING_BRACKET_token:
                 word.append(OPENING_BRACKET_token)
-                stack.append("[")
-            elif choice == 4:
+                stack.append(OPENING_BRACKET_token)
+            elif choice == CLOSING_BRACKET_token:
                 word.append(CLOSING_BRACKET_token)
                 stack.pop()
 

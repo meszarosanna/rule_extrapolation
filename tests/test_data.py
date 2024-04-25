@@ -255,12 +255,12 @@ from llm_non_identifiability.data import (
 
 
 def test_generate_matched_brackets():
-    generate_matched_brackets(4)
+    generate_matched_brackets(40)
 
 
 def test_generate_matched_parentheses():
-    generate_matched_parentheses(4)
+    generate_matched_parentheses(40)
 
 
 def test_generate_matched_parentheses_and_brackets():
-    generate_matched_parentheses_and_brackets(4)
+    generate_matched_parentheses_and_brackets(40)
