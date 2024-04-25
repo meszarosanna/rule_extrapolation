@@ -1,9 +1,9 @@
 import numpy as np
 import torch
 
-SOS_token = np.array([2])
-EOS_token = np.array([3])
-PAD_token = np.array([4])
+SOS_token = np.array([3])
+EOS_token = np.array([4])
+PAD_token = np.array([5])
 
 from itertools import product
 
@@ -110,6 +110,45 @@ def generate_aNbNaN_grammar_data(
     return data
 
 
+def generate_aNbNcN_grammar_data(
+    num_samples: int, max_length: int = 32, all_sequences=True
+) -> list:
+    """
+    PCFG with two rules:
+    - number of a's is equal to the number of b's, equal to the number of c's
+    - N a's come first, followed by N b's, then N c's
+
+    :param all_sequences:
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+
+    """
+    if all_sequences is True:
+        lengths = np.linspace(
+            start=1, stop=max_length // 3, num=max_length // 3, dtype=int, endpoint=True
+        )
+    else:
+        lengths = np.random.randint(low=1, high=max_length // 3 + 1, size=num_samples)
+
+    data = []
+
+    for length in lengths:
+        data.append(
+            np.concatenate(
+                (
+                    SOS_token,
+                    np.zeros(length),
+                    np.ones(length),
+                    np.ones(length) * 2,
+                    EOS_token,
+                )
+            )
+        )
+
+    return data
+
+
 def generate_abN_grammar_data(num_samples: int, max_length: int = 32) -> list:
     """
     PCFG with one rule:
@@ -197,6 +236,56 @@ def check_as_before_bs(sequence: torch.Tensor):
             first_b = b_tokens[0]
 
             return first_b > last_a
+        else:
+            return True
+    else:
+        return True
+
+
+def check_as_before_cs(sequence: torch.Tensor):
+    """
+    Check if the first c comes after the last a
+    :param sequence:
+    :return:
+    """
+
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(a_tokens := torch.where(sequence == 0)[0]) > 0:
+        # find the last a
+        last_a = a_tokens[-1]
+
+        if len(c_tokens := torch.where(sequence == 2)[0]) > 0:
+            # find the first c
+            first_c = c_tokens[0]
+
+            return first_c > last_a
+        else:
+            return True
+    else:
+        return True
+
+
+def check_bs_before_cs(sequence: torch.Tensor):
+    """
+    Check if the first c comes after the last b
+    :param sequence:
+    :return:
+    """
+
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+        # find the last b
+        last_b = b_tokens[-1]
+
+        if len(c_tokens := torch.where(sequence == 2)[0]) > 0:
+            # find the first c
+            first_c = c_tokens[0]
+
+            return first_c > last_b
         else:
             return True
     else:
@@ -291,6 +380,20 @@ def check_more_as_than_bs(sequence: torch.Tensor):
     return num_as >= num_bs
 
 
+def check_more_bs_than_cs(sequence: torch.Tensor):
+    """
+    Check if there are more b's than c's
+    :param sequence:
+    :return:
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    num_bs = torch.sum(sequence == 1)
+    num_cs = torch.sum(sequence == 2)
+    return num_bs >= num_cs
+
+
 def check_more_as_before_bs(sequence: torch.Tensor):
     """
     Check if there are more a's than b's
@@ -311,6 +414,73 @@ def check_more_as_before_bs(sequence: torch.Tensor):
         return True
 
 
+def check_same_number_as_bs_cs(sequence: torch.Tensor):
+    """
+    Check if the number of a's, b's and c's is the same
+    :param sequence:
+    :return:
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    num_as = torch.sum(sequence == 0)
+    num_bs = torch.sum(sequence == 1)
+    num_cs = torch.sum(sequence == 2)
+    return (num_as == num_bs) and (num_bs == num_cs)
+
+
+def check_as_before_bs_before_cs(sequence: torch.Tensor):
+    """
+    Check if the first b comes after the last a and the first c comes after the last b
+    :param sequence:
+    :return:
+    """
+
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(c_tokens := torch.where(sequence == 2)[0]) > 0:
+        # find the first c
+        first_c = c_tokens[0]
+
+        if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+            # find the first and last b
+            last_b = b_tokens[-1]
+            first_b = b_tokens[0]
+
+            if len(a_tokens := torch.where(sequence == 0)[0]) > 0:
+                # find the last a
+                last_a = a_tokens[-1]
+                if (last_a < first_b) and (last_b < first_c):
+                    return True
+                else:
+                    return False
+            else:
+                return check_bs_before_cs(sequence)
+        else:
+            return check_as_before_cs(sequence)
+    else:
+        return check_as_before_bs(sequence)
+
+
+def check_in_dist_anbncn(sequence: torch.Tensor):
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(c_tokens := torch.where(sequence == 2)[0]) == 0:
+        if len(b_tokens := torch.where(sequence == 1)[0]) == 0:
+            return True
+        else:
+            return check_as_before_bs(sequence) and check_more_as_than_bs(sequence)
+    else:
+        return (
+            check_as_before_bs(sequence)
+            and check_bs_before_cs(sequence)
+            and check_same_number_as_bs(sequence)
+            and check_more_bs_than_cs(sequence)
+        )
+
+
 def check_sequence_finished(sequence: torch.Tensor):
     """
     Check if the sequence is finished (EOS token)
@@ -320,7 +490,7 @@ def check_sequence_finished(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    # check whether there are no 0's or 1's in the sequence after the first EOS token
+    # check whether there are no 0's or 1's or 2's in the sequence after the first EOS token
 
     # find the first EOS token
     if len(eos_tokens := torch.where(sequence == EOS_token.item())[0]) > 0:
@@ -329,20 +499,24 @@ def check_sequence_finished(sequence: torch.Tensor):
         return (
             torch.sum(sequence[first_EOS + 1 :] == 0)
             + torch.sum(sequence[first_EOS + 1 :] == 1)
+            + torch.sum(sequence[first_EOS + 1 :] == 2)
             == 0
         )
     else:
         return False
 
 
-def generate_test_prompts(length: int = 6):
+def generate_test_prompts(grammar, length: int = 6):
     """
-    Generates all prompts of a given length with symbols a and b
+    Generates all prompts of a given length with symbols a and b or (and c)
     :param length:
     :return:
     """
+    if grammar == "aNbNcN":
+        symbols = [0, 1, 2]
+    else:
+        symbols = [0, 1]
 
-    symbols = [0, 1]
     prompts = torch.tensor(list(product(symbols, repeat=length)), dtype=torch.long)
 
     # add SOS
@@ -361,6 +535,10 @@ def grammar_rules(grammar):
     """
     if grammar == "aNbN":
         return lambda x: check_same_number_as_bs(x) and check_as_before_bs(x)
+    elif grammar == "aNbNcN":
+        return lambda x: check_same_number_as_bs_cs(x) and check_as_before_bs_before_cs(
+            x
+        )
     elif grammar == "abN":
         return lambda x: check_same_number_as_bs(x)
     elif grammar == "aNbM":
@@ -387,6 +565,8 @@ def prompt_grammar_rules(grammar):
     """
     if grammar == "aNbN":
         return lambda x: check_as_before_bs(x) and check_more_as_than_bs(x)
+    elif grammar == "aNbNcN":
+        return lambda x: check_in_dist_anbncn(x)
     elif grammar == "abN":
         return lambda x: True
     elif grammar == "aNbM":

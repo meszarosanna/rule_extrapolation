@@ -2,7 +2,7 @@
 model:
   num_tokens: 5
   embedding_dim: 32
-  hidden_dim: 100
+  hidden_dim: 128
   num_layers: 3
   dropout: 0.4
   model: lstm

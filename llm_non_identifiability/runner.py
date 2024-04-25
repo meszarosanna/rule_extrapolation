@@ -38,10 +38,11 @@ class LightningGrammarModule(pl.LightningModule):
 
     def __init__(
         self,
-        num_tokens: int = 5,
+        num_tokens: int = 6,
         dim_model: int = 8,
         num_heads: int = 4,
         num_layers: int = 2,
+        num_decoder_layers: int = 2,
         max_pred_length: int = 64,
         test_prompt_length: int = 6,
         dropout_p: float = 0.1,
@@ -50,7 +51,7 @@ class LightningGrammarModule(pl.LightningModule):
         offline: bool = False,
         next_token_pick_mode: str = "max",
         layer_norm_eps: float = 2e-4,
-        grammar: str = "aNbN",
+        grammar: str = "aNbNcN",
         max_data_length: int = 256,
         batch_size: int = 64,
         relu_rescale: float = 1.0,
@@ -58,7 +59,8 @@ class LightningGrammarModule(pl.LightningModule):
         num_warmup_steps: int = 1000,
         extrapolation_training: bool = False,
         optimizer: str = "adamw",
-        hidden_dim=256,
+        dim_feedforward: int = 256,
+        hidden_dim: int = 128,
         model="transformer",
         bias=True,
         dropout=0.4,
@@ -99,9 +101,9 @@ class LightningGrammarModule(pl.LightningModule):
                 num_tokens=self.hparams.num_tokens,
                 dim_model=self.hparams.dim_model,
                 num_heads=self.hparams.num_heads,
-                num_decoder_layers=self.hparams.num_layers,
+                num_decoder_layers=self.hparams.num_decoder_layers,  # num_layers
                 dropout_p=self.hparams.dropout_p,
-                dim_feedforward=self.hparams.hidden_dim,
+                dim_feedforward=self.hparams.dim_feedforward,  # hidden_dim
                 layer_norm_eps=self.hparams.layer_norm_eps,
                 relu_rescale=self.hparams.relu_rescale,
             )
@@ -149,9 +151,9 @@ class LightningGrammarModule(pl.LightningModule):
             raise ValueError(f"Unknown optimizer: {self.hparams.optimizer}")
 
     def _setup_test_prompts(self) -> None:
-        test_prompts = generate_test_prompts(length=self.hparams.test_prompt_length).to(
-            self.hparams.device
-        )
+        test_prompts = generate_test_prompts(
+            grammar=self.hparams.grammar, length=self.hparams.test_prompt_length
+        ).to(self.hparams.device)
 
         rules_met = [self.prompt_grammar_rules(t) for t in test_prompts]
 
