@@ -245,3 +245,22 @@ def test_grammar_rules(max_length, grammar, num_samples):
         assert torch.all(torch.tensor([rules(d) for d in abN_data]))
     elif grammar == "aNbM":
         assert torch.all(torch.tensor([rules(d) for d in aNbM_data]))
+
+
+from llm_non_identifiability.data import (
+    generate_matched_brackets,
+    generate_matched_parentheses,
+    generate_matched_parentheses_and_brackets,
+)
+
+
+def test_generate_matched_brackets():
+    generate_matched_brackets(4)
+
+
+def test_generate_matched_parentheses():
+    generate_matched_parentheses(4)
+
+
+def test_generate_matched_parentheses_and_brackets():
+    generate_matched_parentheses_and_brackets(4)
