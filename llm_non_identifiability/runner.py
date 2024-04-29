@@ -496,16 +496,28 @@ class LightningGrammarModule(pl.LightningModule):
         )
 
     def _calc_grammar_metrics(self, prompt_pred, eps: float = 1e-8):
-        as_before_bs = [check_as_before_bs(p) for p in prompt_pred]
-        same_number_as_bs = [check_same_number_as_bs(p) for p in prompt_pred]
+        if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
+            # metrics for aNbN
+            as_before_bs = [check_as_before_bs(p) for p in prompt_pred]
+            same_number_as_bs = [check_same_number_as_bs(p) for p in prompt_pred]
+
+            if self.hparams.grammar != "aNbNaN":
+                as_before_bs_completion = [
+                    check_as_before_bs(
+                        p[self.hparams.test_prompt_length + 1 :]
+                    )  # +1 is for the SOS token
+                    for p in prompt_pred
+                ]
+            else:
+                as_before_bs_completion = []
+        else:
+            as_before_bs = []
+            same_number_as_bs = []
+            as_before_bs_completion = []
+
+        # general metrics
         grammatical = [self.grammar_rules(p) for p in prompt_pred]
         finished = [check_sequence_finished(p) for p in prompt_pred]
-        as_before_bs_completion = [
-            check_as_before_bs(
-                p[self.hparams.test_prompt_length + 1 :]
-            )  # +1 is for the SOS token
-            for p in prompt_pred
-        ]
 
         metrics = GrammarMetrics(
             as_before_bs_accuracy=sum(as_before_bs) / (len(as_before_bs) + eps),
