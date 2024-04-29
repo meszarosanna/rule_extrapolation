@@ -375,6 +375,12 @@ def grammar_rules(grammar):
             and check_bs_in_the_middle(x)
             and check_bs_together(x)
         )
+    elif grammar == "brackets":
+        return lambda x: check_matched_brackets(x)
+    elif grammar == "parentheses":
+        return lambda x: check_matched_parentheses(x)
+    elif grammar == "parentheses_and_brackets":
+        return lambda x: check_matched_parentheses_and_brackets(x)
     else:
         raise ValueError(f"Unknown grammar {grammar}")
 
