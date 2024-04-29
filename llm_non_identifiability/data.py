@@ -4,10 +4,10 @@ import torch
 SOS_token = np.array([2])
 EOS_token = np.array([3])
 PAD_token = np.array([4])
-OPENING_PARENTHESIS_token = np.array([7])
-CLOSING_PARENTHESIS_token = np.array([8])
-OPENING_BRACKET_token = np.array([9])
-CLOSING_BRACKET_token = np.array([10])
+OPENING_PARENTHESIS_token = np.array([6])
+CLOSING_PARENTHESIS_token = np.array([7])
+OPENING_BRACKET_token = np.array([8])
+CLOSING_BRACKET_token = np.array([9])
 
 from itertools import product
 
