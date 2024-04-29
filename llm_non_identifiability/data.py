@@ -409,7 +409,7 @@ def generate_matched_parentheses_and_brackets(n):
     Generate a word of length n with paired () and [].
     """
     if n == 0:
-        return ""
+        return np.concatenate((SOS_token, EOS_token))
     elif n % 2 == 1:
         raise ValueError("Length can only be even")
     else:
@@ -466,7 +466,7 @@ def generate_matched_parentheses(n):
     Generate a word of length n with paired ().
     """
     if n == 0:
-        return ""
+        return np.concatenate((SOS_token, EOS_token))
     elif n % 2 == 1:
         raise ValueError("Length can only be even")
     else:
@@ -501,7 +501,7 @@ def generate_matched_brackets(n):
     Generate a word of length n with paired [].
     """
     if n == 0:
-        return ""
+        return np.concatenate((SOS_token, EOS_token))
     elif n % 2 == 1:
         raise ValueError("Length can only be even")
     else:
