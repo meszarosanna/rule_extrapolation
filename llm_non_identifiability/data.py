@@ -345,6 +345,7 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
     :param length:
     :return:
     """
+    num_samples = 2**length
     if grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
         symbols = [0, 1]
         prompts = torch.tensor(list(product(symbols, repeat=length)), dtype=torch.long)
@@ -357,11 +358,11 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
     elif grammar == "parentheses":
         data = torch.tensor(
             generate_matched_parentheses_data(
-                num_samples=64, max_length=length, fixed_length=True
+                num_samples=num_samples / 2, max_length=length, fixed_length=True
             ),
             dtype=torch.long,
         )
-        prompts = torch.cat(
+        ood_prompts = torch.cat(
             (
                 data[:, 0].view(-1, 1),
                 torch.ones((data.shape[0], 1), dtype=torch.long)
@@ -372,14 +373,28 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
             ),
             dim=1,
         )  # remove EOS
+
+        id_prompts = torch.cat(
+            (
+                data[:, 0].view(-1, 1),
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * OPENING_PARENTHESIS_token,
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * CLOSING_PARENTHESIS_token,
+                data[:, 1:-1],
+            ),
+            dim=1,
+        )  # remove EOS
+
+        prompts = torch.cat((ood_prompts, id_prompts), dim=0)
     elif grammar == "brackets":
         data = torch.tensor(
             generate_matched_brackets_data(
-                num_samples=64, max_length=length, fixed_length=True
+                num_samples=num_samples / 2, max_length=length, fixed_length=True
             ),
             dtype=torch.long,
         )
-        prompts = torch.cat(
+        ood_prompts = torch.cat(
             (
                 data[:, 0].view(-1, 1),
                 torch.ones((data.shape[0], 1), dtype=torch.long)
@@ -390,10 +405,24 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
             ),
             dim=1,
         )  # remove EOS
+
+        id_prompts = torch.cat(
+            (
+                data[:, 0].view(-1, 1),
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * OPENING_BRACKET_token,
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * CLOSING_BRACKET_token,
+                data[:, 1:-1],
+            ),
+            dim=1,
+        )  # remove EOS
+        prompts = torch.cat((ood_prompts, id_prompts), dim=0)
+
     elif grammar == "parentheses_and_brackets":
         data = torch.tensor(
             generate_matched_parentheses_and_brackets_data(
-                num_samples=64, max_length=length, fixed_length=True
+                num_samples=num_samples / 2, max_length=length, fixed_length=True
             ),
             dtype=torch.long,
         )
@@ -401,7 +430,7 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         # generate torch 0-1 sequence in shape (data.shape[0], 1)
         bernoulli = torch.bernoulli(0.5 * torch.ones((data.shape[0], 1)))
 
-        prompts = torch.cat(
+        ood_prompts = torch.cat(
             (
                 data[:, 0].view(-1, 1),
                 torch.where(
@@ -418,6 +447,26 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
             ),
             dim=1,
         )  # remove EOS
+
+        id_prompts = torch.cat(
+            (
+                data[:, 0].view(-1, 1),
+                torch.where(
+                    bernoulli == 1,
+                    OPENING_PARENTHESIS_token.item(),
+                    OPENING_BRACKET_token.item(),
+                ),
+                torch.where(
+                    bernoulli == 1,
+                    CLOSING_PARENTHESIS_token.item(),
+                    CLOSING_BRACKET_token.item(),
+                ),
+                data[:, 1:-1],
+            ),
+            dim=1,
+        )  # remove EOS
+
+        prompts = torch.cat((ood_prompts, id_prompts), dim=0)
     return prompts
 
 

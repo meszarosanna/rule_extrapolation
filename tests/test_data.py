@@ -223,13 +223,12 @@ def test_check_sequence_finished():
 )
 def test_generate_test_prompts(grammar):
     length = 6
-    num_samples = 64
     prompts = generate_test_prompts(length, grammar=grammar)
 
     if grammar in ["aNbN", "abN", "aNbM"]:
         assert prompts.shape == (2**length, length + 1)
     elif grammar in ["parentheses", "brackets", "parentheses_and_brackets"]:
-        assert prompts.shape == (num_samples, length + 3)
+        assert prompts.shape == (2**length, length + 3)
 
 
 @pytest.mark.parametrize("grammar", ["aNbN", "abN", "aNbM"])
