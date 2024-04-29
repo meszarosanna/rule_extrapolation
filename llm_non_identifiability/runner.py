@@ -94,6 +94,14 @@ class LightningGrammarModule(pl.LightningModule):
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
 
+        self._setup_model()
+
+        # access grammar rule (e.g. check_as_before_bs)
+        self.grammar_rules = grammar_rules(self.hparams.grammar)
+        self.prompt_grammar_rules = prompt_grammar_rules(self.hparams.grammar)
+        self._setup_test_prompts()
+
+    def _setup_model(self):
         if self.hparams.model == "transformer":
             self.model: nn.Module = TransformerDecoder(
                 num_tokens=self.hparams.num_tokens,
@@ -123,11 +131,6 @@ class LightningGrammarModule(pl.LightningModule):
                 dropout_lstm=self.hparams.dropout,
                 device=self.hparams.device,
             )
-
-        # access grammar rule (e.g. check_as_before_bs)
-        self.grammar_rules = grammar_rules(self.hparams.grammar)
-        self.prompt_grammar_rules = prompt_grammar_rules(self.hparams.grammar)
-        self._setup_test_prompts()
 
     @property
     def data_entropy(self):
