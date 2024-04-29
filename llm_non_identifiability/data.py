@@ -339,22 +339,39 @@ def check_sequence_finished(sequence: torch.Tensor):
         return False
 
 
-def generate_test_prompts(length: int = 6):
+def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
     """
     Generates all prompts of a given length with symbols a and b
     :param length:
     :return:
     """
+    if grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
+        symbols = [0, 1]
+        prompts = torch.tensor(list(product(symbols, repeat=length)), dtype=torch.long)
 
-    symbols = [0, 1]
-    prompts = torch.tensor(list(product(symbols, repeat=length)), dtype=torch.long)
-
-    # add SOS
-    prompts = torch.cat(
-        (torch.ones((prompts.shape[0], 1), dtype=torch.long) * SOS_token, prompts),
-        dim=1,
-    )
-
+        # add SOS
+        prompts = torch.cat(
+            (torch.ones((prompts.shape[0], 1), dtype=torch.long) * SOS_token, prompts),
+            dim=1,
+        )
+    elif grammar in ["parentheses"]:
+        data = torch.tensor(
+            generate_matched_parentheses_data(
+                num_samples=64, max_length=length, fixed_length=True
+            ),
+            dtype=torch.long,
+        )
+        prompts = torch.cat(
+            (
+                data[:, 0].view(-1, 1),
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * CLOSING_PARENTHESIS_token,
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * OPENING_PARENTHESIS_token,
+                data[:, 1:-1],
+            ),
+            dim=1,
+        )  # remove EOS
     return prompts
 
 
@@ -610,40 +627,8 @@ def check_matched_brackets(sequence: torch.Tensor) -> bool:
     return len(stack) == 0
 
 
-def generate_matched_parenthesis_data(num_samples: int, max_length: int = 32) -> list:
-    """
-
-
-    :param num_samples: number of samples
-    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
-    :return: list of length num_samples with maximal sequences of length max_length
-    """
-
-    lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
-
-    data = [generate_matched_parentheses(l) for l in lengths]
-
-    return data
-
-
-def generate_matched_brackets_data(num_samples: int, max_length: int = 32) -> list:
-    """
-
-
-    :param num_samples: number of samples
-    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
-    :return: list of length num_samples with maximal sequences of length max_length
-    """
-
-    lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
-
-    data = [generate_matched_brackets(l) for l in lengths]
-
-    return data
-
-
-def generate_matched_parentheses_and_brackets_data(
-    num_samples: int, max_length: int = 32
+def generate_matched_parentheses_data(
+    num_samples: int, max_length: int = 32, fixed_length=False
 ) -> list:
     """
 
@@ -653,8 +638,56 @@ def generate_matched_parentheses_and_brackets_data(
     :return: list of length num_samples with maximal sequences of length max_length
     """
 
-    lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
+    if fixed_length is False:
+        lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
+        data = [generate_matched_parentheses(2 * l) for l in lengths]
+    else:
+        data = []
+        while len(data) < num_samples:
+            sample = generate_matched_parentheses(max_length)
+            if len(sample) == (max_length + 2):  # +SOS, EOS
+                data.append(sample)
 
-    data = [generate_matched_parentheses_and_brackets(l) for l in lengths]
+    return data
+
+
+def generate_matched_brackets_data(
+    num_samples: int, max_length: int = 32, fixed_length=False
+) -> list:
+    """
+
+
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+    """
+
+    if fixed_length is False:
+        lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
+    else:
+        lengths = np.ones(num_samples) * max_length // 2
+
+    data = [generate_matched_brackets(2 * l) for l in lengths]
+
+    return data
+
+
+def generate_matched_parentheses_and_brackets_data(
+    num_samples: int, max_length: int = 32, fixed_length=False
+) -> list:
+    """
+
+
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+    """
+
+    if fixed_length is False:
+        lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
+    else:
+        lengths = np.ones(num_samples) * max_length // 2
+
+    data = [generate_matched_parentheses_and_brackets(2 * l) for l in lengths]
 
     return data
