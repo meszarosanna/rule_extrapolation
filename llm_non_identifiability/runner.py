@@ -38,7 +38,7 @@ class LightningGrammarModule(pl.LightningModule):
 
     def __init__(
         self,
-        num_tokens: int = 5,
+        num_tokens: int = 10,
         dim_model: int = 8,
         num_heads: int = 4,
         num_layers: int = 2,
@@ -93,6 +93,16 @@ class LightningGrammarModule(pl.LightningModule):
             )
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
+
+        # # calculate number of tokens:
+        # if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
+        #     self.hparams["num_tokens"] = 5
+        # elif self.hparams.grammar == "aNbNcN":
+        #     self.hparams["num_tokens"] = 6
+        # elif self.hparams.grammar in ["brackets", "parentheses"]:
+        #     self.hparams["num_tokens"] = 5
+        # elif self.hparams.grammar == "parentheses_and_brackets":
+        #     self.hparams["num_tokens"] = 7
 
         self._setup_model()
 
