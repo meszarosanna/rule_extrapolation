@@ -461,6 +461,33 @@ def generate_matched_parentheses_and_brackets(n):
         return np.concatenate((SOS_token, *word, EOS_token))
 
 
+def check_matched_parentheses_and_brackets(sequence: torch.Tensor) -> bool:
+    """
+    Check if the parentheses and brackets are matched
+    :param sequence:
+    :return:
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    stack = []
+    for token in sequence:
+        if token == OPENING_PARENTHESIS_token.item():
+            stack.append(token)
+        elif token == CLOSING_PARENTHESIS_token.item():
+            if len(stack) == 0 or stack[-1] != OPENING_PARENTHESIS_token.item():
+                return False
+            stack.pop()
+        elif token == OPENING_BRACKET_token.item():
+            stack.append(token)
+        elif token == CLOSING_BRACKET_token.item():
+            if len(stack) == 0 or stack[-1] != OPENING_BRACKET_token.item():
+                return False
+            stack.pop()
+
+    return len(stack) == 0
+
+
 def generate_matched_parentheses(n):
     """
     Generate a word of length n with paired ().
@@ -496,6 +523,27 @@ def generate_matched_parentheses(n):
         return np.concatenate((SOS_token, *word, EOS_token))
 
 
+def check_matched_parentheses(sequence: torch.Tensor) -> bool:
+    """
+    Check if the parentheses are matched
+    :param sequence:
+    :return:
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    stack = []
+    for token in sequence:
+        if token == OPENING_PARENTHESIS_token.item():
+            stack.append(token)
+        elif token == CLOSING_PARENTHESIS_token.item():
+            if len(stack) == 0:
+                return False
+            stack.pop()
+
+    return len(stack) == 0
+
+
 def generate_matched_brackets(n):
     """
     Generate a word of length n with paired [].
@@ -527,6 +575,27 @@ def generate_matched_brackets(n):
                 break
 
         return np.concatenate((SOS_token, *word, EOS_token))
+
+
+def check_matched_brackets(sequence: torch.Tensor) -> bool:
+    """
+    Check if the brackets are matched
+    :param sequence:
+    :return:
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    stack = []
+    for token in sequence:
+        if token == OPENING_BRACKET_token.item():
+            stack.append(token)
+        elif token == CLOSING_BRACKET_token.item():
+            if len(stack) == 0:
+                return False
+            stack.pop()
+
+    return len(stack) == 0
 
 
 def generate_matched_parenthesis_data(num_samples: int, max_length: int = 32) -> list:

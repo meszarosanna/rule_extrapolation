@@ -251,6 +251,13 @@ from llm_non_identifiability.data import (
     generate_matched_brackets,
     generate_matched_parentheses,
     generate_matched_parentheses_and_brackets,
+    check_matched_parentheses,
+    check_matched_brackets,
+    check_matched_parentheses_and_brackets,
+    OPENING_BRACKET_token,
+    OPENING_PARENTHESIS_token,
+    CLOSING_PARENTHESIS_token,
+    CLOSING_BRACKET_token,
 )
 
 
@@ -264,3 +271,65 @@ def test_generate_matched_parentheses():
 
 def test_generate_matched_parentheses_and_brackets():
     generate_matched_parentheses_and_brackets(40)
+
+
+def test_check_matched_parentheses():
+    op = OPENING_PARENTHESIS_token.item()
+    cp = CLOSING_PARENTHESIS_token.item()
+    sequence = torch.tensor([op, cp, op, cp, op, cp])  # ()()()
+    assert check_matched_parentheses(sequence) == True
+
+    sequence = torch.tensor([op, cp, op, op, cp, cp])  # ()(())
+    assert check_matched_parentheses(sequence) == True
+
+    sequence = torch.tensor([op, cp, cp, op, op, cp])  # ())(()
+    assert check_matched_parentheses(sequence) == False
+
+    sequence = torch.tensor([op, cp, cp, op, op, cp, cp, op])  # ())(())(
+    assert check_matched_parentheses(sequence) == False
+
+    sequence = torch.tensor([op, cp, cp, op, op, cp, cp, op, cp, cp])  # ())(())(())
+    assert check_matched_parentheses(sequence) == False
+
+
+def test_check_matched_brackets():
+    ob = OPENING_BRACKET_token.item()
+    cb = CLOSING_BRACKET_token.item()
+    sequence = torch.tensor([ob, cb, ob, cb, ob, cb])  # [][][]
+    assert check_matched_brackets(sequence) == True
+
+    sequence = torch.tensor([ob, cb, ob, ob, cb, cb])  # [][[]]
+    assert check_matched_brackets(sequence) == True
+
+    sequence = torch.tensor([ob, cb, cb, ob, ob, cb])  # []][[]
+    assert check_matched_brackets(sequence) == False
+
+    sequence = torch.tensor([ob, cb, cb, ob, ob, cb, cb, ob])  # []][[]][
+    assert check_matched_brackets(sequence) == False
+
+    sequence = torch.tensor([ob, cb, cb, ob, ob, cb, cb, ob, cb, cb])  # []][[]][]]
+    assert check_matched_brackets(sequence) == False
+
+
+def test_check_matched_parentheses_and_brackets():
+    op = OPENING_PARENTHESIS_token.item()
+    cp = CLOSING_PARENTHESIS_token.item()
+    ob = OPENING_BRACKET_token.item()
+    cb = CLOSING_BRACKET_token.item()
+
+    sequence = torch.tensor([op, cp, ob, cb, op, cp, ob, cb])  # ()[]()[]
+    assert check_matched_parentheses_and_brackets(sequence) == True
+
+    sequence = torch.tensor([op, cp, ob, cb, op, cp, ob, ob, cb, cb])  # ()[]()[[]]
+    assert check_matched_parentheses_and_brackets(sequence) == True
+
+    sequence = torch.tensor([op, cp, ob, cb, cp, op, ob, cb])  # ()[])([]
+    assert check_matched_parentheses_and_brackets(sequence) == False
+
+    sequence = torch.tensor([op, cp, ob, cb, cp, op, ob, cb, cp, op])  # ()[])([])(
+    assert check_matched_parentheses_and_brackets(sequence) == False
+
+    sequence = torch.tensor(
+        [op, cp, ob, cb, cp, op, ob, cb, cp, op, cp, cp]
+    )  # ()[])([])())
+    assert check_matched_parentheses_and_brackets(sequence) == False
