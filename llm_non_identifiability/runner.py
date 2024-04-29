@@ -38,7 +38,7 @@ class LightningGrammarModule(pl.LightningModule):
 
     def __init__(
         self,
-        num_tokens: int = 6,
+        num_tokens: int = 10,
         dim_model: int = 8,
         num_heads: int = 4,
         num_layers: int = 2,
@@ -96,6 +96,24 @@ class LightningGrammarModule(pl.LightningModule):
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
 
+        # # calculate number of tokens:
+        # if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
+        #     self.hparams["num_tokens"] = 5
+        # elif self.hparams.grammar == "aNbNcN":
+        #     self.hparams["num_tokens"] = 6
+        # elif self.hparams.grammar in ["brackets", "parentheses"]:
+        #     self.hparams["num_tokens"] = 5
+        # elif self.hparams.grammar == "parentheses_and_brackets":
+        #     self.hparams["num_tokens"] = 7
+
+        self._setup_model()
+
+        # access grammar rule (e.g. check_as_before_bs)
+        self.grammar_rules = grammar_rules(self.hparams.grammar)
+        self.prompt_grammar_rules = prompt_grammar_rules(self.hparams.grammar)
+        self._setup_test_prompts()
+
+    def _setup_model(self):
         if self.hparams.model == "transformer":
             self.model: nn.Module = TransformerDecoder(
                 num_tokens=self.hparams.num_tokens,
@@ -125,11 +143,6 @@ class LightningGrammarModule(pl.LightningModule):
                 dropout_lstm=self.hparams.dropout,
                 device=self.hparams.device,
             )
-
-        # access grammar rule (e.g. check_as_before_bs)
-        self.grammar_rules = grammar_rules(self.hparams.grammar)
-        self.prompt_grammar_rules = prompt_grammar_rules(self.hparams.grammar)
-        self._setup_test_prompts()
 
     @property
     def data_entropy(self):
@@ -177,7 +190,7 @@ class LightningGrammarModule(pl.LightningModule):
             self.logger.experiment.summary["data_entropy"] = self.data_entropy
 
         self.__setup_adversarial_prompts()
-        self.__setup_extrapolation_prompts()
+        self.__setup_oracle_prompts()
 
     def __setup_adversarial_prompts(self) -> None:
         """
@@ -206,7 +219,7 @@ class LightningGrammarModule(pl.LightningModule):
                 torch.from_numpy(pad(prompts)).long().to(self.hparams.device)
             )
 
-    def __setup_extrapolation_prompts(self) -> None:
+    def __setup_oracle_prompts(self) -> None:
         """
         Setup the prompts for extrapolation training from the OOD test prompts
         """
@@ -495,16 +508,28 @@ class LightningGrammarModule(pl.LightningModule):
         )
 
     def _calc_grammar_metrics(self, prompt_pred, eps: float = 1e-8):
-        as_before_bs = [check_as_before_bs(p) for p in prompt_pred]
-        same_number_as_bs = [check_same_number_as_bs(p) for p in prompt_pred]
+        if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
+            # metrics for aNbN
+            as_before_bs = [check_as_before_bs(p) for p in prompt_pred]
+            same_number_as_bs = [check_same_number_as_bs(p) for p in prompt_pred]
+
+            if self.hparams.grammar != "aNbNaN":
+                as_before_bs_completion = [
+                    check_as_before_bs(
+                        p[self.hparams.test_prompt_length + 1 :]
+                    )  # +1 is for the SOS token
+                    for p in prompt_pred
+                ]
+            else:
+                as_before_bs_completion = []
+        else:
+            as_before_bs = []
+            same_number_as_bs = []
+            as_before_bs_completion = []
+
+        # general metrics
         grammatical = [self.grammar_rules(p) for p in prompt_pred]
         finished = [check_sequence_finished(p) for p in prompt_pred]
-        as_before_bs_completion = [
-            check_as_before_bs(
-                p[self.hparams.test_prompt_length + 1 :]
-            )  # +1 is for the SOS token
-            for p in prompt_pred
-        ]
 
         metrics = GrammarMetrics(
             as_before_bs_accuracy=sum(as_before_bs) / (len(as_before_bs) + eps),
