@@ -511,7 +511,6 @@ def check_sequence_finished(sequence: torch.Tensor):
         return False
 
 
-
 def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
     """
     Generates all prompts of a given length with symbols a and b or (and c)
