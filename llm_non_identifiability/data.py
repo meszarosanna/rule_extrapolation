@@ -354,7 +354,7 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
             (torch.ones((prompts.shape[0], 1), dtype=torch.long) * SOS_token, prompts),
             dim=1,
         )
-    elif grammar in ["parentheses"]:
+    elif grammar == "parentheses":
         data = torch.tensor(
             generate_matched_parentheses_data(
                 num_samples=64, max_length=length, fixed_length=True
@@ -368,6 +368,52 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
                 * CLOSING_PARENTHESIS_token,
                 torch.ones((data.shape[0], 1), dtype=torch.long)
                 * OPENING_PARENTHESIS_token,
+                data[:, 1:-1],
+            ),
+            dim=1,
+        )  # remove EOS
+    elif grammar == "brackets":
+        data = torch.tensor(
+            generate_matched_brackets_data(
+                num_samples=64, max_length=length, fixed_length=True
+            ),
+            dtype=torch.long,
+        )
+        prompts = torch.cat(
+            (
+                data[:, 0].view(-1, 1),
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * CLOSING_BRACKET_token,
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * OPENING_BRACKET_token,
+                data[:, 1:-1],
+            ),
+            dim=1,
+        )  # remove EOS
+    elif grammar == "parentheses_and_brackets":
+        data = torch.tensor(
+            generate_matched_parentheses_and_brackets_data(
+                num_samples=64, max_length=length, fixed_length=True
+            ),
+            dtype=torch.long,
+        )
+
+        # generate torch 0-1 sequence in shape (data.shape[0], 1)
+        bernoulli = torch.bernoulli(0.5 * torch.ones((data.shape[0], 1)))
+
+        prompts = torch.cat(
+            (
+                data[:, 0].view(-1, 1),
+                torch.where(
+                    bernoulli == 1,
+                    CLOSING_PARENTHESIS_token.item(),
+                    CLOSING_BRACKET_token.item(),
+                ),
+                torch.where(
+                    bernoulli == 1,
+                    OPENING_PARENTHESIS_token.item(),
+                    OPENING_BRACKET_token.item(),
+                ),
                 data[:, 1:-1],
             ),
             dim=1,
@@ -664,10 +710,13 @@ def generate_matched_brackets_data(
 
     if fixed_length is False:
         lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
+        data = [generate_matched_brackets(2 * l) for l in lengths]
     else:
-        lengths = np.ones(num_samples) * max_length // 2
-
-    data = [generate_matched_brackets(2 * l) for l in lengths]
+        data = []
+        while len(data) < num_samples:
+            sample = generate_matched_parentheses(max_length)
+            if len(sample) == (max_length + 2):  # +SOS, EOS
+                data.append(sample)
 
     return data
 
@@ -685,9 +734,12 @@ def generate_matched_parentheses_and_brackets_data(
 
     if fixed_length is False:
         lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
+        data = [generate_matched_parentheses_and_brackets(2 * l) for l in lengths]
     else:
-        lengths = np.ones(num_samples) * max_length // 2
-
-    data = [generate_matched_parentheses_and_brackets(2 * l) for l in lengths]
+        data = []
+        while len(data) < num_samples:
+            sample = generate_matched_parentheses_and_brackets(max_length)
+            if len(sample) == (max_length + 2):  # +SOS, EOS
+                data.append(sample)
 
     return data
