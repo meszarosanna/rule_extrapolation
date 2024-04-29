@@ -12,6 +12,7 @@ from llm_non_identifiability.data import (
     generate_matched_parentheses_and_brackets_data,
     generate_matched_brackets_data,
     generate_matched_parentheses_data,
+    generate_aNbNcN_grammar_data,
 )
 from llm_non_identifiability.dataset import GrammarDataset
 
@@ -61,6 +62,8 @@ class GrammarDataModule(pl.LightningDataModule):
             return generate_matched_parentheses_data
         elif self.hparams.grammar == "parentheses_and_brackets":
             return generate_matched_parentheses_and_brackets_data
+        elif self.hparams.grammar == "aNbNcN":
+            return generate_aNbNcN_grammar_data
         else:
             raise ValueError(f"Unknown grammar {self.hparams.grammar}")
 
@@ -71,7 +74,7 @@ class GrammarDataModule(pl.LightningDataModule):
 
         grammar_generator = self._select_grammar()
 
-        if self.hparams.grammar in ["aNbN", "aNbNaN"]:
+        if self.hparams.grammar in ["aNbN", "aNbNaN", "aNbNcN"]:
             # include all samples only once
             self.hparams.num_train = (
                 self.hparams.num_val

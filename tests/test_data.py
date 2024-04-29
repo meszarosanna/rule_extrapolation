@@ -8,6 +8,7 @@ from llm_non_identifiability.data import (
     generate_abN_grammar_data,
     generate_aNbM_grammar_data,
     generate_aNbNaN_grammar_data,
+    generate_aNbNcN_grammar_data,
     pad,
     PAD_token,
     check_sequence_finished,
@@ -15,6 +16,12 @@ from llm_non_identifiability.data import (
     check_bs_in_the_middle,
     check_bs_together,
     check_more_as_before_bs,
+    check_as_before_cs,
+    check_bs_before_cs,
+    check_more_bs_than_cs,
+    check_same_number_as_bs_cs,
+    check_as_before_bs_before_cs,
+    check_in_dist_anbncn,
     EOS_token,
     generate_test_prompts,
     grammar_rules,
@@ -31,6 +38,38 @@ def test_aNbN_grammar_as_before_bs(num_samples, max_length):
     sequences = generate_aNbN_grammar_data(num_samples, max_length, all_sequences=False)
     for sequence in sequences:
         assert check_as_before_bs(sequence)
+
+
+def test_aNbNcN_grammar_equal_as_bs_cs(num_samples, max_length):
+    sequences = generate_aNbNcN_grammar_data(
+        num_samples, max_length, all_sequences=False
+    )
+    for sequence in sequences:
+        assert check_same_number_as_bs_cs(sequence)
+
+
+def test_aNbNcN_grammar_as_before_bs_before_cs(num_samples, max_length):
+    sequences = generate_aNbNcN_grammar_data(
+        num_samples, max_length, all_sequences=False
+    )
+    for sequence in sequences:
+        assert check_as_before_bs_before_cs(sequence)
+
+
+def test_aNbNcN_grammar_as_before_cs(num_samples, max_length):
+    sequences = generate_aNbNcN_grammar_data(
+        num_samples, max_length, all_sequences=False
+    )
+    for sequence in sequences:
+        assert check_as_before_cs(sequence)
+
+
+def test_aNbNcN_grammar_bs_before_cs(num_samples, max_length):
+    sequences = generate_aNbNcN_grammar_data(
+        num_samples, max_length, all_sequences=False
+    )
+    for sequence in sequences:
+        assert check_bs_before_cs(sequence)
 
 
 def test_aNbN_grammar_all_sequences(num_samples, max_length):
@@ -146,6 +185,23 @@ def test_check_more_as_before_bs():
     assert check_more_as_before_bs(sequence) == True
 
 
+def test_check_more_bs_than_cs():
+    sequence = torch.tensor([1, 1, 2, 2])
+    assert check_more_bs_than_cs(sequence) == True
+
+    sequence = torch.tensor([2, 1, 1])
+    assert check_more_bs_than_cs(sequence) == True
+
+    sequence = torch.tensor([0, 0])
+    assert check_more_bs_than_cs(sequence) == True
+
+    sequence = torch.tensor([0, 2, 0, 2, 0, 1])
+    assert check_more_bs_than_cs(sequence) == False
+
+    sequence = torch.tensor([0, 0, 2])
+    assert check_more_bs_than_cs(sequence) == False
+
+
 def test_check_bs_together():
     sequence = torch.tensor([0, 0, 1, 0, 1])
     assert check_bs_together(sequence) == False
@@ -199,6 +255,20 @@ def test_check_twice_many_as_than_bs():
     assert check_twice_many_as_than_bs(sequence) == True
 
 
+def test_check_in_distr_anbncn():
+    sequence = torch.tensor([0, 0, 1, 0, 1])
+    assert check_in_dist_anbncn(sequence) == False
+
+    sequence = torch.tensor([0, 0, 1, 1])
+    assert check_in_dist_anbncn(sequence) == True
+
+    sequence = torch.tensor([0, 0, 0, 1, 1, 1, 2])
+    assert check_in_dist_anbncn(sequence) == True
+
+    sequence = torch.tensor([2, 2, 0, 1])
+    assert check_in_dist_anbncn(sequence) == False
+
+
 def test_check_sequence_finished():
     sequence = torch.tensor([0, 1, 0, 1])
     assert check_sequence_finished(sequence) == False
@@ -231,7 +301,7 @@ def test_generate_test_prompts(grammar):
         assert prompts.shape == (2**length, length + 3)
 
 
-@pytest.mark.parametrize("grammar", ["aNbN", "abN", "aNbM"])
+@pytest.mark.parametrize("grammar", ["aNbN", "abN", "aNbM", "aNbNcN"])
 def test_grammar_rules(max_length, grammar, num_samples):
     rules = grammar_rules(grammar)
 
@@ -244,6 +314,11 @@ def test_grammar_rules(max_length, grammar, num_samples):
     aNbM_data = torch.from_numpy(
         pad(generate_aNbM_grammar_data(num_samples=num_samples, max_length=max_length))
     ).long()
+    aNbNcN_data = torch.from_numpy(
+        pad(
+            generate_aNbNcN_grammar_data(num_samples=num_samples, max_length=max_length)
+        )
+    ).long()
 
     if grammar == "aNbN":
         assert torch.all(torch.tensor([rules(d) for d in aNbN_data]))
@@ -251,6 +326,9 @@ def test_grammar_rules(max_length, grammar, num_samples):
         assert torch.all(torch.tensor([rules(d) for d in abN_data]))
     elif grammar == "aNbM":
         assert torch.all(torch.tensor([rules(d) for d in aNbM_data]))
+    elif grammar == "aNbNcN":
+        assert torch.all(torch.tensor([rules(d) for d in aNbNcN_data]))
+
 
 
 from llm_non_identifiability.data import (

@@ -54,13 +54,13 @@ trainer:
   reload_dataloaders_every_n_epochs: 0
   default_root_dir: null
 model:
-  num_tokens: 5
+  num_tokens: 6
   dim_model: 8
-  hidden_dim: 128
+  dim_feedforward: 128
   num_heads: 4
   test_prompt_length: 6
   max_pred_length: 64
-  num_layers: 2
+  num_decoder_layers: 2
   dropout_p: 0.1
   lr: 0.01
   layer_norm_eps: 2e-4
@@ -71,7 +71,7 @@ data:
   num_test: 512
   max_length: 512
   batch_size: 128
-  grammar: aNbN
+  grammar: aNbNcN
 notes: null
 tags: null
 ckpt_path: null
