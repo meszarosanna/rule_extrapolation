@@ -152,9 +152,9 @@ class LightningGrammarModule(pl.LightningModule):
             raise ValueError(f"Unknown optimizer: {self.hparams.optimizer}")
 
     def _setup_test_prompts(self) -> None:
-        test_prompts = generate_test_prompts(length=self.hparams.test_prompt_length).to(
-            self.hparams.device
-        )
+        test_prompts = generate_test_prompts(
+            length=self.hparams.test_prompt_length, grammar=self.hparams.grammar
+        ).to(self.hparams.device)
 
         rules_met = [self.prompt_grammar_rules(t) for t in test_prompts]
 
