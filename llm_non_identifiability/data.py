@@ -556,7 +556,7 @@ def generate_matched_brackets_data(num_samples: int, max_length: int = 32) -> li
 
     lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
 
-    data = [generate_matched_brackets_data(l) for l in lengths]
+    data = [generate_matched_brackets(l) for l in lengths]
 
     return data
 
