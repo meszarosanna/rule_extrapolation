@@ -178,7 +178,7 @@ class LightningGrammarModule(pl.LightningModule):
             self.logger.experiment.summary["data_entropy"] = self.data_entropy
 
         self.__setup_adversarial_prompts()
-        self.__setup_extrapolation_prompts()
+        self.__setup_oracle_prompts()
 
     def __setup_adversarial_prompts(self) -> None:
         """
@@ -207,7 +207,7 @@ class LightningGrammarModule(pl.LightningModule):
                 torch.from_numpy(pad(prompts)).long().to(self.hparams.device)
             )
 
-    def __setup_extrapolation_prompts(self) -> None:
+    def __setup_oracle_prompts(self) -> None:
         """
         Setup the prompts for extrapolation training from the OOD test prompts
         """
