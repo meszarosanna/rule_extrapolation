@@ -314,6 +314,7 @@ class LightningGrammarModule(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         panel_name = "Val"
+
         X, X_expected, pred, loss = self._forward(batch)
         self.log(f"{panel_name}/loss", loss)
 
@@ -526,11 +527,11 @@ class LightningGrammarModule(pl.LightningModule):
 
             if self.hparams.grammar != "aNbNaN":
                 rule_2_completion = [
-                check_as_before_bs(
-                    p[self.hparams.test_prompt_length + 1 :]
-                )  # +1 is for the SOS token
-                for p in prompt_pred
-              ]
+                    check_as_before_bs(
+                        p[self.hparams.test_prompt_length + 1 :]
+                    )  # +1 is for the SOS token
+                    for p in prompt_pred
+                ]
             else:
                 rule_2_completion = []
         else:

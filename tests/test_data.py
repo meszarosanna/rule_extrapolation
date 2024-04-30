@@ -291,11 +291,17 @@ def test_check_sequence_finished():
     assert check_sequence_finished(sequence) == True
 
 
-
-
-
 @pytest.mark.parametrize(
-    "grammar", ["aNbN","abN", "aNbM", "aNbNcN", "parentheses", "brackets", "parentheses_and_brackets"]
+    "grammar",
+    [
+        "aNbN",
+        "abN",
+        "aNbM",
+        "aNbNcN",
+        "parentheses",
+        "brackets",
+        "parentheses_and_brackets",
+    ],
 )
 def test_generate_test_prompts(grammar):
     length = 6
