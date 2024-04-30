@@ -54,7 +54,7 @@ class LightningGrammarModule(pl.LightningModule):
         offline: bool = False,
         next_token_pick_mode: str = "max",
         layer_norm_eps: float = 2e-4,
-        grammar: str = "aNbN",
+        grammar: str = "aNbNcN",
         max_data_length: int = 256,
         batch_size: int = 64,
         relu_rescale: float = 1.0,
