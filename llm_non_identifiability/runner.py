@@ -12,6 +12,8 @@ from llm_non_identifiability.data import (
     generate_aNbN_grammar_data,
     check_same_number_as_bs,
     check_as_before_bs,
+    check_same_number_as_bs_cs,
+    check_as_before_bs_before_cs,
     SOS_token,
     EOS_token,
     PAD_token,
@@ -40,6 +42,7 @@ class LightningGrammarModule(pl.LightningModule):
         self,
         num_tokens: int = 6,
         dim_model: int = 8,
+        embedding_dim: int = 32,
         num_heads: int = 4,
         num_layers: int = 2,
         num_decoder_layers: int = 2,
@@ -495,25 +498,36 @@ class LightningGrammarModule(pl.LightningModule):
         )
 
     def _calc_grammar_metrics(self, prompt_pred, eps: float = 1e-8):
-        as_before_bs = [check_as_before_bs(p) for p in prompt_pred]
-        same_number_as_bs = [check_same_number_as_bs(p) for p in prompt_pred]
+        if self.hparams.grammar == "aNbNcN":
+            rule_2 = [check_as_before_bs_before_cs(p) for p in prompt_pred]
+            rule_1 = [check_same_number_as_bs_cs(p) for p in prompt_pred]
+            rule_2_completion = [
+                check_as_before_bs_before_cs(
+                    p[self.hparams.test_prompt_length + 1 :]
+                )  # +1 is for the SOS token
+                for p in prompt_pred
+            ]
+
+        else:
+            rule_2 = [check_as_before_bs(p) for p in prompt_pred]
+            rule_1 = [check_same_number_as_bs(p) for p in prompt_pred]
+            rule_2_completion = [
+                check_as_before_bs(
+                    p[self.hparams.test_prompt_length + 1 :]
+                )  # +1 is for the SOS token
+                for p in prompt_pred
+            ]
+
         grammatical = [self.grammar_rules(p) for p in prompt_pred]
         finished = [check_sequence_finished(p) for p in prompt_pred]
-        as_before_bs_completion = [
-            check_as_before_bs(
-                p[self.hparams.test_prompt_length + 1 :]
-            )  # +1 is for the SOS token
-            for p in prompt_pred
-        ]
 
         metrics = GrammarMetrics(
-            as_before_bs_accuracy=sum(as_before_bs) / (len(as_before_bs) + eps),
-            same_number_as_bs_accuracy=sum(same_number_as_bs)
-            / (len(same_number_as_bs) + eps),
+            rule_2_accuracy=sum(rule_2) / (len(rule_2) + eps),
+            rule_1_accuracy=sum(rule_1) / (len(rule_1) + eps),
             finished_accuracy=sum(finished) / (len(finished) + eps),
             grammatical_accuracy=sum(grammatical) / (len(grammatical) + eps),
-            as_before_bs_completion_accuracy=sum(as_before_bs_completion)
-            / (len(as_before_bs_completion) + eps),
+            rule_2_completion_accuracy=sum(rule_2_completion)
+            / (len(rule_2_completion) + eps),
         )
 
         return metrics, finished
@@ -613,10 +627,8 @@ class LightningGrammarModule(pl.LightningModule):
 
             # pick the prediction for the last token only
             next_items = self._pick_next_tokens(pred)[:, -1].view(-1, 1)
-
             # Concatenate previous input with predicted best word
             prompt = torch.cat((prompt, next_items), dim=1)
-
             # save if model predicts end of sentence
             finished.logical_or_(next_items.view(-1) == EOS_token.item())
             # Stop if model predicts end of sentence

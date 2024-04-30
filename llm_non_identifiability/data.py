@@ -14,10 +14,10 @@ from typing import Dict
 # to_dict: creates a dictionary: {'as_before_bs_accuracy': 0.0, 'as_before_bs_completion_accuracy':0.0, etc}
 @dataclasses.dataclass
 class GrammarMetrics:
-    as_before_bs_accuracy: float = 0.0
-    as_before_bs_completion_accuracy: float = 0.0
+    rule_2_accuracy: float = 0.0
+    rule_2_completion_accuracy: float = 0.0
 
-    same_number_as_bs_accuracy: float = 0.0
+    rule_1_accuracy: float = 0.0
     finished_accuracy: float = 0.0
     grammatical_accuracy: float = 0.0
 

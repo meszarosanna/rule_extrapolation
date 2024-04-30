@@ -26,7 +26,7 @@ class GrammarDataModule(pl.LightningDataModule):
         num_test: int = 1024,
         max_length: int = 32,
         batch_size: int = 64,
-        grammar: str = "aNbN",
+        grammar: str = "aNbNcN",
         max_num_workers: int = 4,
     ):
         """

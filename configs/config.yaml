@@ -4,9 +4,9 @@ trainer:
   logger:
     class_path: pytorch_lightning.loggers.WandbLogger
     init_args:
-      entity: m-meszaros-anna
+      entity: causal-representation-learning #m-meszaros-anna
       log_model: all
-      project: Rule extrapolation
+      project: rule_extrapolation #Rule extrapolation
       save_dir:
       offline: false
   accelerator: auto

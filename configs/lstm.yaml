@@ -1,6 +1,6 @@
 
 model:
-  num_tokens: 5
+  num_tokens: 6
   embedding_dim: 32
   hidden_dim: 128
   num_layers: 3

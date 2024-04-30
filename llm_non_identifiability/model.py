@@ -38,6 +38,7 @@ class PositionalEncoding(nn.Module):
 
     def forward(self, token_embedding: torch.Tensor) -> torch.Tensor:
         # Residual connection + pos encoding
+        print(token_embedding.shape, self.pos_encoding.shape)
         return self.dropout(
             token_embedding + self.pos_encoding[: token_embedding.size(0), :]  # type: ignore[index]
         )
@@ -71,7 +72,7 @@ class TransformerDecoder(nn.Module):
     # Constructor
     def __init__(
         self,
-        num_tokens: int = 5,
+        num_tokens: int = 6,
         dim_model: int = 8,
         num_heads: int = 4,
         num_decoder_layers: int = 2,
@@ -117,7 +118,6 @@ class TransformerDecoder(nn.Module):
         # Tgt size must be (batch_size, tgt sequence length)
 
         # Embedding + positional encoding - Out size = (batch_size, sequence length, dim_model)
-
         src = self.embedding(src) * math.sqrt(self.dim_model)
         src = self.positional_encoder(src)
 
@@ -140,7 +140,7 @@ class LinearLLM(nn.Module):
     def __init__(
         self,
         max_data_length: int = 256,
-        num_tokens=5,
+        num_tokens=6,
         embedding_dim: int = 32,
         bias: bool = True,
         device=None,
@@ -210,7 +210,7 @@ class LSTM_LLM(nn.Module):
     # Constructor
     def __init__(
         self,
-        num_tokens: int = 5,
+        num_tokens: int = 6,
         embedding_dim: int = 32,
         hidden_dim: int = 128,
         num_layers: int = 4,
