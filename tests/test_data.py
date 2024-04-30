@@ -310,7 +310,7 @@ def test_generate_test_prompts(grammar):
     if grammar in ["aNbN", "abN", "aNbM"]:
         assert prompts.shape == (2**length, length + 1)
     elif grammar == "aNbNcN":
-        prompts = generate_test_prompts(grammar, length)
+        prompts = generate_test_prompts(length, grammar)
         assert prompts.shape == (3**length, length + 1)
     elif grammar in ["parentheses", "brackets", "parentheses_and_brackets"]:
         assert prompts.shape == (2**length, length + 3)
