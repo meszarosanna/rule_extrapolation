@@ -203,20 +203,20 @@ class LightningGrammarModule(pl.LightningModule):
         Setup the prompts for adversarial training from the OOD test prompts
         """
 
-        if self.hparams.adversarial_training is True:
+        if self.hparams.adversarial_training is True and self.hparams.grammar == "aNbN":
             prompts = []
 
             for idx, prompt in enumerate(self.test_prompts_out_of_distribution):
-                num_as = torch.sum(prompt == 0)
-                num_bs = torch.sum(prompt == 1)
+                num_as = torch.sum(prompt == A_token.item())
+                num_bs = torch.sum(prompt == B_token.item())
 
                 if num_as >= num_bs:
                     prompt = self._extend_prompt(
-                        prompt, num_as - num_bs + 1, value=torch.ones
+                        prompt, num_as - num_bs + 1, value=B_token.item()
                     )
                 else:
                     prompt = self._extend_prompt(
-                        prompt, num_bs - num_as + 1, value=torch.zeros
+                        prompt, num_bs - num_as + 1, value=A_token.item()
                     )
 
                 prompts.append(prompt.cpu().numpy())

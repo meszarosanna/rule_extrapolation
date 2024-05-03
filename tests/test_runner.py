@@ -10,8 +10,13 @@ from llm_non_identifiability.runner import LightningGrammarModule
 @pytest.mark.parametrize("adversarial_training", [True, False])
 def test_fit_adversarial(num_train, num_val, num_test, adversarial_training):
     trainer = Trainer(fast_dev_run=True)
-    runner = LightningGrammarModule(adversarial_training=adversarial_training)
-    dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
+    grammar = "aNbN"
+    runner = LightningGrammarModule(
+        adversarial_training=adversarial_training, grammar=grammar
+    )
+    dm = GrammarDataModule(
+        num_train=num_train, num_val=num_val, num_test=num_test, grammar=grammar
+    )
     trainer.fit(runner, datamodule=dm)
 
 
