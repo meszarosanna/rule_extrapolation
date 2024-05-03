@@ -105,12 +105,12 @@ class LightningGrammarModule(pl.LightningModule):
             self.hparams["num_tokens"] = 5
         elif self.hparams.grammar == "aNbNcN":
             self.hparams["num_tokens"] = 6
+        elif self.hparams.grammar == "parentheses":
+            self.hparams["num_tokens"] = 5
         elif self.hparams.grammar == "parentheses_and_brackets":
             self.hparams["num_tokens"] = 7
-        else:
-            raise ValueError(
-                f"Num tokens not specified for grammar: {self.hparams.grammar}"
-            )
+        elif grammar == "brackets":
+            raise NotImplementedError("num_tokens for brackets grammar is inconsistent")
 
         self._setup_model()
 
