@@ -53,8 +53,11 @@ def test_fit_extrapolation(
     num_test,
 ):
     trainer = Trainer(fast_dev_run=True)
-    runner = LightningGrammarModule(extrapolation_training=True)
-    dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
+    grammar = "aNbN"
+    runner = LightningGrammarModule(extrapolation_training=True, grammar=grammar)
+    dm = GrammarDataModule(
+        num_train=num_train, num_val=num_val, num_test=num_test, grammar=grammar
+    )
     trainer.fit(runner, datamodule=dm)
 
 
