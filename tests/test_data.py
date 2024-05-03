@@ -28,7 +28,14 @@ from llm_non_identifiability.data import (
     generate_matched_brackets_data,
     generate_matched_parentheses_data,
     generate_aNbNcN_grammar_data,
+    A_token,
+    B_token,
+    C_token,
 )
+
+A = A_token.item()
+B = B_token.item()
+C = C_token.item()
 
 
 def test_aNbN_grammar_equal_as_bs(num_samples, max_length):
@@ -132,8 +139,8 @@ def test_aNbNaN_grammar_all_sequences(num_samples, max_length):
 def test_abN_equal_as_bs(num_samples, max_length):
     data = generate_abN_grammar_data(num_samples, max_length)
     for sequence in data:
-        num_a = np.sum(sequence == 0)
-        num_b = np.sum(sequence == 1)
+        num_a = np.sum(sequence == A)
+        num_b = np.sum(sequence == B)
         assert num_a == num_b
 
 
@@ -158,135 +165,135 @@ def test_pad_varying_sequence_lengths():
 
 
 def test_check_as_before_bs():
-    sequence = torch.tensor([0, 0, 1, 0, 1])
+    sequence = torch.tensor([A, A, B, A, B])
     assert check_as_before_bs(sequence) == False
 
-    sequence = torch.tensor([0, 0, 1, 1])
+    sequence = torch.tensor([A, A, B, B])
     assert check_as_before_bs(sequence) == True
 
-    sequence = torch.tensor([1, 1])
+    sequence = torch.tensor([B, B])
     assert check_as_before_bs(sequence) == True
 
-    sequence = torch.tensor([0, 0])
+    sequence = torch.tensor([A, A])
     assert check_as_before_bs(sequence) == True
 
 
 def test_check_more_as_before_bs():
-    sequence = torch.tensor([0, 0, 1, 0, 1])
+    sequence = torch.tensor([A, A, B, A, B])
     assert check_more_as_before_bs(sequence) == True
 
-    sequence = torch.tensor([0, 1, 0, 1, 0, 0])
+    sequence = torch.tensor([A, B, A, B, A, A])
     assert check_more_as_before_bs(sequence) == False
 
-    sequence = torch.tensor([0, 0, 1, 1])
+    sequence = torch.tensor([A, A, B, B])
     assert check_more_as_before_bs(sequence) == True
 
-    sequence = torch.tensor([1, 1])
+    sequence = torch.tensor([B, B])
     assert check_more_as_before_bs(sequence) == False
 
-    sequence = torch.tensor([0, 0])
+    sequence = torch.tensor([A, A])
     assert check_more_as_before_bs(sequence) == True
 
 
 def test_check_more_bs_than_cs():
-    sequence = torch.tensor([1, 1, 2, 2])
+    sequence = torch.tensor([B, B, C, C])
     assert check_more_bs_than_cs(sequence) == True
 
-    sequence = torch.tensor([2, 1, 1])
+    sequence = torch.tensor([C, B, B])
     assert check_more_bs_than_cs(sequence) == True
 
-    sequence = torch.tensor([0, 0])
+    sequence = torch.tensor([A, A])
     assert check_more_bs_than_cs(sequence) == True
 
-    sequence = torch.tensor([0, 2, 0, 2, 0, 1])
+    sequence = torch.tensor([A, C, A, C, A, B])
     assert check_more_bs_than_cs(sequence) == False
 
-    sequence = torch.tensor([0, 0, 2])
+    sequence = torch.tensor([A, A, C])
     assert check_more_bs_than_cs(sequence) == False
 
 
 def test_check_bs_together():
-    sequence = torch.tensor([0, 0, 1, 0, 1])
+    sequence = torch.tensor([A, A, B, A, B])
     assert check_bs_together(sequence) == False
 
-    sequence = torch.tensor([0, 0, 1, 1, 0, 0])
+    sequence = torch.tensor([A, A, B, B, A, A])
     assert check_bs_together(sequence) == True
 
-    sequence = torch.tensor([1, 1])
+    sequence = torch.tensor([B, B])
     assert check_bs_together(sequence) == True
 
-    sequence = torch.tensor([0, 0])
+    sequence = torch.tensor([A, A])
     assert check_bs_together(sequence) == False
 
 
 def test_check_bs_in_the_middle():
-    sequence = torch.tensor([0, 0, 1, 0, 1])
+    sequence = torch.tensor([A, A, B, A, B])
     assert check_bs_in_the_middle(sequence) == False
 
-    sequence = torch.tensor([0, 0, 1, 1, 0, 0])
+    sequence = torch.tensor([A, A, B, B, A, A])
     assert check_bs_in_the_middle(sequence) == True
 
-    sequence = torch.tensor([1, 1])
+    sequence = torch.tensor([B, B])
     assert check_bs_in_the_middle(sequence) == True
 
-    sequence = torch.tensor([0, 0])
+    sequence = torch.tensor([A, A])
     assert check_bs_in_the_middle(sequence) == False
 
 
 def test_check_same_number_as_bs():
-    sequence = torch.tensor([0, 0, 1, 0, 1])
+    sequence = torch.tensor([A, A, B, A, B])
     assert check_same_number_as_bs(sequence) == False
 
-    sequence = torch.tensor([0, 0, 1, 1])
+    sequence = torch.tensor([A, A, B, B])
     assert check_same_number_as_bs(sequence) == True
 
-    sequence = torch.tensor([0, 1, 1, 0])
+    sequence = torch.tensor([A, B, B, A])
     assert check_same_number_as_bs(sequence) == True
 
-    sequence = torch.tensor([1, 1, 0, 0])
+    sequence = torch.tensor([B, B, A, A])
     assert check_same_number_as_bs(sequence) == True
 
 
 def test_check_twice_many_as_than_bs():
-    sequence = torch.tensor([0, 0, 1, 0, 1])
+    sequence = torch.tensor([A, A, B, A, B])
     assert check_twice_many_as_than_bs(sequence) == False
 
-    sequence = torch.tensor([0, 0, 1, 1, 0, 0])
+    sequence = torch.tensor([A, A, B, B, A, A])
     assert check_twice_many_as_than_bs(sequence) == True
 
-    sequence = torch.tensor([1, 0, 0, 0, 0, 1])
+    sequence = torch.tensor([B, A, A, A, A, B])
     assert check_twice_many_as_than_bs(sequence) == True
 
 
 def test_check_in_distr_anbncn():
-    sequence = torch.tensor([0, 0, 1, 0, 1])
+    sequence = torch.tensor([A, A, B, A, B])
     assert check_in_dist_anbncn(sequence) == False
 
-    sequence = torch.tensor([0, 0, 1, 1])
+    sequence = torch.tensor([A, A, B, B])
     assert check_in_dist_anbncn(sequence) == True
 
-    sequence = torch.tensor([0, 0, 0, 1, 1, 1, 2])
+    sequence = torch.tensor([A, A, A, B, B, B, C])
     assert check_in_dist_anbncn(sequence) == True
 
-    sequence = torch.tensor([2, 2, 0, 1])
+    sequence = torch.tensor([C, C, A, B])
     assert check_in_dist_anbncn(sequence) == False
 
 
 def test_check_sequence_finished():
-    sequence = torch.tensor([0, 1, 0, 1])
+    sequence = torch.tensor([A, B, A, B])
     assert check_sequence_finished(sequence) == False
 
-    sequence = torch.tensor([0, 1, EOS_token.item(), 0, 1])
+    sequence = torch.tensor([A, B, EOS_token.item(), A, B])
     assert check_sequence_finished(sequence) == False
 
-    sequence = torch.tensor([0, 1, EOS_token.item(), 0, 1, EOS_token.item(), 0, 1])
+    sequence = torch.tensor([A, B, EOS_token.item(), A, B, EOS_token.item(), A, B])
     assert check_sequence_finished(sequence) == False
 
-    sequence = torch.tensor([0, 1, EOS_token.item()])
+    sequence = torch.tensor([A, B, EOS_token.item()])
     assert check_sequence_finished(sequence) == True
 
     sequence = torch.tensor(
-        [0, 1, EOS_token.item(), EOS_token.item(), PAD_token.item()]
+        [A, B, EOS_token.item(), EOS_token.item(), PAD_token.item()]
     )
     assert check_sequence_finished(sequence) == True
 
@@ -408,6 +415,7 @@ def test_generate_matched_parentheses_and_brackets():
 def test_check_matched_parentheses():
     op = OPENING_PARENTHESIS_token.item()
     cp = CLOSING_PARENTHESIS_token.item()
+    random_token = op + cp
     sequence = torch.tensor([op, cp, op, cp, op, cp])  # ()()()
     assert check_matched_parentheses(sequence) == True
 
@@ -423,14 +431,25 @@ def test_check_matched_parentheses():
     sequence = torch.tensor([op, cp, cp, op, op, cp, cp, op, cp, cp])  # ())(())(())
     assert check_matched_parentheses(sequence) == False
 
+    sequence = torch.tensor(
+        [op, random_token, cp, op, cp, random_token, op, cp]
+    )  # (X)()X()
+    assert check_matched_parentheses(sequence) == True
+
 
 def test_check_matched_brackets():
     ob = OPENING_BRACKET_token.item()
     cb = CLOSING_BRACKET_token.item()
+    random_token = ob + cb
     sequence = torch.tensor([ob, cb, ob, cb, ob, cb])  # [][][]
     assert check_matched_brackets(sequence) == True
 
     sequence = torch.tensor([ob, cb, ob, ob, cb, cb])  # [][[]]
+    assert check_matched_brackets(sequence) == True
+
+    sequence = torch.tensor(
+        [ob, cb, random_token, ob, random_token, ob, cb, cb]
+    )  # []X[X[]]
     assert check_matched_brackets(sequence) == True
 
     sequence = torch.tensor([ob, cb, cb, ob, ob, cb])  # []][[]

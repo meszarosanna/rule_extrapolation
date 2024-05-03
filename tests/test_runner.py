@@ -10,8 +10,13 @@ from llm_non_identifiability.runner import LightningGrammarModule
 @pytest.mark.parametrize("adversarial_training", [True, False])
 def test_fit_adversarial(num_train, num_val, num_test, adversarial_training):
     trainer = Trainer(fast_dev_run=True)
-    runner = LightningGrammarModule(adversarial_training=adversarial_training)
-    dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
+    grammar = "aNbN"
+    runner = LightningGrammarModule(
+        adversarial_training=adversarial_training, grammar=grammar
+    )
+    dm = GrammarDataModule(
+        num_train=num_train, num_val=num_val, num_test=num_test, grammar=grammar
+    )
     trainer.fit(runner, datamodule=dm)
 
 
@@ -33,7 +38,7 @@ def test_fit_model(num_train, num_val, num_test, model, max_length):
     trainer.fit(runner, datamodule=dm)
 
 
-@pytest.mark.parametrize("grammar", ["aNbN", "brackets"])
+@pytest.mark.parametrize("grammar", ["aNbN", "parentheses_and_brackets"])
 def test_fit_grammars(num_train, num_val, num_test, max_length, grammar):
     trainer = Trainer(fast_dev_run=True)
     runner = LightningGrammarModule(max_data_length=max_length, grammar=grammar)
@@ -53,8 +58,11 @@ def test_fit_extrapolation(
     num_test,
 ):
     trainer = Trainer(fast_dev_run=True)
-    runner = LightningGrammarModule(extrapolation_training=True)
-    dm = GrammarDataModule(num_train=num_train, num_val=num_val, num_test=num_test)
+    grammar = "aNbN"
+    runner = LightningGrammarModule(extrapolation_training=True, grammar=grammar)
+    dm = GrammarDataModule(
+        num_train=num_train, num_val=num_val, num_test=num_test, grammar=grammar
+    )
     trainer.fit(runner, datamodule=dm)
 
 

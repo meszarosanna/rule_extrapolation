@@ -9,7 +9,6 @@ import torch.nn as nn
 from transformers.optimization import get_inverse_sqrt_schedule
 
 from llm_non_identifiability.data import (
-    generate_aNbN_grammar_data,
     check_same_number_as_bs,
     check_as_before_bs,
     check_same_number_as_bs_cs,
@@ -17,6 +16,8 @@ from llm_non_identifiability.data import (
     SOS_token,
     EOS_token,
     PAD_token,
+    A_token,
+    B_token,
     check_sequence_finished,
     generate_test_prompts,
     grammar_rules,
@@ -99,15 +100,17 @@ class LightningGrammarModule(pl.LightningModule):
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
 
-        # # calculate number of tokens:
-        # if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
-        #     self.hparams["num_tokens"] = 5
-        # elif self.hparams.grammar == "aNbNcN":
-        #     self.hparams["num_tokens"] = 6
-        # elif self.hparams.grammar in ["brackets", "parentheses"]:
-        #     self.hparams["num_tokens"] = 5
-        # elif self.hparams.grammar == "parentheses_and_brackets":
-        #     self.hparams["num_tokens"] = 7
+        # calculate number of tokens:
+        if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
+            self.hparams["num_tokens"] = 5
+        elif self.hparams.grammar == "aNbNcN":
+            self.hparams["num_tokens"] = 6
+        elif self.hparams.grammar == "parentheses":
+            self.hparams["num_tokens"] = 5
+        elif self.hparams.grammar == "parentheses_and_brackets":
+            self.hparams["num_tokens"] = 7
+        elif grammar == "brackets":
+            raise NotImplementedError("num_tokens for brackets grammar is inconsistent")
 
         self._setup_model()
 
@@ -200,20 +203,20 @@ class LightningGrammarModule(pl.LightningModule):
         Setup the prompts for adversarial training from the OOD test prompts
         """
 
-        if self.hparams.adversarial_training is True:
+        if self.hparams.adversarial_training is True and self.hparams.grammar == "aNbN":
             prompts = []
 
             for idx, prompt in enumerate(self.test_prompts_out_of_distribution):
-                num_as = torch.sum(prompt == 0)
-                num_bs = torch.sum(prompt == 1)
+                num_as = torch.sum(prompt == A_token.item())
+                num_bs = torch.sum(prompt == B_token.item())
 
                 if num_as >= num_bs:
                     prompt = self._extend_prompt(
-                        prompt, num_as - num_bs + 1, value=torch.ones
+                        prompt, num_as - num_bs + 1, value=B_token.item()
                     )
                 else:
                     prompt = self._extend_prompt(
-                        prompt, num_bs - num_as + 1, value=torch.zeros
+                        prompt, num_bs - num_as + 1, value=A_token.item()
                     )
 
                 prompts.append(prompt.cpu().numpy())
@@ -227,20 +230,23 @@ class LightningGrammarModule(pl.LightningModule):
         Setup the prompts for extrapolation training from the OOD test prompts
         """
 
-        if self.hparams.extrapolation_training is True:
+        if (
+            self.hparams.extrapolation_training is True
+            and self.hparams.grammar == "aNbN"
+        ):
             prompts = []
 
             for idx, prompt in enumerate(self.test_prompts_out_of_distribution):
-                num_as = torch.sum(prompt == 0)
-                num_bs = torch.sum(prompt == 1)
+                num_as = torch.sum(prompt == A_token.item())
+                num_bs = torch.sum(prompt == B_token.item())
 
                 if num_as >= num_bs:
                     prompt = self._extend_prompt(
-                        prompt, num_as - num_bs, value=torch.ones
+                        prompt, num_as - num_bs, value=B_token.item()
                     )
                 else:
                     prompt = self._extend_prompt(
-                        prompt, num_bs - num_as, value=torch.zeros
+                        prompt, num_bs - num_as, value=A_token.item()
                     )
 
                 assert check_same_number_as_bs(prompt) == True
@@ -251,15 +257,16 @@ class LightningGrammarModule(pl.LightningModule):
                 torch.from_numpy(pad(prompts)).long().to(self.hparams.device)
             )
 
-    def _extend_prompt(self, prompt, length, value=torch.ones):
+    def _extend_prompt(self, prompt, length, value=A_token.item()):
         prompt = torch.cat(
             (
                 prompt,
-                value(
+                torch.ones(
                     (length,),
                     dtype=torch.long,
                     device=self.hparams.device,
-                ),
+                )
+                * value,
                 torch.ones(
                     (1,),
                     dtype=torch.long,
