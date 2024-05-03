@@ -1,14 +1,21 @@
 import numpy as np
 import torch
 
+# these are always used
+SOS_token = np.array([0])
+EOS_token = np.array([1])
+PAD_token = np.array([2])
 
-SOS_token = np.array([3])
-EOS_token = np.array([4])
-PAD_token = np.array([5])
-OPENING_PARENTHESIS_token = np.array([6])
-CLOSING_PARENTHESIS_token = np.array([7])
-OPENING_BRACKET_token = np.array([8])
-CLOSING_BRACKET_token = np.array([9])
+# only for aNbNcN and variants
+A_token = np.array([3])
+B_token = np.array([4])
+C_token = np.array([5])
+
+# only for parentheses and brackets
+OPENING_PARENTHESIS_token = np.array([3])
+CLOSING_PARENTHESIS_token = np.array([4])
+OPENING_BRACKET_token = np.array([5])
+CLOSING_BRACKET_token = np.array([6])
 
 from itertools import product
 
@@ -70,7 +77,14 @@ def generate_aNbN_grammar_data(
 
     for length in lengths:
         data.append(
-            np.concatenate((SOS_token, np.zeros(length), np.ones(length), EOS_token))
+            np.concatenate(
+                (
+                    SOS_token,
+                    A_token * np.ones(length),
+                    B_token * np.ones(length),
+                    EOS_token,
+                )
+            )
         )
 
     return data  # list containing the sequences of max length max_length+2
@@ -104,9 +118,9 @@ def generate_aNbNaN_grammar_data(
             np.concatenate(
                 (
                     SOS_token,
-                    np.zeros(length),
-                    np.ones(length),
-                    np.zeros(length),
+                    A_token * np.ones(length),
+                    B_token * np.ones(length),
+                    A_token * np.ones(length),
                     EOS_token,
                 )
             )
@@ -143,9 +157,9 @@ def generate_aNbNcN_grammar_data(
             np.concatenate(
                 (
                     SOS_token,
-                    np.zeros(length),
-                    np.ones(length),
-                    np.ones(length) * 2,
+                    A_token * np.ones(length),
+                    B_token * np.ones(length),
+                    C_token * np.ones(length),
                     EOS_token,
                 )
             )
@@ -169,7 +183,7 @@ def generate_abN_grammar_data(num_samples: int, max_length: int = 32) -> list:
     data = []
 
     for lengths in lengths:
-        abN = np.concatenate((np.zeros(lengths), np.ones(lengths)))
+        abN = np.concatenate((A_token * np.ones(lengths), B_token * np.ones(lengths)))
         # shuffle the symbols between start and end tokens
         np.random.shuffle(abN)
         data.append(np.concatenate((SOS_token, abN, EOS_token)))
@@ -193,7 +207,11 @@ def generate_aNbM_grammar_data(num_samples: int, max_length: int = 32) -> list:
     data = []
 
     for la, lb in zip(lengths_a, lengths_b):
-        data.append(np.concatenate((SOS_token, np.zeros(la), np.ones(lb), EOS_token)))
+        data.append(
+            np.concatenate(
+                (SOS_token, A_token * np.ones(la), B_token * np.ones(lb), EOS_token)
+            )
+        )
 
     return data
 
@@ -232,11 +250,11 @@ def check_as_before_bs(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    if len(a_tokens := torch.where(sequence == 0)[0]) > 0:
+    if len(a_tokens := torch.where(sequence == A_token.item())[0]) > 0:
         # find the last a
         last_a = a_tokens[-1]
 
-        if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+        if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
             # find the first b
             first_b = b_tokens[0]
 
@@ -257,11 +275,11 @@ def check_as_before_cs(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    if len(a_tokens := torch.where(sequence == 0)[0]) > 0:
+    if len(a_tokens := torch.where(sequence == A_token.item())[0]) > 0:
         # find the last a
         last_a = a_tokens[-1]
 
-        if len(c_tokens := torch.where(sequence == 2)[0]) > 0:
+        if len(c_tokens := torch.where(sequence == C_token.item())[0]) > 0:
             # find the first c
             first_c = c_tokens[0]
 
@@ -282,11 +300,11 @@ def check_bs_before_cs(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+    if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
         # find the last b
         last_b = b_tokens[-1]
 
-        if len(c_tokens := torch.where(sequence == 2)[0]) > 0:
+        if len(c_tokens := torch.where(sequence == C_token.item())[0]) > 0:
             # find the first c
             first_c = c_tokens[0]
 
@@ -307,7 +325,7 @@ def check_bs_in_the_middle(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+    if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
         # find the first b
         first_b = b_tokens[0]
         last_b = b_tokens[-1]
@@ -330,12 +348,14 @@ def check_bs_together(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+    if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
         # find the first b
         first_b = b_tokens[0]
         last_b = b_tokens[-1]
 
-        if (b_subsequence := sequence[first_b:last_b]).sum() == len(b_subsequence):
+        if (
+            (b_subsequence := sequence[first_b : last_b + 1]) == B_token.item()
+        ).sum() == len(b_subsequence):
             return True
         else:
             return False
@@ -352,8 +372,8 @@ def check_same_number_as_bs(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    num_as = torch.sum(sequence == 0)
-    num_bs = torch.sum(sequence == 1)
+    num_as = torch.sum(sequence == A_token.item())
+    num_bs = torch.sum(sequence == B_token.item())
     return num_as == num_bs
 
 
@@ -366,8 +386,8 @@ def check_twice_many_as_than_bs(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    num_as = torch.sum(sequence == 0)
-    num_bs = torch.sum(sequence == 1)
+    num_as = torch.sum(sequence == A_token.item())
+    num_bs = torch.sum(sequence == B_token.item())
     return num_as == 2 * num_bs
 
 
@@ -380,8 +400,8 @@ def check_more_as_than_bs(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    num_as = torch.sum(sequence == 0)
-    num_bs = torch.sum(sequence == 1)
+    num_as = torch.sum(sequence == A_token.item())
+    num_bs = torch.sum(sequence == B_token.item())
     return num_as >= num_bs
 
 
@@ -394,8 +414,8 @@ def check_more_bs_than_cs(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    num_bs = torch.sum(sequence == 1)
-    num_cs = torch.sum(sequence == 2)
+    num_bs = torch.sum(sequence == B_token.item())
+    num_cs = torch.sum(sequence == C_token.item())
     return num_bs >= num_cs
 
 
@@ -408,11 +428,11 @@ def check_more_as_before_bs(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+    if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
         first_b = b_tokens[0]
 
-        num_as = torch.sum(sequence[:first_b] == 0)
-        num_bs = torch.sum(sequence == 1)
+        num_as = torch.sum(sequence[:first_b] == A_token.item())
+        num_bs = torch.sum(sequence == B_token.item())
         return num_as >= num_bs
 
     else:
@@ -428,9 +448,9 @@ def check_same_number_as_bs_cs(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    num_as = torch.sum(sequence == 0)
-    num_bs = torch.sum(sequence == 1)
-    num_cs = torch.sum(sequence == 2)
+    num_as = torch.sum(sequence == A_token.item())
+    num_bs = torch.sum(sequence == B_token.item())
+    num_cs = torch.sum(sequence == C_token.item())
     return (num_as == num_bs) and (num_bs == num_cs)
 
 
@@ -444,16 +464,16 @@ def check_as_before_bs_before_cs(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    if len(c_tokens := torch.where(sequence == 2)[0]) > 0:
+    if len(c_tokens := torch.where(sequence == C_token.item())[0]) > 0:
         # find the first c
         first_c = c_tokens[0]
 
-        if len(b_tokens := torch.where(sequence == 1)[0]) > 0:
+        if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
             # find the first and last b
             last_b = b_tokens[-1]
             first_b = b_tokens[0]
 
-            if len(a_tokens := torch.where(sequence == 0)[0]) > 0:
+            if len(a_tokens := torch.where(sequence == A_token.item())[0]) > 0:
                 # find the last a
                 last_a = a_tokens[-1]
                 if (last_a < first_b) and (last_b < first_c):
@@ -472,8 +492,8 @@ def check_in_dist_anbncn(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    if len(c_tokens := torch.where(sequence == 2)[0]) == 0:
-        if len(b_tokens := torch.where(sequence == 1)[0]) == 0:
+    if len(c_tokens := torch.where(sequence == C_token.item())[0]) == 0:
+        if len(b_tokens := torch.where(sequence == B_token.item())[0]) == 0:
             return True
         else:
             return check_as_before_bs(sequence) and check_more_as_than_bs(sequence)
@@ -500,13 +520,10 @@ def check_sequence_finished(sequence: torch.Tensor):
     # find the first EOS token
     if len(eos_tokens := torch.where(sequence == EOS_token.item())[0]) > 0:
         first_EOS = eos_tokens[0]
-        # check whether there are any 0's or 1's after the first EOS token
-        return (
-            torch.sum(sequence[first_EOS + 1 :] == 0)
-            + torch.sum(sequence[first_EOS + 1 :] == 1)
-            + torch.sum(sequence[first_EOS + 1 :] == 2)
-            == 0
-        )
+        # check whether there are any non-PAD or non-EOS tokens after the first EOS token
+        return torch.sum(sequence[first_EOS + 1 :] == EOS_token.item()) + torch.sum(
+            sequence[first_EOS + 1 :] == PAD_token.item()
+        ) == len(sequence[first_EOS + 1 :])
     else:
         return False
 
@@ -520,7 +537,7 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
 
     num_samples = 2**length
     if grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
-        symbols = [0, 1]
+        symbols = [A_token.item(), B_token.item()]
         prompts = torch.tensor(list(product(symbols, repeat=length)), dtype=torch.long)
 
         # add SOS
@@ -529,7 +546,7 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
             dim=1,
         )
     elif grammar == "aNbNcN":
-        symbols = [0, 1, 2]
+        symbols = [A_token.item(), B_token.item(), C_token.item()]
         prompts = torch.tensor(list(product(symbols, repeat=length)), dtype=torch.long)
 
         # add SOS
