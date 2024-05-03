@@ -99,15 +99,17 @@ class LightningGrammarModule(pl.LightningModule):
 
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
 
-        # # calculate number of tokens:
-        # if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
-        #     self.hparams["num_tokens"] = 5
-        # elif self.hparams.grammar == "aNbNcN":
-        #     self.hparams["num_tokens"] = 6
-        # elif self.hparams.grammar in ["brackets", "parentheses"]:
-        #     self.hparams["num_tokens"] = 5
-        # elif self.hparams.grammar == "parentheses_and_brackets":
-        #     self.hparams["num_tokens"] = 7
+        # calculate number of tokens:
+        if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
+            self.hparams["num_tokens"] = 5
+        elif self.hparams.grammar == "aNbNcN":
+            self.hparams["num_tokens"] = 6
+        elif self.hparams.grammar == "parentheses_and_brackets":
+            self.hparams["num_tokens"] = 7
+        else:
+            raise ValueError(
+                f"Num tokens not specified for grammar: {self.hparams.grammar}"
+            )
 
         self._setup_model()
 
