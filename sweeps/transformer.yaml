@@ -16,11 +16,11 @@ parameters:
   model.model:
     value: transformer
   model.dim_model:
-    value: 8 #10
+    value: 10
   model.num_heads:
-    value: 4 #5
+    value: 5
   model.dim_feedforward:
-    value: 256 #1024
+    value: 1024
   model.num_decoder_layers:
     value: 5
   model.dropout_p:
