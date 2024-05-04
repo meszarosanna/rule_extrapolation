@@ -34,7 +34,7 @@ parameters:
   model.dropout:
     value: 0.1
   model.test_prompt_length:
-    value: 6
+    value: 5
   model.max_pred_length:
     value: 300
   model.lr:
