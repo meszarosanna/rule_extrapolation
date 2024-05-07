@@ -1,5 +1,4 @@
 model:
   max_data_length: 256
-  num_tokens: 6
   bias: True
   model: linear
