@@ -625,8 +625,6 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
             ),
             dtype=torch.long,
         )
-        # generate torch 0-1 sequence in shape (data.shape[0], 1)
-        bernoulli = torch.bernoulli(0.5 * torch.ones((data.shape[0], 1)))
 
         ood_prompts = torch.cat(
             (
