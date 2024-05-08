@@ -45,8 +45,6 @@ parameters:
     value: 5 #3
   model.dropout: # lstm
     value: 0.4
-  model.max_data_length: # linear
-    value: 256
   model.bias: # linear
     value: True
   data.grammar:
