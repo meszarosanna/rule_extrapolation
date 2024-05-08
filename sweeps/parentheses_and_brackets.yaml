@@ -14,24 +14,16 @@ parameters:
   trainer.max_epochs:
     value: 50000
   model.model:
-    value: transformer
-  model.dim_model:
+    values: [transformer, lstm, linear]
+  model.dim_model: # transformer
     value: 10
-  model.num_heads:
+  model.num_heads: # transformer
     value: 5
-  model.dim_feedforward:
+  model.dim_feedforward: # transformer
     value: 1024
-  model.num_decoder_layers:
+  model.num_decoder_layers: # transformer
     value: 7
-  model.dropout_p:
-    value: 0.1
-  model.embedding_dim:
-    value: 32
-  model.hidden_dim:
-    value: 128
-  model.num_layers:
-    value: 3
-  model.dropout:
+  model.dropout_p: # transformer
     value: 0.1
   model.test_prompt_length:
     value: 5
@@ -45,6 +37,18 @@ parameters:
     value: false
   model.extrapolation_training:
     value: false
+  model.embedding_dim: # lstm
+    value: 16 #32
+  model.hidden_dim: # lstm
+    value: 64 #128
+  model.num_layers: # lstm
+    value: 5 #3
+  model.dropout: # lstm
+    value: 0.4
+  model.max_data_length: # linear
+    value: 256
+  model.bias: # linear
+    value: True
   data.grammar:
     value: parentheses_and_brackets
   data.max_length:
