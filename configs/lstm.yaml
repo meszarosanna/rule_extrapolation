@@ -2,6 +2,6 @@
 model:
   embedding_dim: 16 #32
   hidden_dim: 64 #128
-  num_layers: 4 #3
+  num_layers: 5 #3
   dropout: 0.4
   model: lstm
