@@ -14,25 +14,7 @@ parameters:
   trainer.max_epochs:
     value: 50000
   model.model:
-    value: transformer
-  model.dim_model:
-    value: 10
-  model.num_heads:
-    value: 5
-  model.dim_feedforward:
-    value: 1024
-  model.num_decoder_layers:
-    value: 7
-  model.dropout_p:
-    value: 0.1
-  model.embedding_dim:
-    value: 32
-  model.hidden_dim:
-    value: 128
-  model.num_layers:
-    value: 3
-  model.dropout:
-    value: 0.1
+    value: lstm
   model.test_prompt_length:
     value: 5
   model.max_pred_length:
@@ -41,6 +23,26 @@ parameters:
     value: 0.002
   model.layer_norm_eps:
     value: 6e-3
+  model.dim_model: # transformer
+    value: 10
+  model.num_heads: # transformer
+    value: 5
+  model.dim_feedforward: # transformer
+    value: 1024
+  model.num_decoder_layers: # transformer
+    value: 7
+  model.dropout_p: # transformer
+    value: 0.1
+  model.embedding_dim: # lstm
+    value: 16
+  model.hidden_dim: # lstm
+    value: 64
+  model.num_layers: # lstm
+    value: 5
+  model.dropout: # lstm
+    value: 0.4
+  model.bias: # linear
+    value: True
   model.adversarial_training:
     value: false
   model.extrapolation_training:
