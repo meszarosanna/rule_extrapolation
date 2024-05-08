@@ -14,7 +14,7 @@ parameters:
   trainer.max_epochs:
     value: 50000
   model.model:
-    value: lstm
+    values: [lstm, transformer, linear]
   model.test_prompt_length:
     value: 5
   model.max_pred_length:
