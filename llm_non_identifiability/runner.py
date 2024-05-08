@@ -13,6 +13,9 @@ from llm_non_identifiability.data import (
     check_as_before_bs,
     check_same_number_as_bs_cs,
     check_as_before_bs_before_cs,
+    check_matched_parentheses,
+    check_matched_parentheses_and_brackets,
+    check_matched_brackets,
     SOS_token,
     EOS_token,
     PAD_token,
@@ -541,6 +544,13 @@ class LightningGrammarModule(pl.LightningModule):
                 ]
             else:
                 rule_2_completion = []
+        elif self.hparams.grammar == "parentheses_and_brackets":
+            rule_2 = [check_matched_parentheses(p) for p in prompt_pred]
+            rule_1 = [check_matched_brackets(p) for p in prompt_pred]
+            rule_2_completion = [
+                check_matched_parentheses(p[self.hparams.test_prompt_length + 1 :])
+                for p in prompt_pred
+            ]
         else:
             rule_2 = []
             rule_1 = []
