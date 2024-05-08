@@ -38,11 +38,11 @@ parameters:
   model.extrapolation_training:
     value: false
   model.embedding_dim: # lstm
-    value: 16 #32
+    value: 16
   model.hidden_dim: # lstm
-    value: 64 #128
+    value: 64
   model.num_layers: # lstm
-    value: 5 #3
+    value: 5
   model.dropout: # lstm
     value: 0.4
   model.bias: # linear
