@@ -7,6 +7,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 from transformers.optimization import get_inverse_sqrt_schedule
+from mamba.mamba_lm import MambaLM, MambaLMConfig
 
 from llm_non_identifiability.data import (
     check_same_number_as_bs,
@@ -71,6 +72,10 @@ class LightningGrammarModule(pl.LightningModule):
         model="transformer",
         bias=True,
         dropout=0.4,
+        n_layers=4,
+        d_state=16,
+        d_conv=4,
+        d_model=8,
     ):
         """
         :param optimizer:
@@ -151,6 +156,16 @@ class LightningGrammarModule(pl.LightningModule):
                 num_layers=self.hparams.num_layers,
                 dropout_lstm=self.hparams.dropout,
                 device=self.hparams.device,
+            )
+        elif self.hparams.model == "mamba":
+            self.model: nn.Module = MambaLM(  # type: ignore
+                lm_config=MambaLMConfig(
+                    vocab_size=self.hparams.num_tokens,
+                    d_model=self.hparams.d_model,
+                    d_state=self.hparams.d_state,
+                    d_conv=self.hparams.d_conv,
+                    n_layers=self.hparams.n_layers,
+                )
             )
 
     @property
@@ -596,6 +611,8 @@ class LightningGrammarModule(pl.LightningModule):
             )
         elif self.hparams.model == "linear" or self.hparams.model == "lstm":
             pred = self.model(src=X_input)
+        elif self.hparams.model == "mamba":
+            pred = self.model(X_input)
 
         if completion_loss is False:
             loss = self.hparams.loss_fn(pred, X_expected)
@@ -663,6 +680,8 @@ class LightningGrammarModule(pl.LightningModule):
 
             elif self.hparams.model == "linear" or self.hparams.model == "lstm":
                 pred = self.model(src=prompt)
+            elif self.hparams.model == "mamba":
+                pred = self.model(prompt)
 
             # pick the prediction for the last token only
             next_items = self._pick_next_tokens(pred)[:, -1].view(-1, 1)

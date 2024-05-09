@@ -12,7 +12,7 @@ def test_fit_adversarial(num_train, num_val, num_test, adversarial_training):
     trainer = Trainer(fast_dev_run=True)
     grammar = "aNbN"
     runner = LightningGrammarModule(
-        adversarial_training=adversarial_training, grammar=grammar
+        grammar=grammar, adversarial_training=adversarial_training
     )
     dm = GrammarDataModule(
         num_train=num_train, num_val=num_val, num_test=num_test, grammar=grammar
@@ -28,7 +28,7 @@ def test_fit_optimizer(num_train, num_val, num_test, optimizer):
     trainer.fit(runner, datamodule=dm)
 
 
-@pytest.mark.parametrize("model", ["transformer", "linear", "lstm"])
+@pytest.mark.parametrize("model", ["transformer", "linear", "lstm", "mamba"])
 def test_fit_model(num_train, num_val, num_test, model, max_length):
     trainer = Trainer(fast_dev_run=True)
     runner = LightningGrammarModule(max_data_length=max_length, model=model)
@@ -41,7 +41,7 @@ def test_fit_model(num_train, num_val, num_test, model, max_length):
 @pytest.mark.parametrize("grammar", ["aNbN", "aNbNcN", "parentheses_and_brackets"])
 def test_fit_grammars(num_train, num_val, num_test, max_length, grammar):
     trainer = Trainer(fast_dev_run=True)
-    runner = LightningGrammarModule(max_data_length=max_length, grammar=grammar)
+    runner = LightningGrammarModule(grammar=grammar, max_data_length=max_length)
     dm = GrammarDataModule(
         num_train=num_train,
         num_val=num_val,
@@ -59,7 +59,7 @@ def test_fit_extrapolation(
 ):
     trainer = Trainer(fast_dev_run=True)
     grammar = "aNbN"
-    runner = LightningGrammarModule(extrapolation_training=True, grammar=grammar)
+    runner = LightningGrammarModule(grammar=grammar, extrapolation_training=True)
     dm = GrammarDataModule(
         num_train=num_train, num_val=num_val, num_test=num_test, grammar=grammar
     )
