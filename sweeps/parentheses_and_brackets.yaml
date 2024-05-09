@@ -14,7 +14,7 @@ parameters:
   trainer.max_epochs:
     value: 50000
   model.model:
-    values: [transformer, lstm, linear, mamba]
+    value: mamba
   model.dim_model: # transformer
     value: 10
   model.num_heads: # transformer
@@ -48,7 +48,7 @@ parameters:
   model.bias: # linear
     value: True
   model.n_layers: # mamba
-    value: 15
+    value: 10
   model.d_state: # mamba
     value: 16
   model.d_conv: # mamba
