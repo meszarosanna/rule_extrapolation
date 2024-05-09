@@ -14,7 +14,7 @@ parameters:
   trainer.max_epochs:
     value: 50000
   model.model:
-    values: [transformer, lstm, linear]
+    values: [transformer, lstm, linear, mamba]
   model.dim_model: # transformer
     value: 10
   model.num_heads: # transformer
@@ -47,6 +47,14 @@ parameters:
     value: 0.4
   model.bias: # linear
     value: True
+  model.n_layers: # mamba
+    value: 15
+  model.d_state: # mamba
+    value: 16
+  model.d_conv: # mamba
+    value: 8
+  model.d_model: # mamba
+    value: 32
   data.grammar:
     value: parentheses_and_brackets
   data.max_length:

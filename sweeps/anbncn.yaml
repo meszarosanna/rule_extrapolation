@@ -14,7 +14,7 @@ parameters:
   trainer.max_epochs:
     value: 50000
   model.model:
-    values: [lstm, transformer, linear]
+    values: [lstm, transformer, linear, mamba]
   model.test_prompt_length:
     value: 5
   model.max_pred_length:
@@ -43,6 +43,14 @@ parameters:
     value: 0.4
   model.bias: # linear
     value: True
+  model.n_layers: # mamba
+    value: 15
+  model.d_state: # mamba
+    value: 16
+  model.d_conv: # mamba
+    value: 8
+  model.d_model: # mamba
+    value: 32
   model.adversarial_training:
     value: false
   model.extrapolation_training:
