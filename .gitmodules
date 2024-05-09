@@ -3,4 +3,4 @@
 	url = https://github.com/rpatrik96/cluster-tools
 [submodule "mamba"]
 	path = mamba
-	url = https://github.com/alxndrTL/mamba.py
+url=https://github.com/rpatrik96/mamba.py
