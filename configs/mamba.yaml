@@ -1,0 +1,7 @@
+
+model:
+  n_layers: 15
+  d_state: 16
+  d_conv: 8
+  d_model: 32
+  model: mamba
