@@ -184,6 +184,11 @@ class LinearLLM(nn.Module):
             nn.init.zeros_(self.bias)
 
     def forward(self, src, apply_pad_mask: bool = True):
+        if apply_pad_mask:
+            src = (
+                src * create_pad_mask(src).logical_not()
+            )  # logical not needed as we want to mask the pad tokens
+
         src = self.embedding(src)
         if src.shape[1] != (self.max_data_length + 1):
             zeros_tensor = torch.zeros(
@@ -193,11 +198,6 @@ class LinearLLM(nn.Module):
                 device=self.device,
             )
             src = torch.cat((src, zeros_tensor), dim=1)
-
-        if apply_pad_mask:
-            src = (
-                src * create_pad_mask(src).logical_not()
-            )  # logical not needed as we want to mask the pad tokens
 
         out = torch.einsum("bsw,swtv,st->btv", src.float(), self.weight, self.mask)
         if self.bias != None:
