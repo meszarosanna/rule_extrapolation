@@ -54,7 +54,7 @@ class GrammarDataModule(pl.LightningDataModule):
         elif self.hparams.grammar == "abN":
             return generate_abN_grammar_data
         elif self.hparams.grammar == "baN":
-            return generate_abN_grammar_data
+            return generate_baN_grammar_data
         elif self.hparams.grammar == "aNbM":
             return generate_aNbM_grammar_data
         elif self.hparams.grammar == "aNbNaN":
@@ -77,7 +77,7 @@ class GrammarDataModule(pl.LightningDataModule):
 
         grammar_generator = self._select_grammar()
 
-        if self.hparams.grammar in ["aNbN", "aNbNaN", "aNbNcN", "baN"]:
+        if self.hparams.grammar in ["aNbN", "aNbNaN", "aNbNcN"]:
             # include all samples only once
             self.hparams.num_train = (
                 self.hparams.num_val

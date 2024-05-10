@@ -231,10 +231,10 @@ def generate_baN_grammar_data(num_samples: int, max_length: int = 32) -> list:
 
     data = []
 
-    for lengths in lengths:
-        num_a = np.random.randint(low=0, high=(lengths - 1) // 2 + 1)
+    for l in lengths:
+        num_a = np.random.randint(low=0, high=(l - 1) // 2 + 1)
         second_part = np.concatenate(
-            (A_token * np.ones(num_a * 2), B_token * np.ones(lengths - 1 - num_a * 2))
+            (A_token * np.ones(num_a * 2), B_token * np.ones(l - 1 - num_a * 2))
         )
         # shuffle the symbols
         np.random.shuffle(second_part)
@@ -560,6 +560,9 @@ def check_even_number_of_as(sequence: torch.Tensor):
     """
     Check if the sequence has even number of a's
     """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
     num_as = torch.sum(sequence == A_token.item())
 
     return num_as % 2 == 0
@@ -569,6 +572,21 @@ def check_begins_with_b(sequence: torch.Tensor):
     """
     Check if the sequence begins with a B_token (after SOS)
     """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    # if len(a_tokens := torch.where(sequence == A_token.item())[0]) > 0:
+    #     # find the last a
+    #     last_a = a_tokens[-1]
+    #
+    #     if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
+    #         # find the first b
+    #         first_b = b_tokens[0]
+    #
+    #         return first_b > last_a
+    #     else:
+    #         return True
+
     if sequence[0] == SOS_token.item():
         return sequence[1] == B_token.item()
     else:
