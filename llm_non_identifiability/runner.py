@@ -17,6 +17,7 @@ from llm_non_identifiability.data import (
     check_even_number_of_as,
     check_matched_parentheses,
     check_matched_parentheses_and_brackets,
+    check_begins_with_b,
     check_matched_brackets,
     SOS_token,
     EOS_token,
@@ -562,9 +563,14 @@ class LightningGrammarModule(pl.LightningModule):
             else:
                 rule_2_completion = []
         elif self.hparams.grammar == "baN":
-            rule_2 = []
+            rule_2 = [check_begins_with_b(p) for p in prompt_pred]
             rule_1 = [check_even_number_of_as(p) for p in prompt_pred]
-            rule_2_completion = []
+            rule_2_completion = [
+                check_begins_with_b(
+                    p[self.hparams.test_prompt_length + 1 :]
+                )  # +1 is for the SOS token
+                for p in prompt_pred
+            ]
 
         elif self.hparams.grammar == "parentheses_and_brackets":
             rule_2 = [check_matched_parentheses(p) for p in prompt_pred]
