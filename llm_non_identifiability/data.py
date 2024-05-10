@@ -216,6 +216,34 @@ def generate_aNbM_grammar_data(num_samples: int, max_length: int = 32) -> list:
     return data
 
 
+def generate_baN_grammar_data(num_samples: int, max_length: int = 32) -> list:
+    """
+    PCFG with two rules:
+    - begins with b
+    - even number of a's
+
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+    """
+
+    lengths = np.random.randint(low=1, high=max_length + 1, size=num_samples)
+
+    data = []
+
+    for l in lengths:
+        num_a = np.random.randint(low=0, high=(l - 1) // 2 + 1)
+        second_part = np.concatenate(
+            (A_token * np.ones(num_a * 2), B_token * np.ones(l - 1 - num_a * 2))
+        )
+        # shuffle the symbols
+        np.random.shuffle(second_part)
+
+        data.append(np.concatenate((SOS_token, B_token, second_part, EOS_token)))
+
+    return data
+
+
 def pad(data: list, max_seq_length: int = 0) -> np.ndarray:
     """
     Pad data with PAD token
@@ -528,6 +556,43 @@ def check_sequence_finished(sequence: torch.Tensor):
         return False
 
 
+def check_even_number_of_as(sequence: torch.Tensor):
+    """
+    Check if the sequence has even number of a's
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    num_as = torch.sum(sequence == A_token.item())
+
+    return num_as % 2 == 0
+
+
+def check_begins_with_b(sequence: torch.Tensor):
+    """
+    Check if the sequence begins with a B_token (after SOS)
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    # if len(a_tokens := torch.where(sequence == A_token.item())[0]) > 0:
+    #     # find the last a
+    #     last_a = a_tokens[-1]
+    #
+    #     if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
+    #         # find the first b
+    #         first_b = b_tokens[0]
+    #
+    #         return first_b > last_a
+    #     else:
+    #         return True
+
+    if sequence[0] == SOS_token.item():
+        return sequence[1] == B_token.item()
+    else:
+        return sequence[0] == B_token.item()
+
+
 def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
     """
     Generates all prompts of a given length with symbols a and b or (and c)
@@ -536,7 +601,7 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
     """
 
     num_samples = 2**length
-    if grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
+    if grammar in ["aNbN", "abN", "aNbM", "aNbNaN", "baN"]:
         symbols = [A_token.item(), B_token.item()]
         prompts = torch.tensor(list(product(symbols, repeat=length)), dtype=torch.long)
 
@@ -625,14 +690,22 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
             ),
             dtype=torch.long,
         )
+        # generate torch 0-1 sequence in shape (data.shape[0], 1)
+        bernoulli = torch.bernoulli(0.5 * torch.ones((data.shape[0], 1)))
 
         ood_prompts = torch.cat(
             (
                 data[:, 0].view(-1, 1),
-                torch.ones((data.shape[0], 1), dtype=torch.long)
-                * CLOSING_PARENTHESIS_token,
-                torch.ones((data.shape[0], 1), dtype=torch.long)
-                * OPENING_PARENTHESIS_token,
+                torch.where(
+                    bernoulli == 1,
+                    CLOSING_PARENTHESIS_token.item(),
+                    CLOSING_BRACKET_token.item(),
+                ),
+                torch.where(
+                    bernoulli == 1,
+                    OPENING_PARENTHESIS_token.item(),
+                    OPENING_BRACKET_token.item(),
+                ),
                 data[:, 1:-1],
             ),
             dim=1,
@@ -641,10 +714,16 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         id_prompts = torch.cat(
             (
                 data[:, 0].view(-1, 1),
-                torch.ones((data.shape[0], 1), dtype=torch.long)
-                * OPENING_PARENTHESIS_token,
-                torch.ones((data.shape[0], 1), dtype=torch.long)
-                * CLOSING_PARENTHESIS_token,
+                torch.where(
+                    bernoulli == 1,
+                    OPENING_PARENTHESIS_token.item(),
+                    OPENING_BRACKET_token.item(),
+                ),
+                torch.where(
+                    bernoulli == 1,
+                    CLOSING_PARENTHESIS_token.item(),
+                    CLOSING_BRACKET_token.item(),
+                ),
                 data[:, 1:-1],
             ),
             dim=1,
@@ -665,6 +744,8 @@ def grammar_rules(grammar):
         return lambda x: check_same_number_as_bs_cs(x) and check_as_before_bs_before_cs(
             x
         )
+    elif grammar == "baN":
+        return lambda x: check_even_number_of_as(x) and check_begins_with_b(x)
     elif grammar == "abN":
         return lambda x: check_same_number_as_bs(x)
     elif grammar == "aNbM":
@@ -701,6 +782,8 @@ def prompt_grammar_rules(grammar):
         return lambda x: check_in_dist_anbncn(x)
     elif grammar == "abN":
         return lambda x: True
+    elif grammar == "baN":
+        return lambda x: check_begins_with_b(x)
     elif grammar == "aNbM":
         return lambda x: check_as_before_bs(x)
     elif grammar == "aNbNaN":

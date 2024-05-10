@@ -7,6 +7,7 @@ import os
 from llm_non_identifiability.data import (
     generate_aNbN_grammar_data,
     generate_abN_grammar_data,
+    generate_baN_grammar_data,
     generate_aNbM_grammar_data,
     generate_aNbNaN_grammar_data,
     generate_matched_parentheses_and_brackets_data,
@@ -29,7 +30,7 @@ class GrammarDataModule(pl.LightningDataModule):
         num_test: int = 1024,
         max_length: int = 32,
         batch_size: int = 64,
-        grammar: str = "aNbNcN",
+        grammar: str = "baN",
         max_num_workers: int = 4,
     ):
         """
@@ -52,6 +53,8 @@ class GrammarDataModule(pl.LightningDataModule):
             return generate_aNbN_grammar_data
         elif self.hparams.grammar == "abN":
             return generate_abN_grammar_data
+        elif self.hparams.grammar == "baN":
+            return generate_baN_grammar_data
         elif self.hparams.grammar == "aNbM":
             return generate_aNbM_grammar_data
         elif self.hparams.grammar == "aNbNaN":

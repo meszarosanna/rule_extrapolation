@@ -38,7 +38,9 @@ def test_fit_model(num_train, num_val, num_test, model, max_length):
     trainer.fit(runner, datamodule=dm)
 
 
-@pytest.mark.parametrize("grammar", ["aNbN", "aNbNcN", "parentheses_and_brackets"])
+@pytest.mark.parametrize(
+    "grammar", ["baN", "aNbN", "aNbNcN", "parentheses_and_brackets"]
+)
 def test_fit_grammars(num_train, num_val, num_test, max_length, grammar):
     trainer = Trainer(fast_dev_run=True)
     runner = LightningGrammarModule(grammar=grammar, max_data_length=max_length)
