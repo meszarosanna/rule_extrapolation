@@ -12,7 +12,7 @@ metric:
   name: Val/loss
 parameters:
   trainer.max_epochs:
-    value: 50000
+    value: 25000
   model.model:
     values: [lstm, transformer, linear, mamba]
   model.test_prompt_length:
