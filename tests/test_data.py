@@ -6,6 +6,7 @@ from llm_non_identifiability.data import check_as_before_bs, check_same_number_a
 from llm_non_identifiability.data import (
     generate_aNbN_grammar_data,
     generate_abN_grammar_data,
+    generate_baN_grammar_data,
     generate_aNbM_grammar_data,
     generate_aNbNaN_grammar_data,
     pad,
@@ -21,6 +22,8 @@ from llm_non_identifiability.data import (
     check_same_number_as_bs_cs,
     check_as_before_bs_before_cs,
     check_in_dist_anbncn,
+    check_even_number_of_as,
+    check_begins_with_b,
     EOS_token,
     generate_test_prompts,
     grammar_rules,
@@ -48,6 +51,18 @@ def test_aNbN_grammar_as_before_bs(num_samples, max_length):
     sequences = generate_aNbN_grammar_data(num_samples, max_length, all_sequences=False)
     for sequence in sequences:
         assert check_as_before_bs(sequence)
+
+
+def test_baN_even_number_of_as(num_samples, max_length):
+    sequences = generate_baN_grammar_data(num_samples, max_length, all_sequences=False)
+    for sequence in sequences:
+        assert check_even_number_of_as(sequence)
+
+
+def test_baN_check_begins_with_b(num_samples, max_length):
+    sequences = generate_baN_grammar_data(num_samples, max_length, all_sequences=False)
+    for sequence in sequences:
+        assert check_begins_with_b(sequence)
 
 
 def test_aNbNcN_grammar_equal_as_bs_cs(num_samples, max_length):
@@ -298,11 +313,40 @@ def test_check_sequence_finished():
     assert check_sequence_finished(sequence) == True
 
 
+def test_check_even_number_of_as():
+    sequence = torch.Tensor([B, A, A])
+    assert check_even_number_of_as(sequence) == True
+
+    sequence = torch.Tensor([SOS_token.item(), A, B, A, EOS_token.item()])
+    assert check_even_number_of_as(sequence) == True
+
+    sequence = torch.Tensor([SOS_token.item(), A, A, B, A])
+    assert check_even_number_of_as(sequence) == False
+
+    sequence = torch.Tensor([A, B, B, B])
+    assert check_even_number_of_as(sequence) == False
+
+
+def test_check_begins_with_b():
+    sequence = torch.Tensor([B, A, A])
+    assert check_begins_with_b(sequence) == True
+
+    sequence = torch.Tensor([SOS_token.item(), B, A, B, A, EOS_token.item()])
+    assert check_begins_with_b(sequence) == True
+
+    sequence = torch.Tensor([SOS_token.item(), A, A, B, A])
+    assert check_begins_with_b(sequence) == False
+
+    sequence = torch.Tensor([A, B, B, B])
+    assert check_begins_with_b(sequence) == False
+
+
 @pytest.mark.parametrize(
     "grammar",
     [
         "aNbN",
         "abN",
+        "baN",
         "aNbM",
         "aNbNcN",
         "parentheses",
@@ -314,7 +358,7 @@ def test_generate_test_prompts(grammar):
     length = 6
     prompts = generate_test_prompts(length, grammar=grammar)
 
-    if grammar in ["aNbN", "abN", "aNbM"]:
+    if grammar in ["aNbN", "abN", "aNbM", "baN"]:
         assert prompts.shape == (2**length, length + 1)
     elif grammar == "aNbNcN":
         assert prompts.shape == (3**length, length + 1)
@@ -327,6 +371,7 @@ def test_generate_test_prompts(grammar):
     [
         "aNbN",
         "abN",
+        "baN",
         "aNbM",
         "aNbNcN",
         "parentheses",
@@ -349,6 +394,14 @@ def test_grammar_rules(max_length, grammar, num_samples):
         data = torch.from_numpy(
             pad(
                 generate_abN_grammar_data(
+                    num_samples=num_samples, max_length=max_length
+                )
+            )
+        ).long()
+    elif grammar == "baN":
+        data = torch.from_numpy(
+            pad(
+                generate_baN_grammar_data(
                     num_samples=num_samples, max_length=max_length
                 )
             )

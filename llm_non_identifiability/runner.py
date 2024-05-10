@@ -14,6 +14,7 @@ from llm_non_identifiability.data import (
     check_as_before_bs,
     check_same_number_as_bs_cs,
     check_as_before_bs_before_cs,
+    check_even_number_of_as,
     check_matched_parentheses,
     check_matched_parentheses_and_brackets,
     check_matched_brackets,
@@ -59,7 +60,7 @@ class LightningGrammarModule(pl.LightningModule):
         offline: bool = False,
         next_token_pick_mode: str = "max",
         layer_norm_eps: float = 2e-4,
-        grammar: str = "aNbNcN",
+        grammar: str = "baN",
         max_data_length: int = 256,
         batch_size: int = 64,
         relu_rescale: float = 1.0,
@@ -109,7 +110,7 @@ class LightningGrammarModule(pl.LightningModule):
         self.hparams["loss_fn"] = nn.CrossEntropyLoss()
 
         # calculate number of tokens:
-        if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
+        if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN", "baN"]:
             self.hparams["num_tokens"] = 5
         elif self.hparams.grammar == "aNbNcN":
             self.hparams["num_tokens"] = 6
@@ -546,19 +547,21 @@ class LightningGrammarModule(pl.LightningModule):
                 )  # +1 is for the SOS token
                 for p in prompt_pred
             ]
-        elif self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
+        elif self.hparams.grammar == "aNbN":
             rule_2 = [check_as_before_bs(p) for p in prompt_pred]
             rule_1 = [check_same_number_as_bs(p) for p in prompt_pred]
 
-            if self.hparams.grammar != "aNbNaN":
-                rule_2_completion = [
-                    check_as_before_bs(
-                        p[self.hparams.test_prompt_length + 1 :]
-                    )  # +1 is for the SOS token
-                    for p in prompt_pred
-                ]
-            else:
-                rule_2_completion = []
+            rule_2_completion = [
+                check_as_before_bs(
+                    p[self.hparams.test_prompt_length + 1 :]
+                )  # +1 is for the SOS token
+                for p in prompt_pred
+            ]
+        elif self.hparams.grammar == "baN":
+            rule_2 = []
+            rule_1 = [check_even_number_of_as(p) for p in prompt_pred]
+            rule_2_completion = []
+
         elif self.hparams.grammar == "parentheses_and_brackets":
             rule_2 = [check_matched_parentheses(p) for p in prompt_pred]
             rule_1 = [check_matched_brackets(p) for p in prompt_pred]
