@@ -25,6 +25,7 @@ from llm_non_identifiability.data import (
     check_even_number_of_as,
     check_begins_with_b,
     EOS_token,
+    SOS_token,
     generate_test_prompts,
     grammar_rules,
     generate_matched_parentheses_and_brackets_data,
@@ -54,13 +55,13 @@ def test_aNbN_grammar_as_before_bs(num_samples, max_length):
 
 
 def test_baN_even_number_of_as(num_samples, max_length):
-    sequences = generate_baN_grammar_data(num_samples, max_length, all_sequences=False)
+    sequences = generate_baN_grammar_data(num_samples, max_length)
     for sequence in sequences:
         assert check_even_number_of_as(sequence)
 
 
 def test_baN_check_begins_with_b(num_samples, max_length):
-    sequences = generate_baN_grammar_data(num_samples, max_length, all_sequences=False)
+    sequences = generate_baN_grammar_data(num_samples, max_length)
     for sequence in sequences:
         assert check_begins_with_b(sequence)
 
