@@ -2,9 +2,13 @@ import math
 import subprocess
 from os.path import dirname
 from typing import Optional, Dict, Any
+from itertools import product
+from random import choices
+import matplotlib.pyplot as plt
 
 import pytorch_lightning as pl
 import torch
+import numpy as np
 import torch.nn as nn
 from transformers.optimization import get_inverse_sqrt_schedule
 from mamba.mamba_lm import MambaLM, MambaLMConfig
@@ -74,6 +78,7 @@ class LightningGrammarModule(pl.LightningModule):
         model="transformer",
         bias=True,
         dropout=0.4,
+        plot: bool = False,
         n_layers=4,
         d_state=16,
         d_conv=4,
@@ -337,7 +342,88 @@ class LightningGrammarModule(pl.LightningModule):
 
             loss += loss_extrapolation
 
+        if (
+            self.trainer.global_step == 0
+            or self.current_epoch == 500
+            or self.current_epoch == 50000
+        ):
+            if (
+                self.hparams.plot is True
+                and self.hparams.model == "transformer"
+                and self.hparams.grammar == "aNbN"
+            ):
+                self.plot_figure_1()
+
         return loss
+
+    def plot_figure_1(self):
+        # generating all sequences of max length sequence_length
+        length = 8
+        prompts = []
+        symbols = [A_token.item(), B_token.item()]
+        for i in range(1, length + 1):
+            sequences = torch.tensor(list(product(symbols, repeat=i)), dtype=torch.long)
+            # add SOS
+            sequences = torch.cat(
+                (
+                    torch.ones((sequences.shape[0], 1), dtype=torch.long) * SOS_token,
+                    sequences,
+                    torch.ones((sequences.shape[0], 1), dtype=torch.long) * EOS_token,
+                ),
+                dim=1,
+            )
+            prompts.extend(sequences.tolist())
+
+        # calculate the probability of a sequence given by the model
+        list_of_probab = []
+        for sequence in prompts:
+            prompt = torch.Tensor([sequence[:-1]]).long().to(self.hparams.device)
+            tgt_mask = get_tgt_mask(size=(prompt.size(1)), device=self.hparams.device)
+            pred = self.model(
+                src=prompt,
+                mask=tgt_mask,
+                src_key_padding_mask=create_pad_mask(prompt),
+            )
+            pred = pred.squeeze(0)
+            pred = nn.functional.softmax(pred, dim=0)  # make the columns sum to 1
+            probability = 1
+            for i, element in enumerate(sequence[1:], 1):
+                probability *= pred[element][i - 1]
+
+            list_of_probab.append([sequence, probability])
+
+        # separate the list with the rules
+        rule1_met = [check_same_number_as_bs(np.array(t[0])) for t in list_of_probab]
+        rule2_met = [check_as_before_bs(np.array(t[0])) for t in list_of_probab]
+
+        not_rule1_nor_rule2 = []
+        rule1_not_rule2 = []
+        rule2_not_rule1 = []
+        rule1_and_rule2 = []
+
+        for i, element in enumerate(list_of_probab):
+            if not rule1_met[i] and not rule2_met[i]:
+                not_rule1_nor_rule2.append(element[1])
+            elif rule1_met[i] and not rule2_met[i]:
+                rule1_not_rule2.append(element[1])
+            elif not rule1_met[i] and rule2_met[i]:
+                rule2_not_rule1.append(element[1])
+            else:
+                rule1_and_rule2.append(element[1])
+
+        # sample from each category and create a squace
+        C_12 = torch.Tensor(choices(rule1_and_rule2, k=10)).reshape(2, 5)
+        C_1 = torch.Tensor(choices(rule1_not_rule2, k=70)).reshape(14, 5)
+        C_2 = torch.Tensor(choices(rule2_not_rule1, k=22)).reshape(2, 11)
+        C = torch.Tensor(choices(not_rule1_nor_rule2, k=154)).reshape(14, 11)
+
+        result = torch.cat((torch.cat((C_2, C_12), dim=1), torch.cat((C, C_1), dim=1)))
+
+        # plot the results
+        plt.imshow(result, cmap="viridis")
+        plt.colorbar()
+        plt.title("Init")
+        plt.savefig("plot1.png")
 
     def validation_step(self, batch, batch_idx):
         panel_name = "Val"
