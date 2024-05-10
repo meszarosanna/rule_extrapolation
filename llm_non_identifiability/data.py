@@ -87,7 +87,7 @@ def generate_aNbN_grammar_data(
             )
         )
 
-    return data  # list containing the sequences of max length max_length+2
+    return data  # list containing the sequences of max length
 
 
 def generate_aNbNaN_grammar_data(
@@ -231,10 +231,10 @@ def generate_baN_grammar_data(num_samples: int, max_length: int = 32) -> list:
 
     data = []
 
-    for lengths in lengths:
-        num_a = np.random.randint(low=0, high=(lengths - 1) // 2 + 1)
+    for length in lengths:
+        num_a = np.random.randint(low=0, high=(length - 1) // 2 + 1)
         second_part = np.concatenate(
-            (A_token * np.ones(num_a * 2), B_token * np.ones(lengths - 1 - num_a * 2))
+            (A_token * np.ones(num_a * 2), B_token * np.ones(length - 1 - num_a * 2))
         )
         # shuffle the symbols
         np.random.shuffle(second_part)
