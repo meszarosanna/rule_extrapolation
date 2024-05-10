@@ -44,7 +44,7 @@ parameters:
   model.bias: # linear
     value: True
   model.n_layers: # mamba
-    value: 10
+    value: 15
   model.d_state: # mamba
     value: 16
   model.d_conv: # mamba
