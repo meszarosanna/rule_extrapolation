@@ -532,16 +532,20 @@ class LightningGrammarModule(pl.LightningModule):
                 )  # +1 is for the SOS token
                 for p in prompt_pred
             ]
-        elif self.hparams.grammar == "aNbN":
+
+        elif self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
             rule_2 = [check_as_before_bs(p) for p in prompt_pred]
             rule_1 = [check_same_number_as_bs(p) for p in prompt_pred]
 
-            rule_2_completion = [
-                check_as_before_bs(
-                    p[self.hparams.test_prompt_length + 1 :]
-                )  # +1 is for the SOS token
-                for p in prompt_pred
-            ]
+            if self.hparams.grammar != "aNbNaN":
+                rule_2_completion = [
+                    check_as_before_bs(
+                        p[self.hparams.test_prompt_length + 1 :]
+                    )  # +1 is for the SOS token
+                    for p in prompt_pred
+                ]
+            else:
+                rule_2_completion = []
         elif self.hparams.grammar == "baN":
             rule_2 = []
             rule_1 = [check_even_number_of_as(p) for p in prompt_pred]
