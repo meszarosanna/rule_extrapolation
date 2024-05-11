@@ -24,7 +24,7 @@ trainer:
     - class_path: pytorch_lightning.callbacks.EarlyStopping
       init_args:
         monitor: Val/loss
-        patience: 20
+        patience: 25
         mode: min
   fast_dev_run: false
   max_epochs: 5000
