@@ -1,17 +1,16 @@
 import math
 import subprocess
-from os.path import dirname
-from typing import Optional, Dict, Any
 from itertools import product
+from os.path import dirname
 from random import choices
-import matplotlib.pyplot as plt
+from typing import Optional, Dict, Any
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pytorch_lightning as pl
 import torch
-import numpy as np
 import torch.nn as nn
 from transformers.optimization import get_inverse_sqrt_schedule
-from mamba.mamba_lm import MambaLM, MambaLMConfig
 
 from llm_non_identifiability.data import (
     check_same_number_as_bs,
@@ -20,7 +19,6 @@ from llm_non_identifiability.data import (
     check_as_before_bs_before_cs,
     check_even_number_of_as,
     check_matched_parentheses,
-    check_matched_parentheses_and_brackets,
     check_begins_with_b,
     check_matched_brackets,
     SOS_token,
@@ -42,6 +40,7 @@ from llm_non_identifiability.model import (
     LinearLLM,
     LSTM_LLM,
 )
+from mamba.mamba_lm import MambaLM, MambaLMConfig
 
 
 class LightningGrammarModule(pl.LightningModule):
