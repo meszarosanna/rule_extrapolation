@@ -140,6 +140,7 @@ def sweep2df(
                 max_length = config["data.max_length"]
                 batch_size = config["data.batch_size"]
                 seed_everything = config["seed_everything"]
+                model = config["model.model"]
 
                 try:
                     adversarial_training = config["model.adversarial_training"]
@@ -302,6 +303,7 @@ def sweep2df(
                         adversarial_training,
                         max_length,
                         batch_size,
+                        model,
                         # transformer
                         dim_model,
                         num_heads,
@@ -366,6 +368,7 @@ def sweep2df(
             "adversarial_training",
             "max_length",
             "batch_size",
+            "model",
             # transformer
             "dim_model",
             "num_heads",
