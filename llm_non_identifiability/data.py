@@ -797,21 +797,13 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
             dtype=torch.long,
         )
         # generate torch 0-1 sequence in shape (data.shape[0], 1)
-        bernoulli = torch.bernoulli(0.5 * torch.ones((data.shape[0], 1)))
-
         ood_prompts = torch.cat(
             (
                 data[:, 0].view(-1, 1),
-                torch.where(
-                    bernoulli == 1,
-                    CLOSING_PARENTHESIS_token.item(),
-                    CLOSING_BRACKET_token.item(),
-                ),
-                torch.where(
-                    bernoulli == 1,
-                    OPENING_PARENTHESIS_token.item(),
-                    OPENING_BRACKET_token.item(),
-                ),
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * CLOSING_PARENTHESIS_token,
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * OPENING_PARENTHESIS_token,
                 data[:, 1:-1],
             ),
             dim=1,
@@ -820,16 +812,10 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         id_prompts = torch.cat(
             (
                 data[:, 0].view(-1, 1),
-                torch.where(
-                    bernoulli == 1,
-                    OPENING_PARENTHESIS_token.item(),
-                    OPENING_BRACKET_token.item(),
-                ),
-                torch.where(
-                    bernoulli == 1,
-                    CLOSING_PARENTHESIS_token.item(),
-                    CLOSING_BRACKET_token.item(),
-                ),
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * OPENING_PARENTHESIS_token,
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * CLOSING_PARENTHESIS_token,
                 data[:, 1:-1],
             ),
             dim=1,
