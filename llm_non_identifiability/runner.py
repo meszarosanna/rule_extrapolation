@@ -368,7 +368,7 @@ class LightningGrammarModule(pl.LightningModule):
                     self.result3 = self.plot_figure_1()
 
                     # plot the results
-                    fig, axes = plt.subplots(nrows=1, ncols=3)
+                    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(21, 7))
 
                     im1 = axes[0].imshow(self.result1, cmap="plasma")
                     axes[0].xaxis.set_tick_params(labelbottom=False)
@@ -387,7 +387,9 @@ class LightningGrammarModule(pl.LightningModule):
                     axes[2].yaxis.set_tick_params(labelleft=False)
                     axes[2].set_xticks([])
                     axes[2].set_yticks([])
-                    cbar = fig.colorbar(im3, ax=axes.ravel().tolist())
+                    cbar = fig.colorbar(
+                        im3, ax=axes.ravel().tolist(), shrink=0.7, pad=0.02
+                    )
 
                     axes[0].set_title("Initialization")
                     axes[1].set_title("During training")
