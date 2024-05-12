@@ -647,18 +647,6 @@ def check_begins_with_b(sequence: torch.Tensor):
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    # if len(a_tokens := torch.where(sequence == A_token.item())[0]) > 0:
-    #     # find the last a
-    #     last_a = a_tokens[-1]
-    #
-    #     if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
-    #         # find the first b
-    #         first_b = b_tokens[0]
-    #
-    #         return first_b > last_a
-    #     else:
-    #         return True
-
     if sequence[0] == SOS_token.item():
         return sequence[1] == B_token.item()
     else:
