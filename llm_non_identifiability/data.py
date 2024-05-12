@@ -617,24 +617,15 @@ def check_in_dist_anbncn(sequence: torch.Tensor):
 
 def check_sequence_finished(sequence: torch.Tensor):
     """
-    Check if the sequence is finished (EOS token)
+    Check if the sequence is finished (EOS token is in the sequence)
     :param sequence:
     :return:
     """
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    # check whether there are no 0's or 1's or 2's in the sequence after the first EOS token
-
     # find the first EOS token
-    if len(eos_tokens := torch.where(sequence == EOS_token.item())[0]) > 0:
-        first_EOS = eos_tokens[0]
-        # check whether there are any non-PAD or non-EOS tokens after the first EOS token
-        return torch.sum(sequence[first_EOS + 1 :] == EOS_token.item()) + torch.sum(
-            sequence[first_EOS + 1 :] == PAD_token.item()
-        ) == len(sequence[first_EOS + 1 :])
-    else:
-        return False
+    return len(torch.where(sequence == EOS_token.item())[0]) > 0
 
 
 def check_even_number_of_as(sequence: torch.Tensor):
@@ -655,18 +646,6 @@ def check_begins_with_b(sequence: torch.Tensor):
     """
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
-
-    # if len(a_tokens := torch.where(sequence == A_token.item())[0]) > 0:
-    #     # find the last a
-    #     last_a = a_tokens[-1]
-    #
-    #     if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
-    #         # find the first b
-    #         first_b = b_tokens[0]
-    #
-    #         return first_b > last_a
-    #     else:
-    #         return True
 
     if sequence[0] == SOS_token.item():
         return sequence[1] == B_token.item()
@@ -797,21 +776,13 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
             dtype=torch.long,
         )
         # generate torch 0-1 sequence in shape (data.shape[0], 1)
-        bernoulli = torch.bernoulli(0.5 * torch.ones((data.shape[0], 1)))
-
         ood_prompts = torch.cat(
             (
                 data[:, 0].view(-1, 1),
-                torch.where(
-                    bernoulli == 1,
-                    CLOSING_PARENTHESIS_token.item(),
-                    CLOSING_BRACKET_token.item(),
-                ),
-                torch.where(
-                    bernoulli == 1,
-                    OPENING_PARENTHESIS_token.item(),
-                    OPENING_BRACKET_token.item(),
-                ),
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * CLOSING_PARENTHESIS_token,
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * OPENING_PARENTHESIS_token,
                 data[:, 1:-1],
             ),
             dim=1,
@@ -820,16 +791,10 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         id_prompts = torch.cat(
             (
                 data[:, 0].view(-1, 1),
-                torch.where(
-                    bernoulli == 1,
-                    OPENING_PARENTHESIS_token.item(),
-                    OPENING_BRACKET_token.item(),
-                ),
-                torch.where(
-                    bernoulli == 1,
-                    CLOSING_PARENTHESIS_token.item(),
-                    CLOSING_BRACKET_token.item(),
-                ),
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * OPENING_PARENTHESIS_token,
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * CLOSING_PARENTHESIS_token,
                 data[:, 1:-1],
             ),
             dim=1,

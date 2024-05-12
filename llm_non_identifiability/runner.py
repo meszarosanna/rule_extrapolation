@@ -113,7 +113,11 @@ class LightningGrammarModule(pl.LightningModule):
                 "Cannot train with both extrapolation and adversarial training"
             )
 
-        self.hparams["loss_fn"] = nn.CrossEntropyLoss(ignore_index=PAD_token.item())
+        self.hparams["loss_fn"] = (
+            nn.CrossEntropyLoss(ignore_index=PAD_token.item())
+            if self.hparams.model != "transformer"
+            else nn.CrossEntropyLoss()
+        )
 
         # calculate number of tokens:
         if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN", "baN", "bbaN"]:
@@ -643,10 +647,21 @@ class LightningGrammarModule(pl.LightningModule):
             )
             metrics_finished = GrammarMetrics()
         else:
-            # filter out finsihed prompts only
-            prompt_pred_finished = torch.stack(
-                [p for p, f in zip(prompt_pred, finished) if f == True]
-            )
+            # filter out finished prompts only
+            # and cut them at the first EOS
+            prompt_pred_finished = [
+                p for p, f in zip(prompt_pred, finished) if f == True
+            ]
+            for i, p in enumerate(prompt_pred_finished):
+                first_eos = torch.where(p == EOS_token.item())[0][0]
+                prompt_pred_finished[i][first_eos:] = (
+                    torch.ones_like(
+                        prompt_pred_finished[i][first_eos:], device=p.device
+                    )
+                    * EOS_token.item()
+                )
+
+            prompt_pred_finished = torch.stack(prompt_pred_finished)
 
             metrics_finished, _ = self._calc_grammar_metrics(prompt_pred_finished)
 
