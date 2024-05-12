@@ -21,11 +21,6 @@ trainer:
         verbose: true
         save_top_k: 1
         mode: min
-    - class_path: pytorch_lightning.callbacks.EarlyStopping
-      init_args:
-        monitor: Val/loss
-        patience: 25
-        mode: min
   fast_dev_run: false
   max_epochs: 5000
   min_epochs: null
