@@ -226,8 +226,8 @@ def generate_bNaM_grammar_data(num_samples: int, max_length: int = 32) -> list:
     :return: list of length num_samples with maximal sequences of length max_length
     """
 
-    lengths_b = np.random.randint(low=1, high=max_length - 2, size=num_samples)
-    lengths_a = np.ones_like(lengths_b) * max_length - lengths_b - 2
+    lengths_b = np.random.randint(low=1, high=max_length, size=num_samples)
+    lengths_a = np.ones_like(lengths_b) * max_length - lengths_b
 
     data = []
 
@@ -702,11 +702,13 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         )
     elif grammar == "bbaN":
         ID_data = torch.tensor(
-            generate_bNaM_grammar_data(num_samples=num_samples, max_length=length),
+            generate_bNaM_grammar_data(num_samples=num_samples // 2, max_length=length),
             dtype=torch.long,
         )
         OOD_data = torch.tensor(
-            generate_bNaM_grammar_data(num_samples=num_samples, max_length=length - 1),
+            generate_bNaM_grammar_data(
+                num_samples=num_samples // 2, max_length=length - 1
+            ),
             dtype=torch.long,
         )
         id_prompts = torch.cat(

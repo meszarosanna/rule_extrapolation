@@ -51,9 +51,6 @@ class LightningGrammarModule(pl.LightningModule):
 
     def __init__(
         self,
-        result1,
-        result2,
-        result3,
         num_tokens: int = 10,
         dim_model: int = 8,
         embedding_dim: int = 32,
@@ -68,7 +65,7 @@ class LightningGrammarModule(pl.LightningModule):
         offline: bool = False,
         next_token_pick_mode: str = "max",
         layer_norm_eps: float = 2e-4,
-        grammar: str = "baN",
+        grammar: str = "aNbN",
         max_data_length: int = 256,
         batch_size: int = 64,
         relu_rescale: float = 1.0,
@@ -136,6 +133,10 @@ class LightningGrammarModule(pl.LightningModule):
         self.grammar_rules = grammar_rules(self.hparams.grammar)
         self.prompt_grammar_rules = prompt_grammar_rules(self.hparams.grammar)
         self._setup_test_prompts()
+
+        self.result1 = 0
+        self.result2 = 0
+        self.result3 = 0
 
     def _setup_model(self):
         if self.hparams.model == "transformer":
@@ -347,7 +348,7 @@ class LightningGrammarModule(pl.LightningModule):
 
         if (
             self.trainer.global_step == 0
-            or self.current_epoch == 899
+            or self.current_epoch == 799
             or self.current_epoch == 41099
         ):
             if (
@@ -356,28 +357,28 @@ class LightningGrammarModule(pl.LightningModule):
                 and self.hparams.grammar == "aNbN"
             ):
                 if self.trainer.global_step == 0:
-                    self.hparams.result1 = self.plot_figure_1()
-                elif self.current_epoch == 899:
-                    self.hparams.result2 = self.plot_figure_1()
+                    self.result1 = self.plot_figure_1()
+                elif self.current_epoch == 799:
+                    self.result2 = self.plot_figure_1()
                 elif self.current_epoch == 41099:
-                    self.hparams.result3 = self.plot_figure_1()
+                    self.result3 = self.plot_figure_1()
 
                     # plot the results
                     fig, axes = plt.subplots(nrows=1, ncols=3)
 
-                    im1 = axes[0].imshow(self.hparams.result1, cmap="plasma")
+                    im1 = axes[0].imshow(self.result1, cmap="plasma")
                     axes[0].xaxis.set_tick_params(labelbottom=False)
                     axes[0].yaxis.set_tick_params(labelleft=False)
                     axes[0].set_xticks([])
                     axes[0].set_yticks([])
 
-                    im2 = axes[1].imshow(self.hparams.result2, cmap="plasma")
+                    im2 = axes[1].imshow(self.result2, cmap="plasma")
                     axes[1].xaxis.set_tick_params(labelbottom=False)
                     axes[1].yaxis.set_tick_params(labelleft=False)
                     axes[1].set_xticks([])
                     axes[1].set_yticks([])
 
-                    im3 = axes[2].imshow(self.hparams.result3, cmap="plasma")
+                    im3 = axes[2].imshow(self.result3, cmap="plasma")
                     axes[2].xaxis.set_tick_params(labelbottom=False)
                     axes[2].yaxis.set_tick_params(labelleft=False)
                     axes[2].set_xticks([])
