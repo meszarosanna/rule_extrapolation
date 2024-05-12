@@ -314,10 +314,10 @@ def test_check_sequence_finished():
     assert check_sequence_finished(sequence) == False
 
     sequence = torch.tensor([A, B, EOS_token.item(), A, B])
-    assert check_sequence_finished(sequence) == False
+    assert check_sequence_finished(sequence) == True
 
     sequence = torch.tensor([A, B, EOS_token.item(), A, B, EOS_token.item(), A, B])
-    assert check_sequence_finished(sequence) == False
+    assert check_sequence_finished(sequence) == True
 
     sequence = torch.tensor([A, B, EOS_token.item()])
     assert check_sequence_finished(sequence) == True

@@ -617,24 +617,15 @@ def check_in_dist_anbncn(sequence: torch.Tensor):
 
 def check_sequence_finished(sequence: torch.Tensor):
     """
-    Check if the sequence is finished (EOS token)
+    Check if the sequence is finished (EOS token is in the sequence)
     :param sequence:
     :return:
     """
     if type(sequence) == np.ndarray:
         sequence = torch.from_numpy(sequence)
 
-    # check whether there are no 0's or 1's or 2's in the sequence after the first EOS token
-
     # find the first EOS token
-    if len(eos_tokens := torch.where(sequence == EOS_token.item())[0]) > 0:
-        first_EOS = eos_tokens[0]
-        # check whether there are any non-PAD or non-EOS tokens after the first EOS token
-        return torch.sum(sequence[first_EOS + 1 :] == EOS_token.item()) + torch.sum(
-            sequence[first_EOS + 1 :] == PAD_token.item()
-        ) == len(sequence[first_EOS + 1 :])
-    else:
-        return False
+    return len(torch.where(sequence == EOS_token.item())[0]) > 0
 
 
 def check_even_number_of_as(sequence: torch.Tensor):
