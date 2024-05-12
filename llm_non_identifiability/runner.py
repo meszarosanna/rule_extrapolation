@@ -15,6 +15,7 @@ from transformers.optimization import get_inverse_sqrt_schedule
 from llm_non_identifiability.data import (
     check_same_number_as_bs,
     check_as_before_bs,
+    check_bs_before_as,
     check_same_number_as_bs_cs,
     check_as_before_bs_before_cs,
     check_even_number_of_as,
@@ -50,6 +51,9 @@ class LightningGrammarModule(pl.LightningModule):
 
     def __init__(
         self,
+        result1,
+        result2,
+        result3,
         num_tokens: int = 10,
         dim_model: int = 8,
         embedding_dim: int = 32,
@@ -115,7 +119,7 @@ class LightningGrammarModule(pl.LightningModule):
         self.hparams["loss_fn"] = nn.CrossEntropyLoss(ignore_index=PAD_token.item())
 
         # calculate number of tokens:
-        if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN", "baN"]:
+        if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN", "baN", "bbaN"]:
             self.hparams["num_tokens"] = 5
         elif self.hparams.grammar == "aNbNcN":
             self.hparams["num_tokens"] = 6
@@ -343,15 +347,48 @@ class LightningGrammarModule(pl.LightningModule):
 
         if (
             self.trainer.global_step == 0
-            or self.current_epoch == 500
-            or self.current_epoch == 50000
+            or self.current_epoch == 899
+            or self.current_epoch == 41099
         ):
             if (
                 self.hparams.plot is True
                 and self.hparams.model == "transformer"
                 and self.hparams.grammar == "aNbN"
             ):
-                self.plot_figure_1()
+                if self.trainer.global_step == 0:
+                    self.hparams.result1 = self.plot_figure_1()
+                elif self.current_epoch == 899:
+                    self.hparams.result2 = self.plot_figure_1()
+                elif self.current_epoch == 41099:
+                    self.hparams.result3 = self.plot_figure_1()
+
+                    # plot the results
+                    fig, axes = plt.subplots(nrows=1, ncols=3)
+
+                    im1 = axes[0].imshow(self.hparams.result1, cmap="plasma")
+                    axes[0].xaxis.set_tick_params(labelbottom=False)
+                    axes[0].yaxis.set_tick_params(labelleft=False)
+                    axes[0].set_xticks([])
+                    axes[0].set_yticks([])
+
+                    im2 = axes[1].imshow(self.hparams.result2, cmap="plasma")
+                    axes[1].xaxis.set_tick_params(labelbottom=False)
+                    axes[1].yaxis.set_tick_params(labelleft=False)
+                    axes[1].set_xticks([])
+                    axes[1].set_yticks([])
+
+                    im3 = axes[2].imshow(self.hparams.result3, cmap="plasma")
+                    axes[2].xaxis.set_tick_params(labelbottom=False)
+                    axes[2].yaxis.set_tick_params(labelleft=False)
+                    axes[2].set_xticks([])
+                    axes[2].set_yticks([])
+                    cbar = fig.colorbar(im3, ax=axes.ravel().tolist())
+
+                    axes[0].set_title("Initialization")
+                    axes[1].set_title("During training")
+                    axes[2].set_title("After training")
+
+                    plt.savefig("Figure1.png")
 
         return loss
 
@@ -418,11 +455,7 @@ class LightningGrammarModule(pl.LightningModule):
 
         result = torch.cat((torch.cat((C_2, C_12), dim=1), torch.cat((C, C_1), dim=1)))
 
-        # plot the results
-        plt.imshow(result, cmap="viridis")
-        plt.colorbar()
-        plt.title("Init")
-        plt.savefig("plot1.png")
+        return result
 
     def validation_step(self, batch, batch_idx):
         panel_name = "Val"
@@ -656,7 +689,15 @@ class LightningGrammarModule(pl.LightningModule):
                 )  # +1 is for the SOS token
                 for p in prompt_pred
             ]
-
+        elif self.hparams.grammar == "bbaN":
+            rule_2 = [check_bs_before_as(p) for p in prompt_pred]
+            rule_1 = [check_even_number_of_as(p) for p in prompt_pred]
+            rule_2_completion = [
+                check_bs_before_as(
+                    p[self.hparams.test_prompt_length + 1 :]
+                )  # +1 is for the SOS token
+                for p in prompt_pred
+            ]
         elif self.hparams.grammar == "parentheses_and_brackets":
             rule_2 = [check_matched_parentheses(p) for p in prompt_pred]
             rule_1 = [check_matched_brackets(p) for p in prompt_pred]

@@ -7,6 +7,7 @@ from llm_non_identifiability.data import (
     generate_aNbN_grammar_data,
     generate_abN_grammar_data,
     generate_baN_grammar_data,
+    generate_bbaN_grammar_data,
     generate_aNbM_grammar_data,
     generate_aNbNaN_grammar_data,
     pad,
@@ -16,6 +17,7 @@ from llm_non_identifiability.data import (
     check_bs_in_the_middle,
     check_bs_together,
     check_more_as_before_bs,
+    check_bs_before_as,
     check_as_before_cs,
     check_bs_before_cs,
     check_more_bs_than_cs,
@@ -64,6 +66,18 @@ def test_baN_check_begins_with_b(num_samples, max_length):
     sequences = generate_baN_grammar_data(num_samples, max_length)
     for sequence in sequences:
         assert check_begins_with_b(sequence)
+
+
+def test_bbaN_even_number_of_as(num_samples, max_length):
+    sequences = generate_bbaN_grammar_data(num_samples, max_length)
+    for sequence in sequences:
+        assert check_even_number_of_as(sequence)
+
+
+def test_bbaN_bs_before_as(num_samples, max_length):
+    sequences = generate_bbaN_grammar_data(num_samples, max_length)
+    for sequence in sequences:
+        assert check_even_number_of_as(sequence)
 
 
 def test_aNbNcN_grammar_equal_as_bs_cs(num_samples, max_length):
@@ -348,6 +362,7 @@ def test_check_begins_with_b():
         "aNbN",
         "abN",
         "baN",
+        "bbaN",
         "aNbM",
         "aNbNcN",
         "parentheses",
@@ -359,7 +374,7 @@ def test_generate_test_prompts(grammar):
     length = 6
     prompts = generate_test_prompts(length, grammar=grammar)
 
-    if grammar in ["aNbN", "abN", "aNbM", "baN"]:
+    if grammar in ["aNbN", "abN", "aNbM", "baN", "bbaN"]:
         assert prompts.shape == (2**length, length + 1)
     elif grammar == "aNbNcN":
         assert prompts.shape == (3**length, length + 1)
@@ -373,6 +388,7 @@ def test_generate_test_prompts(grammar):
         "aNbN",
         "abN",
         "baN",
+        "bbaN",
         "aNbM",
         "aNbNcN",
         "parentheses",
@@ -403,6 +419,14 @@ def test_grammar_rules(max_length, grammar, num_samples):
         data = torch.from_numpy(
             pad(
                 generate_baN_grammar_data(
+                    num_samples=num_samples, max_length=max_length
+                )
+            )
+        ).long()
+    elif grammar == "bbaN":
+        data = torch.from_numpy(
+            pad(
+                generate_bbaN_grammar_data(
                     num_samples=num_samples, max_length=max_length
                 )
             )

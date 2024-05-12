@@ -216,6 +216,27 @@ def generate_aNbM_grammar_data(num_samples: int, max_length: int = 32) -> list:
     return data
 
 
+def generate_bNaM_grammar_data(num_samples: int, max_length: int = 32) -> list:
+    """
+    PCFG with one rule:
+    - b's are before a's (begins with b, without SOS, EOS)
+
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+    """
+
+    lengths_b = np.random.randint(low=1, high=max_length - 2, size=num_samples)
+    lengths_a = np.ones_like(lengths_b) * max_length - lengths_b - 2
+
+    data = []
+
+    for lb, la in zip(lengths_b, lengths_a):
+        data.append(np.concatenate((B_token * np.ones(la), A_token * np.ones(lb))))
+
+    return data
+
+
 def generate_baN_grammar_data(num_samples: int, max_length: int = 32) -> list:
     """
     PCFG with two rules:
@@ -240,6 +261,41 @@ def generate_baN_grammar_data(num_samples: int, max_length: int = 32) -> list:
         np.random.shuffle(second_part)
 
         data.append(np.concatenate((SOS_token, B_token, second_part, EOS_token)))
+
+    return data
+
+
+def generate_bbaN_grammar_data(num_samples: int, max_length: int = 32) -> list:
+    """
+    PCFG with two rules:
+    - b's before a's ('bbbb' ok but 'aaaa' not)
+    - even number of a's
+
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+    """
+
+    lengths = np.random.randint(low=1, high=max_length + 1, size=num_samples)
+
+    data = []
+
+    for l in lengths:
+        num_a = np.random.randint(low=0, high=(l - 1) // 2 + 1)
+        second_part = np.concatenate(
+            (B_token * np.ones(l - 1 - num_a * 2), A_token * np.ones(num_a * 2))
+        )
+
+        data.append(
+            np.concatenate(
+                (
+                    SOS_token,
+                    B_token * np.ones(l - num_a * 2),
+                    A_token * np.ones(num_a * 2),
+                    EOS_token,
+                )
+            )
+        )
 
     return data
 
@@ -291,6 +347,31 @@ def check_as_before_bs(sequence: torch.Tensor):
             return True
     else:
         return True
+
+
+def check_bs_before_as(sequence: torch.Tensor):
+    """
+    Check if the first a comes after the last b. 'bbbb' ok, 'aaaa' not
+    :param sequence:
+    :return:
+    """
+
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
+        # find the last b
+        last_b = b_tokens[-1]
+
+        if len(a_tokens := torch.where(sequence == A_token.item())[0]) > 0:
+            # find the first a
+            first_a = a_tokens[0]
+
+            return first_a > last_b
+        else:
+            return True
+    else:
+        return False
 
 
 def check_as_before_cs(sequence: torch.Tensor):
@@ -619,6 +700,29 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
             (torch.ones((prompts.shape[0], 1), dtype=torch.long) * SOS_token, prompts),
             dim=1,
         )
+    elif grammar == "bbaN":
+        ID_data = torch.tensor(
+            generate_bNaM_grammar_data(num_samples=num_samples, max_length=length),
+            dtype=torch.long,
+        )
+        OOD_data = torch.tensor(
+            generate_bNaM_grammar_data(num_samples=num_samples, max_length=length - 1),
+            dtype=torch.long,
+        )
+        id_prompts = torch.cat(
+            (torch.ones((ID_data.shape[0], 1), dtype=torch.long) * SOS_token, ID_data),
+            dim=1,
+        )
+        ood_prompts = torch.cat(
+            (
+                torch.ones((OOD_data.shape[0], 1), dtype=torch.long) * SOS_token,
+                torch.ones((OOD_data.shape[0], 1), dtype=torch.long) * A_token,
+                OOD_data,
+            ),
+            dim=1,
+        )
+        prompts = torch.cat((ood_prompts, id_prompts), dim=0)
+
     elif grammar == "parentheses":
         data = torch.tensor(
             generate_matched_parentheses_data(
@@ -746,6 +850,8 @@ def grammar_rules(grammar):
         )
     elif grammar == "baN":
         return lambda x: check_even_number_of_as(x) and check_begins_with_b(x)
+    elif grammar == "bbaN":
+        return lambda x: check_even_number_of_as(x) and check_bs_before_as(x)
     elif grammar == "abN":
         return lambda x: check_same_number_as_bs(x)
     elif grammar == "aNbM":
@@ -783,6 +889,8 @@ def prompt_grammar_rules(grammar):
     elif grammar == "abN":
         return lambda x: True
     elif grammar == "baN":
+        return lambda x: check_begins_with_b(x)
+    elif grammar == "bbaN":
         return lambda x: check_begins_with_b(x)
     elif grammar == "aNbM":
         return lambda x: check_as_before_bs(x)
