@@ -113,7 +113,11 @@ class LightningGrammarModule(pl.LightningModule):
                 "Cannot train with both extrapolation and adversarial training"
             )
 
-        self.hparams["loss_fn"] = nn.CrossEntropyLoss(ignore_index=PAD_token.item())
+        self.hparams["loss_fn"] = (
+            nn.CrossEntropyLoss(ignore_index=PAD_token.item())
+            if self.hparams.model != "transformer"
+            else nn.CrossEntropyLoss()
+        )
 
         # calculate number of tokens:
         if self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN", "baN", "bbaN"]:
