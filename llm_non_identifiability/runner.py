@@ -720,7 +720,7 @@ class LightningGrammarModule(pl.LightningModule):
             rule_2 = [check_matched_parentheses(p) for p in prompt_pred]
             rule_1 = [check_matched_brackets(p) for p in prompt_pred]
             rule_2_completion = [
-                check_matched_parentheses(p[3:]) for p in prompt_pred  # omit SOS, ], [
+                check_matched_parentheses(p[3:]) for p in prompt_pred  # omit SOS, ), (
             ]
         else:
             rule_2 = []
