@@ -651,7 +651,7 @@ def check_even_number_of_as_end(sequence: torch.Tensor):
         if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
             last_b = b_tokens[-1]
         else:
-            last_b = torch.Tensor([-1])
+            last_b = torch.tensor(-1)
         num_as = torch.sum(sequence[last_b + 1 :] == A_token.item())
         return num_as % 2 == 0
     else:
