@@ -14,7 +14,7 @@ parameters:
   trainer.max_epochs:
     value: 50000
   model.model:
-    values: [lstm, transformer, linear, mamba]
+    values: [linear, mamba]
   model.dim_model: # transformer
     value: 10
   model.num_heads: # transformer
