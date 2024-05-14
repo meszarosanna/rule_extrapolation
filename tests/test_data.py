@@ -25,6 +25,7 @@ from llm_non_identifiability.data import (
     check_as_before_bs_before_cs,
     check_in_dist_anbncn,
     check_even_number_of_as,
+    check_even_number_of_as_end,
     check_begins_with_b,
     EOS_token,
     SOS_token,
@@ -340,6 +341,23 @@ def test_check_even_number_of_as():
 
     sequence = torch.Tensor([A, B, B, B])
     assert check_even_number_of_as(sequence) == False
+
+
+def test_check_even_number_of_as_end():
+    sequence = torch.Tensor([B, A, A])
+    assert check_even_number_of_as_end(sequence) == True
+
+    sequence = torch.Tensor([SOS_token.item(), A, B, A, EOS_token.item()])
+    assert check_even_number_of_as_end(sequence) == False
+
+    sequence = torch.Tensor([SOS_token.item(), A, A, B, A])
+    assert check_even_number_of_as_end(sequence) == False
+
+    sequence = torch.Tensor([A, A, A, A])
+    assert check_even_number_of_as_end(sequence) == True
+
+    sequence = torch.Tensor([B, B, B, B])
+    assert check_even_number_of_as_end(sequence) == True
 
 
 def test_check_begins_with_b():

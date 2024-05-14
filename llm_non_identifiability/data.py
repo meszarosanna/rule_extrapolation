@@ -640,6 +640,24 @@ def check_even_number_of_as(sequence: torch.Tensor):
     return num_as % 2 == 0
 
 
+def check_even_number_of_as_end(sequence: torch.Tensor):
+    """
+    Check if the sequence has even number of a's after the last b
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if len(a_tokens := torch.where(sequence == A_token.item())[0]) > 0:
+        if len(b_tokens := torch.where(sequence == B_token.item())[0]) > 0:
+            last_b = b_tokens[-1]
+        else:
+            last_b = -1
+        num_as = torch.sum(sequence[last_b + 1 :] == A_token.item())
+        return num_as % 2 == 0
+    else:
+        return True
+
+
 def check_begins_with_b(sequence: torch.Tensor):
     """
     Check if the sequence begins with a B_token (after SOS)
