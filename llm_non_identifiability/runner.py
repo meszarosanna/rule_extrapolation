@@ -391,11 +391,11 @@ class LightningGrammarModule(pl.LightningModule):
                         im3, ax=axes.ravel().tolist(), shrink=0.7, pad=0.02
                     )
 
-                    axes[0].set_title("Initialization")
-                    axes[1].set_title("During training")
-                    axes[2].set_title("After training")
+                    axes[0].set_title("Initialization", fontsize=20)
+                    axes[1].set_title("During training", fontsize=20)
+                    axes[2].set_title("After training", fontsize=20)
 
-                    plt.savefig("Figure1.png")
+                    plt.savefig("Figure1.svg", format="svg")
 
         return loss
 
