@@ -477,3 +477,23 @@ def stats2string(df):
         for m, s in zip(df.mean().train_mcc, df.std().train_mcc)
     ]
     return "".join(s)
+
+
+def rule_stats2string_per_model(
+    stats, plot=("val_loss", "rule_1", "rule_2", "ood_rule_1", "ood_rule_2_completion")
+):
+    models = sorted(stats["rule_1"].groups.keys())
+    print("------------------------------")
+    print(f"Model order is={models}")
+    print(f"Plot order is={plot}")
+    print("------------------------------")
+    table = []
+    for model in models:
+        row = []
+        for p in plot:
+            stat = stats[p].get_group(model)
+            row.append(f"${stat.mean():.3f}\scriptscriptstyle\pm {stat.std():.3f}$ & ")
+        # convert model name to have a capital starting letter
+
+        print(model.capitalize() + " &" + "".join(row))
+    return table
