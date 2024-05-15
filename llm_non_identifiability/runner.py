@@ -19,6 +19,7 @@ from llm_non_identifiability.data import (
     check_same_number_as_bs_cs,
     check_as_before_bs_before_cs,
     check_even_number_of_as,
+    check_even_number_of_as_end,
     check_matched_parentheses,
     check_begins_with_b,
     check_matched_brackets,
@@ -353,7 +354,7 @@ class LightningGrammarModule(pl.LightningModule):
         if (
             self.trainer.global_step == 0
             or self.current_epoch == 799
-            or self.current_epoch == 41099
+            or self.current_epoch == 12499
         ):
             if (
                 self.hparams.plot is True
@@ -364,25 +365,25 @@ class LightningGrammarModule(pl.LightningModule):
                     self.result1 = self.plot_figure_1()
                 elif self.current_epoch == 799:
                     self.result2 = self.plot_figure_1()
-                elif self.current_epoch == 41099:
+                elif self.current_epoch == 12499:
                     self.result3 = self.plot_figure_1()
 
                     # plot the results
                     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(21, 7))
 
-                    im1 = axes[0].imshow(self.result1, cmap="plasma")
+                    im1 = axes[0].imshow(self.result1, cmap="plasma", vmin=0, vmax=0.01)
                     axes[0].xaxis.set_tick_params(labelbottom=False)
                     axes[0].yaxis.set_tick_params(labelleft=False)
                     axes[0].set_xticks([])
                     axes[0].set_yticks([])
 
-                    im2 = axes[1].imshow(self.result2, cmap="plasma")
+                    im2 = axes[1].imshow(self.result2, cmap="plasma", vmin=0, vmax=0.01)
                     axes[1].xaxis.set_tick_params(labelbottom=False)
                     axes[1].yaxis.set_tick_params(labelleft=False)
                     axes[1].set_xticks([])
                     axes[1].set_yticks([])
 
-                    im3 = axes[2].imshow(self.result3, cmap="plasma")
+                    im3 = axes[2].imshow(self.result3, cmap="plasma", vmin=0, vmax=0.01)
                     axes[2].xaxis.set_tick_params(labelbottom=False)
                     axes[2].yaxis.set_tick_params(labelleft=False)
                     axes[2].set_xticks([])
@@ -439,14 +440,14 @@ class LightningGrammarModule(pl.LightningModule):
         rule1_met = [check_same_number_as_bs(np.array(t[0])) for t in list_of_probab]
         rule2_met = [check_as_before_bs(np.array(t[0])) for t in list_of_probab]
 
-        not_rule1_nor_rule2 = []
+        not_rule1_not_rule2 = []
         rule1_not_rule2 = []
         rule2_not_rule1 = []
         rule1_and_rule2 = []
 
         for i, element in enumerate(list_of_probab):
             if not rule1_met[i] and not rule2_met[i]:
-                not_rule1_nor_rule2.append(element[1])
+                not_rule1_not_rule2.append(element[1])
             elif rule1_met[i] and not rule2_met[i]:
                 rule1_not_rule2.append(element[1])
             elif not rule1_met[i] and rule2_met[i]:
@@ -458,7 +459,7 @@ class LightningGrammarModule(pl.LightningModule):
         C_12 = torch.Tensor(choices(rule1_and_rule2, k=10)).reshape(2, 5)
         C_1 = torch.Tensor(choices(rule1_not_rule2, k=70)).reshape(14, 5)
         C_2 = torch.Tensor(choices(rule2_not_rule1, k=22)).reshape(2, 11)
-        C = torch.Tensor(choices(not_rule1_nor_rule2, k=154)).reshape(14, 11)
+        C = torch.Tensor(choices(not_rule1_not_rule2, k=154)).reshape(14, 11)
 
         result = torch.cat((torch.cat((C_2, C_12), dim=1), torch.cat((C, C_1), dim=1)))
 
@@ -709,7 +710,7 @@ class LightningGrammarModule(pl.LightningModule):
             ]
         elif self.hparams.grammar == "bbaN":
             rule_2 = [check_bs_before_as(p) for p in prompt_pred]
-            rule_1 = [check_even_number_of_as(p) for p in prompt_pred]
+            rule_1 = [check_even_number_of_as_end(p) for p in prompt_pred]
             rule_2_completion = [
                 check_bs_before_as(
                     p[self.hparams.test_prompt_length + 1 :]

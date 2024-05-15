@@ -836,7 +836,7 @@ def grammar_rules(grammar):
     elif grammar == "baN":
         return lambda x: check_even_number_of_as(x) and check_begins_with_b(x)
     elif grammar == "bbaN":
-        return lambda x: check_even_number_of_as(x) and check_bs_before_as(x)
+        return lambda x: check_even_number_of_as_end(x) and check_bs_before_as(x)
     elif grammar == "abN":
         return lambda x: check_same_number_as_bs(x)
     elif grammar == "aNbM":
