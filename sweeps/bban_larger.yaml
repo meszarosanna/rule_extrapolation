@@ -13,6 +13,7 @@ metric:
 parameters:
   trainer.max_epochs:
     value: 20000
+  trainer.check_val_every_n_epoch: 25
   model.model:
     value: transformer
   model.test_prompt_length:
