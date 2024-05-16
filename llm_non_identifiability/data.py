@@ -800,7 +800,7 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
                 torch.ones((data.shape[0], 1), dtype=torch.long)
                 * CLOSING_PARENTHESIS_token,
                 torch.ones((data.shape[0], 1), dtype=torch.long)
-                * OPENING_PARENTHESIS_token,
+                * OPENING_BRACKET_token,
                 data[:, 1:-1],
             ),
             dim=1,
@@ -812,7 +812,7 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
                 torch.ones((data.shape[0], 1), dtype=torch.long)
                 * OPENING_PARENTHESIS_token,
                 torch.ones((data.shape[0], 1), dtype=torch.long)
-                * CLOSING_PARENTHESIS_token,
+                * OPENING_BRACKET_token,
                 data[:, 1:-1],
             ),
             dim=1,
