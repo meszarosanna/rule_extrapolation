@@ -12,7 +12,7 @@ metric:
   name: Val/loss
 parameters:
   trainer.max_epochs:
-    value: 50000
+    value: 20000
   model.model:
     value: transformer
   model.test_prompt_length:
@@ -62,7 +62,7 @@ parameters:
   data.batch_size:
     value: 128
   data.num_train:
-    value: 15000
+    value: 50000
   seed_everything:
     distribution: int_uniform
     min: 0
