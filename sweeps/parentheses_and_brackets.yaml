@@ -26,7 +26,7 @@ parameters:
   model.dropout_p: # transformer
     value: 0.1
   model.test_prompt_length:
-    value: 8
+    value: 6
   model.max_pred_length:
     value: 300
   model.lr:
