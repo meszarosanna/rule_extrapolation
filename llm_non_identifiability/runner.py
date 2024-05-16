@@ -20,6 +20,7 @@ from llm_non_identifiability.data import (
     check_as_before_bs_before_cs,
     check_even_number_of_as,
     check_even_number_of_as_end,
+    check_begins_with_opening_parenthesis,
     check_matched_parentheses,
     check_begins_with_b,
     check_matched_brackets,
@@ -214,10 +215,18 @@ class LightningGrammarModule(pl.LightningModule):
             grammar=self.hparams.grammar, length=self.hparams.test_prompt_length
         ).to(self.hparams.device)
 
-        rules_met = [self.prompt_grammar_rules(t) for t in test_prompts]
-
-        self.test_prompts_in_distribution = test_prompts[rules_met]
-        self.test_prompts_out_of_distribution = test_prompts[[not r for r in rules_met]]
+        if self.hparams.grammar != "parentheses_and_brackets":
+            rules_met = [self.prompt_grammar_rules(t) for t in test_prompts]
+            self.test_prompts_in_distribution = test_prompts[rules_met]
+            self.test_prompts_out_of_distribution = test_prompts[
+                [not r for r in rules_met]
+            ]
+        else:
+            rules_met = [check_begins_with_opening_parenthesis(t) for t in test_prompts]
+            self.test_prompts_in_distribution = test_prompts[rules_met]
+            self.test_prompts_out_of_distribution = test_prompts[
+                [not r for r in rules_met]
+            ]
 
         self.hparams.test_prompts_in_distribution_len = len(
             self.test_prompts_in_distribution
@@ -334,7 +343,7 @@ class LightningGrammarModule(pl.LightningModule):
                 self.rule_.append(sum(L))
 
                 if self.current_epoch == 12600:
-                    x_values = np.arange(0, (len(rule12)) * 100, 100)
+                    x_values = np.arange(0, (len(self.rule12)) * 100, 100)
                     fig, ax = plt.subplots(figsize=(10, 10))
                     ax.plot(x_values, self.rule12, label="R1 and R2")
                     ax.plot(x_values, self.rule1, label="Only R1")

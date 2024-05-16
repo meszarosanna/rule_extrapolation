@@ -1013,6 +1013,20 @@ def generate_matched_parentheses(n):
         return np.concatenate((SOS_token, *word, EOS_token))
 
 
+def check_begins_with_opening_parenthesis(sequence: torch.Tensor) -> bool:
+    """
+    Check if begins with opening parenthesis
+    :return:
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    if sequence[0] == SOS_token.item():
+        return sequence[1] == OPENING_PARENTHESIS_token.item()
+    else:
+        return sequence[0] == OPENING_PARENTHESIS_token.item()
+
+
 def check_matched_parentheses(sequence: torch.Tensor) -> bool:
     """
     Check if the parentheses are matched
