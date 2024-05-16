@@ -13,7 +13,9 @@ metric:
 parameters:
   trainer.max_epochs:
     value: 50000
-  model.plot:
+  model.plot1:
+    value: True
+  model.plot2:
     value: True
   model.model:
     value: transformer
@@ -54,4 +56,4 @@ parameters:
   data.batch_size:
     value: 128
   seed_everything:
-    value: 72143
+    value: 63656

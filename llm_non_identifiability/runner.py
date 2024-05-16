@@ -79,7 +79,8 @@ class LightningGrammarModule(pl.LightningModule):
         model="transformer",
         bias=True,
         dropout=0.4,
-        plot: bool = False,
+        plot1: bool = False,
+        plot2: bool = False,
         n_layers=4,
         d_state=16,
         d_conv=4,
@@ -142,6 +143,11 @@ class LightningGrammarModule(pl.LightningModule):
         self.result1 = 0
         self.result2 = 0
         self.result3 = 0
+
+        self.rule12 = []  # type: list[float]
+        self.rule1 = []  # type: list[float]
+        self.rule2 = []  # type: list[float]
+        self.rule_ = []  # type: list[float]
 
     def _setup_model(self):
         if self.hparams.model == "transformer":
@@ -313,6 +319,80 @@ class LightningGrammarModule(pl.LightningModule):
         return prompt
 
     def training_step(self, batch, batch_idx):
+        # plotting
+        if self.hparams.plot2 is True:
+            if self.trainer.global_step == 0 or (
+                self.current_epoch % 100 == 0
+                and self.current_epoch <= 12600
+                and self.current_epoch > 0
+            ):
+                # sum the probabilities of each category
+                L12, L1, L2, L = self.plot_figure_1(True)
+                self.rule12.append(sum(L12))
+                self.rule1.append(sum(L1))
+                self.rule2.append(sum(L2))
+                self.rule_.append(sum(L))
+
+                if self.current_epoch == 12600:
+                    x_values = np.arange(0, (len(rule12)) * 100, 100)
+                    fig, ax = plt.subplots(figsize=(10, 10))
+                    ax.plot(x_values, self.rule12, label="R1 and R2")
+                    ax.plot(x_values, self.rule1, label="Only R1")
+                    ax.plot(x_values, self.rule2, label="Only R2")
+                    ax.plot(x_values, self.rule_, label="Not R1, not R2")
+                    ax.set_xlabel("Epochs", fontsize=15)
+                    ax.set_ylabel("Sum of probabilities", fontsize=15)
+                    ax.set_title(
+                        "Training dynamics of the probabilities of the sequences",
+                        fontsize=18,
+                    )
+                    ax.legend()
+                    plt.savefig("dynamics.png")
+
+        if self.hparams.plot1 is True:
+            if (
+                self.trainer.global_step == 0
+                or self.current_epoch == 800
+                or self.current_epoch == 12600
+            ):
+                if self.trainer.global_step == 0:
+                    self.result1 = self.plot_figure_1()
+                elif self.current_epoch == 800:
+                    self.result2 = self.plot_figure_1()
+                elif self.current_epoch == 12600:
+                    self.result3 = self.plot_figure_1()
+
+                    # plot the results
+                    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(21, 7))
+
+                    im1 = axes[0].imshow(self.result1, cmap="plasma", vmin=0, vmax=0.01)
+                    axes[0].xaxis.set_tick_params(labelbottom=False)
+                    axes[0].yaxis.set_tick_params(labelleft=False)
+                    axes[0].set_xticks([])
+                    axes[0].set_yticks([])
+
+                    im2 = axes[1].imshow(self.result2, cmap="plasma", vmin=0, vmax=0.01)
+                    axes[1].xaxis.set_tick_params(labelbottom=False)
+                    axes[1].yaxis.set_tick_params(labelleft=False)
+                    axes[1].set_xticks([])
+                    axes[1].set_yticks([])
+
+                    im3 = axes[2].imshow(self.result3, cmap="plasma", vmin=0, vmax=0.01)
+                    axes[2].xaxis.set_tick_params(labelbottom=False)
+                    axes[2].yaxis.set_tick_params(labelleft=False)
+                    axes[2].set_xticks([])
+                    axes[2].set_yticks([])
+                    cbar = fig.colorbar(
+                        im3, ax=axes.ravel().tolist(), shrink=0.7, pad=0.02
+                    )
+
+                    axes[0].set_title("Initialization", fontsize=20)
+                    axes[1].set_title("During training", fontsize=20)
+                    axes[2].set_title("After training", fontsize=20)
+
+                    plt.savefig("Figure1.svg", format="svg")
+
+        # training
         panel_name = "Train"
         _, _, _, loss = self._forward(batch)
         self.log(f"{panel_name}/loss", loss)
@@ -351,56 +431,9 @@ class LightningGrammarModule(pl.LightningModule):
 
             loss += loss_extrapolation
 
-        if (
-            self.trainer.global_step == 0
-            or self.current_epoch == 799
-            or self.current_epoch == 12499
-        ):
-            if (
-                self.hparams.plot is True
-                and self.hparams.model == "transformer"
-                and self.hparams.grammar == "aNbN"
-            ):
-                if self.trainer.global_step == 0:
-                    self.result1 = self.plot_figure_1()
-                elif self.current_epoch == 799:
-                    self.result2 = self.plot_figure_1()
-                elif self.current_epoch == 12499:
-                    self.result3 = self.plot_figure_1()
-
-                    # plot the results
-                    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(21, 7))
-
-                    im1 = axes[0].imshow(self.result1, cmap="plasma", vmin=0, vmax=0.01)
-                    axes[0].xaxis.set_tick_params(labelbottom=False)
-                    axes[0].yaxis.set_tick_params(labelleft=False)
-                    axes[0].set_xticks([])
-                    axes[0].set_yticks([])
-
-                    im2 = axes[1].imshow(self.result2, cmap="plasma", vmin=0, vmax=0.01)
-                    axes[1].xaxis.set_tick_params(labelbottom=False)
-                    axes[1].yaxis.set_tick_params(labelleft=False)
-                    axes[1].set_xticks([])
-                    axes[1].set_yticks([])
-
-                    im3 = axes[2].imshow(self.result3, cmap="plasma", vmin=0, vmax=0.01)
-                    axes[2].xaxis.set_tick_params(labelbottom=False)
-                    axes[2].yaxis.set_tick_params(labelleft=False)
-                    axes[2].set_xticks([])
-                    axes[2].set_yticks([])
-                    cbar = fig.colorbar(
-                        im3, ax=axes.ravel().tolist(), shrink=0.7, pad=0.02
-                    )
-
-                    axes[0].set_title("Initialization", fontsize=20)
-                    axes[1].set_title("During training", fontsize=20)
-                    axes[2].set_title("After training", fontsize=20)
-
-                    plt.savefig("Figure1.svg", format="svg")
-
         return loss
 
-    def plot_figure_1(self):
+    def plot_figure_1(self, plot_2=False):
         # generating all sequences of max length sequence_length
         length = 8
         prompts = []
@@ -430,10 +463,11 @@ class LightningGrammarModule(pl.LightningModule):
             )
             pred = pred.squeeze(0)
             pred = nn.functional.softmax(pred, dim=0)  # make the columns sum to 1
-            probability = 1
+            probability = 0
             for i, element in enumerate(sequence[1:], 1):
-                probability *= pred[element][i - 1]
+                probability += math.log(pred[element][i - 1])
 
+            probability = math.exp(probability)
             list_of_probab.append([sequence, probability])
 
         # separate the list with the rules
@@ -445,6 +479,7 @@ class LightningGrammarModule(pl.LightningModule):
         rule2_not_rule1 = []
         rule1_and_rule2 = []
 
+        # list of probabilities of each category
         for i, element in enumerate(list_of_probab):
             if not rule1_met[i] and not rule2_met[i]:
                 not_rule1_not_rule2.append(element[1])
@@ -455,15 +490,24 @@ class LightningGrammarModule(pl.LightningModule):
             else:
                 rule1_and_rule2.append(element[1])
 
-        # sample from each category and create a squace
-        C_12 = torch.Tensor(choices(rule1_and_rule2, k=10)).reshape(2, 5)
-        C_1 = torch.Tensor(choices(rule1_not_rule2, k=70)).reshape(14, 5)
-        C_2 = torch.Tensor(choices(rule2_not_rule1, k=22)).reshape(2, 11)
-        C = torch.Tensor(choices(not_rule1_not_rule2, k=154)).reshape(14, 11)
+        if plot_2 is True:
+            return (
+                rule1_and_rule2,
+                rule1_not_rule2,
+                rule2_not_rule1,
+                not_rule1_not_rule2,
+            )
+        else:
+            # sample from each category and create a squace
+            C_12 = torch.Tensor(choices(rule1_and_rule2, k=10)).reshape(2, 5)
+            C_1 = torch.Tensor(choices(rule1_not_rule2, k=70)).reshape(14, 5)
+            C_2 = torch.Tensor(choices(rule2_not_rule1, k=22)).reshape(2, 11)
+            C = torch.Tensor(choices(not_rule1_not_rule2, k=154)).reshape(14, 11)
 
-        result = torch.cat((torch.cat((C_2, C_12), dim=1), torch.cat((C, C_1), dim=1)))
-
-        return result
+            result = torch.cat(
+                (torch.cat((C_2, C_12), dim=1), torch.cat((C, C_1), dim=1))
+            )
+            return result
 
     def validation_step(self, batch, batch_idx):
         panel_name = "Val"
