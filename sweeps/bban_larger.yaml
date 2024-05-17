@@ -12,11 +12,11 @@ metric:
   name: Val/loss
 parameters:
   trainer.max_epochs:
-    value: 20000
+    value: 10000
   trainer.check_val_every_n_epoch:
-    value: 25
+    value: 100
   model.model:
-    value: transformer
+    values: [ linear, lstm, transformer, mamba ]
   model.test_prompt_length:
     value: 8
   model.max_pred_length:
@@ -64,7 +64,7 @@ parameters:
   data.batch_size:
     value: 128
   data.num_train:
-    value: 50000
+    value: 15000
   seed_everything:
     distribution: int_uniform
     min: 0
