@@ -124,8 +124,14 @@ def sweep2df(
         # .summary contains the output keys/values for metrics like accuracy.
         #  We call ._json_dict to omit large files
         summary = run.summary._json_dict
+        try:
+            summary["epoch"]
+        except:
+            continue
 
-        if run.state == "finished":
+        if run.state != "failed" and (
+            run.state == "finished" or summary["epoch"] > 400
+        ):
             # print(f"\t Processing {run.name}...")
             # try:
             if True:
@@ -211,86 +217,96 @@ def sweep2df(
                 # ID
                 key = f"Val/ID/finished_accuracy"
                 history = run.history(keys=[key])
-                finished4min_val_loss = history.iloc[int(min_val_loss_step)][key]
+                finished4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[int(min_val_loss_step)][key]
                 finised_histories.append(history[key])
 
                 key = f"Val/ID/finished/rule_1_accuracy"
                 history = run.history(keys=[key])
-                rule_1_accuracy4min_val_loss = history.iloc[int(min_val_loss_step)][key]
+                rule_1_accuracy4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[int(min_val_loss_step)][key]
                 rule_1_histories.append(history[key])
 
                 key = f"Val/ID/finished/rule_2_accuracy"
                 history = run.history(keys=[key])
-                rule_2_accuracy4min_val_loss = history.iloc[int(min_val_loss_step)][key]
+                rule_2_accuracy4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[int(min_val_loss_step)][key]
                 rule_2_histories.append(history[key])
 
                 key = f"Val/ID/finished/grammatical_accuracy"
                 history = run.history(keys=[key])
-                grammatical_accuracy4min_val_loss = history.iloc[
-                    int(min_val_loss_step)
-                ][key]
+                grammatical_accuracy4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[ int(min_val_loss_step)][key]
                 grammatical_histories.append(history[key])
 
                 # OOD
                 key = f"Val/OOD/finished_accuracy"
                 history = run.history(keys=[key])
-                ood_finished4min_val_loss = history.iloc[int(min_val_loss_step)][key]
+                ood_finished4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[int(min_val_loss_step)][key]
                 ood_finised_histories.append(history[key])
 
                 key = f"Val/OOD/finished/rule_1_accuracy"
                 history = run.history(keys=[key])
-                ood_rule_1_accuracy4min_val_loss = history.iloc[int(min_val_loss_step)][
-                    key
-                ]
+                ood_rule_1_accuracy4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[int(min_val_loss_step)][ key]
                 ood_rule_1_histories.append(history[key])
 
                 key = f"Val/OOD/finished/rule_2_accuracy"
                 history = run.history(keys=[key])
-                ood_rule_2_accuracy4min_val_loss = history.iloc[int(min_val_loss_step)][
-                    key
-                ]
+                ood_rule_2_accuracy4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[int(min_val_loss_step)][ key]
                 ood_rule_2_histories.append(history[key])
 
                 key = f"Val/OOD/finished/rule_2_completion_accuracy"
                 history = run.history(keys=[key])
-                ood_rule_2_completion_accuracy4min_val_loss = history.iloc[
-                    int(min_val_loss_step)
-                ][key]
+                ood_rule_2_completion_accuracy4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[ int(min_val_loss_step)][key]
                 ood_rule_2_completion_histories.append(history[key])
 
                 key = f"Val/OOD/finished/grammatical_accuracy"
                 history = run.history(keys=[key])
-                ood_grammatical_accuracy4min_val_loss = history.iloc[
-                    int(min_val_loss_step)
-                ][key]
+                ood_grammatical_accuracy4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[ int(min_val_loss_step)][key]
                 ood_grammatical_histories.append(history[key])
 
                 # SOS
 
                 key = f"Val/SOS/finished_accuracy"
                 history = run.history(keys=[key])
-                sos_finished4min_val_loss = history.iloc[int(min_val_loss_step)][key]
+                sos_finished4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[int(min_val_loss_step)][key]
                 sos_finised_histories.append(history[key])
 
                 key = f"Val/SOS/finished/rule_1_accuracy"
                 history = run.history(keys=[key])
-                sos_rule_1_accuracy4min_val_loss = history.iloc[int(min_val_loss_step)][
-                    key
-                ]
+                sos_rule_1_accuracy4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[int(min_val_loss_step)][ key]
                 sos_rule_1_histories.append(history[key])
 
                 key = f"Val/SOS/finished/rule_2_accuracy"
                 history = run.history(keys=[key])
-                sos_rule_2_accuracy4min_val_loss = history.iloc[int(min_val_loss_step)][
-                    key
-                ]
+                sos_rule_2_accuracy4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[int(min_val_loss_step)][ key]
                 sos_rule_2_histories.append(history[key])
 
                 key = f"Val/SOS/finished/grammatical_accuracy"
                 history = run.history(keys=[key])
-                sos_grammatical_accuracy4min_val_loss = history.iloc[
-                    int(min_val_loss_step)
-                ][key]
+                sos_grammatical_accuracy4min_val_loss = history.max()[
+                    1
+                ]  # .iloc[ int(min_val_loss_step)][key]
                 sos_grammatical_histories.append(history[key])
 
                 data.append(
