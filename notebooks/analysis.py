@@ -513,3 +513,31 @@ def rule_stats2string_per_model(
 
         print(model.capitalize() + " &" + "".join(row))
     return table
+
+
+def grouped_rule_stats(df):
+    grouped_df = df.groupby("model")
+
+    stats = {}
+
+    stats["val_loss"] = grouped_df.min_val_loss
+
+    stats["rule_1"] = grouped_df.rule_1_accuracy4min_val_loss
+    stats["rule_2"] = grouped_df.rule_2_accuracy4min_val_loss
+    stats["grammatical"] = grouped_df.grammatical_accuracy4min_val_loss
+    stats["finished"] = grouped_df.finished4min_val_loss
+
+    stats["ood_rule_1"] = grouped_df.ood_rule_1_accuracy4min_val_loss
+    stats["ood_rule_2"] = grouped_df.ood_rule_2_accuracy4min_val_loss
+    stats[
+        "ood_rule_2_completion"
+    ] = grouped_df.ood_rule_2_completion_accuracy4min_val_loss
+    stats["ood_grammatical"] = grouped_df.ood_grammatical_accuracy4min_val_loss
+    stats["ood_finished"] = grouped_df.ood_finished4min_val_loss
+
+    stats["sos_rule_1"] = grouped_df.sos_rule_1_accuracy4min_val_loss
+    stats["sos_rule_2"] = grouped_df.sos_rule_2_accuracy4min_val_loss
+    stats["sos_grammatical"] = grouped_df.sos_grammatical_accuracy4min_val_loss
+    stats["sos_finished"] = grouped_df.sos_finished4min_val_loss
+
+    return stats
