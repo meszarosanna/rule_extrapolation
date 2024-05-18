@@ -61,6 +61,8 @@ parameters:
     value: 256
   data.batch_size:
     value: 128
+  data.num_train:
+    value: 15000
   seed_everything:
     distribution: int_uniform
     min: 0
