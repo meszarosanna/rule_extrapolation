@@ -498,6 +498,12 @@ def stats2string(df):
 def rule_stats2string_per_model(
     stats, plot=("val_loss", "rule_1", "rule_2", "ood_rule_1", "ood_rule_2_completion")
 ):
+    model_colors = {
+        "transformer": BLUE,
+        "lstm": RED,
+        "linear": "green",
+        "mamba": "orange",
+    }
     models = sorted(stats["rule_1"].groups.keys())
     print("------------------------------")
     print(f"Model order is={models}")
@@ -511,7 +517,15 @@ def rule_stats2string_per_model(
             row.append(f"${stat.mean():.3f}\scriptscriptstyle\pm {stat.std():.3f}$ & ")
         # convert model name to have a capital starting letter
 
-        print(model.capitalize() + " &" + "".join(row))
+        print(
+            r"{\color{"
+            + model_colors[model]
+            + "}"
+            + model.capitalize()
+            + "}"
+            + " &"
+            + "".join(row)
+        )
     return table
 
 
