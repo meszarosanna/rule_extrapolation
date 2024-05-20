@@ -496,7 +496,9 @@ def stats2string(df):
 
 
 def rule_stats2string_per_model(
-    stats, plot=("val_loss", "rule_1", "rule_2", "ood_rule_1", "ood_rule_2_completion")
+    stats,
+    plot=("val_loss", "rule_1", "rule_2", "ood_rule_1", "ood_rule_2_completion"),
+    include_r2=True,
 ):
     model_colors = {
         "transformer": "figblue",
@@ -513,9 +515,15 @@ def rule_stats2string_per_model(
     for model in models:
         row = []
         for p in plot:
+            if include_r2 is False and p == "rule_2":
+                continue
+
             stat = stats[p].get_group(model)
             row.append(f"${stat.mean():.3f}\scriptscriptstyle\pm {stat.std():.3f}$ & ")
         # convert model name to have a capital starting letter
+
+        # strip last & symbol
+        row[-1] = row[-1][:-2]
 
         print(
             r"{\color{"
@@ -525,6 +533,7 @@ def rule_stats2string_per_model(
             + "}"
             + " &"
             + "".join(row)
+            + r"\\"
         )
     return table
 
