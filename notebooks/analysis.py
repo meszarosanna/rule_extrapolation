@@ -499,10 +499,10 @@ def rule_stats2string_per_model(
     stats, plot=("val_loss", "rule_1", "rule_2", "ood_rule_1", "ood_rule_2_completion")
 ):
     model_colors = {
-        "transformer": BLUE,
-        "lstm": RED,
+        "transformer": "figblue",
+        "lstm": "orange",
         "linear": "green",
-        "mamba": "orange",
+        "mamba": "figred",
     }
     models = sorted(stats["rule_1"].groups.keys())
     print("------------------------------")
