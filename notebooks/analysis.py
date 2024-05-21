@@ -503,7 +503,7 @@ def rule_stats2string_per_model(
     model_colors = {
         "transformer": "figblue",
         "lstm": "orange",
-        "linear": "green",
+        "linear": "green!80!black",
         "mamba": "figred",
     }
     models = sorted(stats["rule_1"].groups.keys())
@@ -526,14 +526,9 @@ def rule_stats2string_per_model(
         row[-1] = row[-1][:-2]
 
         print(
-            r"{\color{"
-            + model_colors[model]
-            + "}"
-            + model.capitalize()
-            + "}"
-            + " &"
-            + "".join(row)
-            + r"\\"
+            r"{\color{" + model_colors[model] + "}" + model.capitalize()
+            if model != "lstm"
+            else model.upper() + "}" + " &" + "".join(row) + r"\\"
         )
     return table
 
