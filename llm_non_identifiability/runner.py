@@ -540,7 +540,12 @@ class LightningGrammarModule(pl.LightningModule):
         panel_name = "Val"
 
         X, X_expected, pred, loss = self._forward(batch)
-        self.log(f"{panel_name}/loss", loss)
+
+        if self.hparams.model == "linear":
+            self.log(f"{panel_name}/loss", nn.CrossEntropyLoss()(pred, X_expected))
+            self.log(f"{panel_name}/loss_ignore_pad", loss)
+        else:
+            self.log(f"{panel_name}/loss", loss)
 
         self.log(f"{panel_name}/kl", loss - self.data_entropy)
 
