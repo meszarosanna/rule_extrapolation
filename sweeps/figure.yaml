@@ -18,7 +18,7 @@ parameters:
   model.plot2:
     value: true
   model.model:
-    value: mamba
+    value: transformer
   model.test_prompt_length:
     value: 8
   model.max_pred_length:
@@ -66,4 +66,4 @@ parameters:
   data.batch_size:
     value: 128
   seed_everything:
-    value: 91686
+    value: 63656

@@ -327,12 +327,19 @@ class LightningGrammarModule(pl.LightningModule):
         )
         return prompt
 
+    def on_fit_start(self):
+        self.result = self.plot_figure_1()
+        plt.imshow(self.result, cmap="Greys", vmin=0, vmax=0.01)
+        plt.colorbar()
+        plt.title("Initialization")
+        plt.savefig("fig1_init1.png")
+
     def training_step(self, batch, batch_idx):
         # plotting
         if self.hparams.plot2 is True:
             if self.trainer.global_step == 0 or (
                 self.current_epoch % 100 == 0
-                and self.current_epoch <= 12000
+                and self.current_epoch <= 12500
                 and self.current_epoch > 0
             ):
                 # sum the probabilities of each category
@@ -342,7 +349,7 @@ class LightningGrammarModule(pl.LightningModule):
                 self.rule2.append(sum(L2))
                 self.rule_.append(sum(L))
 
-                if self.current_epoch == 12000:
+                if self.current_epoch == 12500:
                     x_values = np.arange(0, (len(self.rule12)) * 100, 100)
                     fig, ax = plt.subplots(figsize=(10, 10))
                     ax.plot(x_values, self.rule12, label="R1 and R2")
@@ -356,37 +363,40 @@ class LightningGrammarModule(pl.LightningModule):
                         fontsize=18,
                     )
                     ax.legend()
-                    plt.savefig("dynamics_mamba.png")
+                    plt.savefig("dynamics_transformer.png")
 
         if self.hparams.plot1 is True:
             if (
                 self.trainer.global_step == 0
                 or self.current_epoch == 900
-                or self.current_epoch == 12000
+                or self.current_epoch == 12500
             ):
                 if self.trainer.global_step == 0:
+                    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(21, 7))
                     self.result1 = self.plot_figure_1()
+                    im1 = axes[0].imshow(self.result2, cmap="Greys", vmin=0, vmax=0.01)
+                    plt.savefig("fig1.png")
                 elif self.current_epoch == 900:  # 900 for the seed 63656
                     self.result2 = self.plot_figure_1()
-                elif self.current_epoch == 12000:
+                elif self.current_epoch == 12500:
                     self.result3 = self.plot_figure_1()
 
                     # plot the results
                     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(21, 7))
 
-                    im1 = axes[0].imshow(self.result1, cmap="plasma", vmin=0, vmax=0.01)
+                    im1 = axes[0].imshow(self.result1, cmap="Greys", vmin=0, vmax=0.01)
                     axes[0].xaxis.set_tick_params(labelbottom=False)
                     axes[0].yaxis.set_tick_params(labelleft=False)
                     axes[0].set_xticks([])
                     axes[0].set_yticks([])
 
-                    im2 = axes[1].imshow(self.result2, cmap="plasma", vmin=0, vmax=0.01)
+                    im2 = axes[1].imshow(self.result2, cmap="Greys", vmin=0, vmax=0.01)
                     axes[1].xaxis.set_tick_params(labelbottom=False)
                     axes[1].yaxis.set_tick_params(labelleft=False)
                     axes[1].set_xticks([])
                     axes[1].set_yticks([])
 
-                    im3 = axes[2].imshow(self.result3, cmap="plasma", vmin=0, vmax=0.01)
+                    im3 = axes[2].imshow(self.result3, cmap="Greys", vmin=0, vmax=0.01)
                     axes[2].xaxis.set_tick_params(labelbottom=False)
                     axes[2].yaxis.set_tick_params(labelleft=False)
                     axes[2].set_xticks([])
@@ -399,7 +409,7 @@ class LightningGrammarModule(pl.LightningModule):
                     axes[1].set_title("During training", fontsize=20)
                     axes[2].set_title("After training", fontsize=20)
 
-                    plt.savefig("Figure1_mamba.svg", format="svg")
+                    plt.savefig("Figure1_transformer.svg", format="svg")
 
         # training
         panel_name = "Train"
