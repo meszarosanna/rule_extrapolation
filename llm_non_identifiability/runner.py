@@ -332,7 +332,7 @@ class LightningGrammarModule(pl.LightningModule):
         if self.hparams.plot2 is True:
             if self.trainer.global_step == 0 or (
                 self.current_epoch % 100 == 0
-                and self.current_epoch <= 12600
+                and self.current_epoch <= 12000
                 and self.current_epoch > 0
             ):
                 # sum the probabilities of each category
@@ -342,7 +342,7 @@ class LightningGrammarModule(pl.LightningModule):
                 self.rule2.append(sum(L2))
                 self.rule_.append(sum(L))
 
-                if self.current_epoch == 12600:
+                if self.current_epoch == 12000:
                     x_values = np.arange(0, (len(self.rule12)) * 100, 100)
                     fig, ax = plt.subplots(figsize=(10, 10))
                     ax.plot(x_values, self.rule12, label="R1 and R2")
@@ -356,19 +356,19 @@ class LightningGrammarModule(pl.LightningModule):
                         fontsize=18,
                     )
                     ax.legend()
-                    plt.savefig("dynamics.png")
+                    plt.savefig("dynamics_mamba.png")
 
         if self.hparams.plot1 is True:
             if (
                 self.trainer.global_step == 0
-                or self.current_epoch == 800
-                or self.current_epoch == 12600
+                or self.current_epoch == 900
+                or self.current_epoch == 12000
             ):
                 if self.trainer.global_step == 0:
                     self.result1 = self.plot_figure_1()
-                elif self.current_epoch == 800:
+                elif self.current_epoch == 900:  # 900 for the seed 63656
                     self.result2 = self.plot_figure_1()
-                elif self.current_epoch == 12600:
+                elif self.current_epoch == 12000:
                     self.result3 = self.plot_figure_1()
 
                     # plot the results
@@ -399,7 +399,7 @@ class LightningGrammarModule(pl.LightningModule):
                     axes[1].set_title("During training", fontsize=20)
                     axes[2].set_title("After training", fontsize=20)
 
-                    plt.savefig("Figure1.svg", format="svg")
+                    plt.savefig("Figure1_mamba.svg", format="svg")
 
         # training
         panel_name = "Train"
@@ -465,11 +465,18 @@ class LightningGrammarModule(pl.LightningModule):
         for sequence in prompts:
             prompt = torch.Tensor([sequence[:-1]]).long().to(self.hparams.device)
             tgt_mask = get_tgt_mask(size=(prompt.size(1)), device=self.hparams.device)
-            pred = self.model(
-                src=prompt,
-                mask=tgt_mask,
-                src_key_padding_mask=create_pad_mask(prompt),
-            )
+
+            if self.hparams.model == "transformer":
+                pred = self.model(
+                    src=prompt,
+                    mask=tgt_mask,
+                    src_key_padding_mask=create_pad_mask(prompt),
+                )
+            elif self.hparams.model == "linear" or self.hparams.model == "lstm":
+                pred = self.model(src=prompt)
+            elif self.hparams.model == "mamba":
+                pred = self.model(prompt)
+
             pred = pred.squeeze(0)
             pred = nn.functional.softmax(pred, dim=0)  # make the columns sum to 1
             probability = 0
