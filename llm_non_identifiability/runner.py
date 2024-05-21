@@ -372,10 +372,11 @@ class LightningGrammarModule(pl.LightningModule):
                 or self.current_epoch == 12500
             ):
                 if self.trainer.global_step == 0:
-                    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(21, 7))
                     self.result1 = self.plot_figure_1()
-                    im1 = axes[0].imshow(self.result2, cmap="Greys", vmin=0, vmax=0.01)
-                    plt.savefig("fig1.png")
+                    plt.imshow(self.result1, cmap="Greys", vmin=0, vmax=0.01)
+                    plt.colorbar()
+                    plt.title("Initialization")
+                    plt.savefig("fig1_init2.png")
                 elif self.current_epoch == 900:  # 900 for the seed 63656
                     self.result2 = self.plot_figure_1()
                 elif self.current_epoch == 12500:
