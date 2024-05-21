@@ -526,9 +526,14 @@ def rule_stats2string_per_model(
         row[-1] = row[-1][:-2]
 
         print(
-            r"{\color{" + model_colors[model] + "}" + model.capitalize()
-            if model != "lstm"
-            else model.upper() + "}" + " &" + "".join(row) + r"\\"
+            r"{\color{"
+            + model_colors[model]
+            + "}"
+            + (model.capitalize() if model != "lstm" else model.upper())
+            + "}"
+            + " &"
+            + "".join(row)
+            + r"\\"
         )
     return table
 
