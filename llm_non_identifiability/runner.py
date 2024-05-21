@@ -328,8 +328,8 @@ class LightningGrammarModule(pl.LightningModule):
         return prompt
 
     def on_fit_start(self):
-        self.result = self.plot_figure_1()
-        plt.imshow(self.result, cmap="Greys", vmin=0, vmax=0.01)
+        result = self.plot_figure_1()
+        plt.imshow(result, cmap="Greys", vmin=0, vmax=0.01)
         plt.colorbar()
         plt.title("Initialization")
         plt.savefig("fig1_init1.png")
