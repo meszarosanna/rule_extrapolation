@@ -36,23 +36,6 @@ pip install --requirement tests/requirements.txt --quiet
 pre-commit install
  ```   
 
-### Running on a SLURM cluster
-
-```bash
-# add execution permission to the scripts
-chmod +x scripts/*.sh
-
-# change userName in run_singularity_server.sh
-userName=yourUserName
-
-# specify root directory in export_root_dir.sh
-export ROOT_DIR=/path/to/root/dir
-export PACKAGE_NAME=/path/to/package/dir
-
-# create the container file
-cd scripts
-singularity build --fakeroot nv.sif nv.def
-```
 
 ### Weights and Biases sweep
 
