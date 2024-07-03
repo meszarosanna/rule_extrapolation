@@ -1,7 +1,7 @@
 from pytorch_lightning.cli import LightningCLI
 
-from llm_non_identifiability.datamodule import GrammarDataModule
-from llm_non_identifiability.runner import LightningGrammarModule
+from rule_extrapolation.datamodule import GrammarDataModule
+from rule_extrapolation.runner import LightningGrammarModule
 
 
 class LLMLightningCLI(LightningCLI):
