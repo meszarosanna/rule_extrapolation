@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 
-from llm_non_identifiability.data import pad
+from rule_extrapolation.data import pad
 
 
 class GrammarDataset(Dataset):

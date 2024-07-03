@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 import torch
 
-from llm_non_identifiability.data import check_as_before_bs, check_same_number_as_bs
-from llm_non_identifiability.data import (
+from rule_extrapolation.data import check_as_before_bs, check_same_number_as_bs
+from rule_extrapolation.data import (
     generate_aNbN_grammar_data,
     generate_abN_grammar_data,
     generate_baN_grammar_data,
@@ -481,7 +481,7 @@ def test_grammar_rules(max_length, grammar, num_samples):
     assert torch.all(torch.tensor([rules(d) for d in data]))
 
 
-from llm_non_identifiability.data import (
+from rule_extrapolation.data import (
     generate_matched_brackets,
     generate_matched_parentheses,
     generate_matched_parentheses_and_brackets,

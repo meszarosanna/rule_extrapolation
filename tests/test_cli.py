@@ -1,6 +1,6 @@
-from llm_non_identifiability.cli import LLMLightningCLI
-from llm_non_identifiability.runner import LightningGrammarModule
-from llm_non_identifiability.datamodule import GrammarDataModule
+from rule_extrapolation.cli import LLMLightningCLI
+from rule_extrapolation.runner import LightningGrammarModule
+from rule_extrapolation.datamodule import GrammarDataModule
 from os.path import abspath, dirname, join
 
 

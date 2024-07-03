@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 from transformers.optimization import get_inverse_sqrt_schedule
 
-from llm_non_identifiability.data import (
+from rule_extrapolation.data import (
     check_same_number_as_bs,
     check_as_before_bs,
     check_bs_before_as,
@@ -36,7 +36,7 @@ from llm_non_identifiability.data import (
     GrammarMetrics,
     pad,
 )
-from llm_non_identifiability.model import (
+from rule_extrapolation.model import (
     TransformerDecoder,
     create_pad_mask,
     get_tgt_mask,
