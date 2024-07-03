@@ -5,7 +5,7 @@ from torch import nn as nn
 import torch.nn.functional as F
 
 
-from llm_non_identifiability.data import PAD_token
+from rule_extrapolation.data import PAD_token
 
 
 class PositionalEncoding(nn.Module):

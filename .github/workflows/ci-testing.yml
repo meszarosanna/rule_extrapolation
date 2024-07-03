@@ -60,15 +60,15 @@ jobs:
 
     - name: black
       run: |
-        black --check --verbose ./llm_non_identifiability/
+        black --check --verbose ./rule_extrapolation/
 
     - name: mypy
       run: |
-        mypy llm_non_identifiability --ignore-missing-imports --scripts-are-modules
+        mypy rule_extrapolation --ignore-missing-imports --scripts-are-modules
 
     - name: Tests
       run: |
-        coverage run --source llm_non_identifiability -m pytest tests -v --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}.xml
+        coverage run --source rule_extrapolation -m pytest tests -v --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}.xml
 
     - name: Statistics
       if: success()

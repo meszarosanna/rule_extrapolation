@@ -7,8 +7,8 @@ authors:
 - family-names: "Huszár"
   given-names: "Ferenc"
   orcid: "https://orcid.org/0000-0002-4988-1430"
-title: "llm-non-identifiability"
-version: 0.0.0
+title: "rule_extrapolation"
+version: 1.0.0
 doi:
 date-released:
-url: "https://github.com/rpatrik96/llm-non-identifiability"
+url: "https://github.com/meszarosanna/rule_extrapolation"

@@ -1,6 +1,6 @@
 import pytest
 
-from llm_non_identifiability.datamodule import GrammarDataModule
+from rule_extrapolation.datamodule import GrammarDataModule
 
 
 @pytest.mark.parametrize(

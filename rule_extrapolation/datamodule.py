@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 import os
 
-from llm_non_identifiability.data import (
+from rule_extrapolation.data import (
     generate_aNbN_grammar_data,
     generate_abN_grammar_data,
     generate_baN_grammar_data,
@@ -16,7 +16,7 @@ from llm_non_identifiability.data import (
     generate_matched_parentheses_data,
     generate_aNbNcN_grammar_data,
 )
-from llm_non_identifiability.dataset import GrammarDataset
+from rule_extrapolation.dataset import GrammarDataset
 
 
 class GrammarDataModule(pl.LightningDataModule):

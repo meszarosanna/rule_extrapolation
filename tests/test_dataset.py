@@ -1,4 +1,4 @@
-from llm_non_identifiability.dataset import GrammarDataset
+from rule_extrapolation.dataset import GrammarDataset
 import torch
 
 

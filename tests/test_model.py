@@ -1,4 +1,4 @@
-from llm_non_identifiability.model import get_tgt_mask, TransformerDecoder
+from rule_extrapolation.model import get_tgt_mask, TransformerDecoder
 import torch
 
 

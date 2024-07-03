@@ -6,8 +6,8 @@ import wandb
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import WandbLogger
 
-from llm_non_identifiability.datamodule import GrammarDataModule
-from llm_non_identifiability.runner import LightningGrammarModule
+from rule_extrapolation.datamodule import GrammarDataModule
+from rule_extrapolation.runner import LightningGrammarModule
 
 if __name__ == "__main__":
     GRAMMAR = "aNbNaN"

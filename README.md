@@ -23,7 +23,7 @@ git clone --recurse-submodules https://github.com/meszarosanna/rule_extrapolatio
 
 
 # install the package   
-cd llm-non-identifiability
+cd rule_extrapolation
 pip install -e .   
 pip install -r requirements.txt
 

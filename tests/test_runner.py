@@ -2,9 +2,9 @@ import pytest
 import torch
 from pytorch_lightning.trainer import Trainer
 
-from llm_non_identifiability.data import SOS_token
-from llm_non_identifiability.datamodule import GrammarDataModule
-from llm_non_identifiability.runner import LightningGrammarModule
+from rule_extrapolation.data import SOS_token
+from rule_extrapolation.datamodule import GrammarDataModule
+from rule_extrapolation.runner import LightningGrammarModule
 
 
 @pytest.mark.parametrize("adversarial_training", [True, False])
