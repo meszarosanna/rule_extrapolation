@@ -1,6 +1,9 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
+- family-names: "Mészáros"
+  given-names: "Anna"
+  orcid: "https://orcid.org/0009-0001-3655-4414"
 - family-names: "Reizinger"
   given-names: "Patrik"
   orcid: "https://orcid.org/0000-0001-9861-0293"
