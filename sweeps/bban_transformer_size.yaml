@@ -25,6 +25,8 @@ parameters:
     value: 0.002
   model.layer_norm_eps:
     value: 6e-3
+  model.dim_model: # transformer
+    value: 10
   model.num_heads: # transformer
     values: [ 5, 10 ]
   model.dim_feedforward: # transformer
