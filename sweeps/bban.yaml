@@ -1,7 +1,7 @@
 command:
   - ${env}
   - python3
-  - llm_non_identifiability/cli.py
+  - rule_extrapolation/cli.py
   - fit
   - "--config"
   - "configs/config.yaml"
