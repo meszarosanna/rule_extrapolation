@@ -8,3 +8,4 @@ tueplots
 pandas
 matplotlib
 transformers~=4.37.1
+xlstm~=1.0.4
