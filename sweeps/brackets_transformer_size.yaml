@@ -22,7 +22,7 @@ parameters:
   model.dim_feedforward: # transformer
     value: 1024
   model.num_decoder_layers: # transformer
-    value: [7, 11, 13]
+    values: [7, 11, 13]
   model.dropout_p: # transformer
     value: 0.1
   model.test_prompt_length:
