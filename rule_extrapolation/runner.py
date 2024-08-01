@@ -92,6 +92,8 @@ class LightningGrammarModule(pl.LightningModule):
         d_state=16,
         d_conv=4,
         d_model=8,
+          num_blocks= 7,
+  xlstm_embedding_dim= 128
     ):
         """
         :param optimizer:
@@ -216,7 +218,7 @@ class LightningGrammarModule(pl.LightningModule):
                 act_fn: gelu
             context_length: {self.hparams.max_data_length}
             num_blocks: {self.hparams.num_blocks}
-            embedding_dim: {self.hparams.xlstm_mbedding_dim}
+            embedding_dim: {self.hparams.xlstm_embedding_dim}
             slstm_at: [1]
             """
 
