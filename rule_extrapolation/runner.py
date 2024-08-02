@@ -10,8 +10,15 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
+from dacite import Config as DaciteConfig
+from dacite import from_dict
+from omegaconf import OmegaConf
 from transformers.optimization import get_inverse_sqrt_schedule
+from xlstm import xLSTMLMModel, xLSTMLMModelConfig
+from xlstm.blocks.mlstm.block import mLSTMBlock, mLSTMBlockConfig
+from xlstm.blocks.slstm.block import sLSTMBlock, sLSTMBlockConfig
 
+from mamba.mamba_lm import MambaLM, MambaLMConfig
 from rule_extrapolation.data import (
     check_same_number_as_bs,
     check_as_before_bs,
@@ -43,7 +50,6 @@ from rule_extrapolation.model import (
     LinearLLM,
     LSTM_LLM,
 )
-from mamba.mamba_lm import MambaLM, MambaLMConfig
 
 
 class LightningGrammarModule(pl.LightningModule):
@@ -86,6 +92,8 @@ class LightningGrammarModule(pl.LightningModule):
         d_state=16,
         d_conv=4,
         d_model=8,
+          num_blocks= 7,
+  xlstm_embedding_dim= 128
     ):
         """
         :param optimizer:
@@ -193,6 +201,38 @@ class LightningGrammarModule(pl.LightningModule):
                     n_layers=self.hparams.n_layers,
                 )
             )
+
+        elif self.hparams.model == "xlstm":
+            xlstm_cfg = f""" 
+            vocab_size: {self.hparams.num_tokens}
+            mlstm_block:
+              mlstm:
+                conv1d_kernel_size: 4
+                qkv_proj_blocksize: 4
+                num_heads: 4
+            slstm_block:
+              slstm:
+                backend: cuda
+                num_heads: 4
+                conv1d_kernel_size: 4
+                bias_init: powerlaw_blockdependent
+              feedforward:
+                proj_factor: 1.3
+                act_fn: gelu
+            context_length: {self.hparams.max_data_length}
+            num_blocks: {self.hparams.num_blocks}
+            embedding_dim: {self.hparams.xlstm_embedding_dim}
+            slstm_at: [1]
+            """
+
+            cfg = OmegaConf.create(xlstm_cfg)
+            cfg = from_dict(
+                data_class=xLSTMLMModelConfig,
+                data=OmegaConf.to_container(cfg),
+                config=DaciteConfig(strict=True),
+            )
+
+            self.model: nn.Module = xLSTMLMModel(cfg)
 
     @property
     def data_entropy(self):
@@ -493,6 +533,8 @@ class LightningGrammarModule(pl.LightningModule):
                 pred = self.model(src=prompt)
             elif self.hparams.model == "mamba":
                 pred = self.model(prompt)
+            elif self.hparams.model == "xlstm":
+                pred = self.model(prompt)
 
             pred = pred.squeeze(0)
             pred = nn.functional.softmax(pred, dim=0)  # make the columns sum to 1
@@ -762,9 +804,8 @@ class LightningGrammarModule(pl.LightningModule):
             rule_2 = [check_as_before_bs_before_cs(p) for p in prompt_pred]
             rule_1 = [check_same_number_as_bs_cs(p) for p in prompt_pred]
             rule_2_completion = [
-                check_as_before_bs_before_cs(
-                    p[self.hparams.test_prompt_length + 1 :]
-                )  # +1 is for the SOS token
+                check_as_before_bs_before_cs(p[self.hparams.test_prompt_length + 1 :])
+                # +1 is for the SOS token
                 for p in prompt_pred
             ]
 
@@ -774,9 +815,8 @@ class LightningGrammarModule(pl.LightningModule):
 
             if self.hparams.grammar != "aNbNaN":
                 rule_2_completion = [
-                    check_as_before_bs(
-                        p[self.hparams.test_prompt_length + 1 :]
-                    )  # +1 is for the SOS token
+                    check_as_before_bs(p[self.hparams.test_prompt_length + 1 :])
+                    # +1 is for the SOS token
                     for p in prompt_pred
                 ]
             else:
@@ -855,6 +895,8 @@ class LightningGrammarModule(pl.LightningModule):
             pred = self.model(src=X_input)
         elif self.hparams.model == "mamba":
             pred = self.model(X_input)
+        elif self.hparams.model == "xlstm":
+            pred = self.model(X_input)
 
         if completion_loss is False:
             loss = self.hparams.loss_fn(pred, X_expected)
@@ -923,6 +965,8 @@ class LightningGrammarModule(pl.LightningModule):
             elif self.hparams.model == "linear" or self.hparams.model == "lstm":
                 pred = self.model(src=prompt)
             elif self.hparams.model == "mamba":
+                pred = self.model(prompt)
+            elif self.hparams.model == "xlstm":
                 pred = self.model(prompt)
 
             # pick the prediction for the last token only

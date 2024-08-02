@@ -1,0 +1,20 @@
+
+model:
+  model: xlstm
+  mlstm_block:
+    mlstm:
+      conv1d_kernel_size: 4
+      qkv_proj_blocksize: 4
+      num_heads: 4
+  slstm_block:
+    slstm:
+      backend: cuda
+      num_heads: 4
+      conv1d_kernel_size: 4
+      bias_init: powerlaw_blockdependent
+    feedforward:
+      proj_factor: 1.3
+      act_fn: gelu
+  num_blocks: 7
+  xlstm_embedding_dim: 128
+  slstm_at: [ 1 ]
