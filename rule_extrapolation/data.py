@@ -819,6 +819,40 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         )  # remove EOS
 
         prompts = torch.cat((ood_prompts, id_prompts), dim=0)
+
+    elif grammar == "not_nested_parentheses_and_brackets":
+        data = torch.tensor(
+            generate_not_nested_matched_parentheses_and_brackets_data(
+                num_samples=num_samples / 2, max_length=length, fixed_length=True
+            ),
+            dtype=torch.long,
+        )
+        # generate torch 0-1 sequence in shape (data.shape[0], 1)
+        ood_prompts = torch.cat(
+            (
+                data[:, 0].view(-1, 1),
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * CLOSING_PARENTHESIS_token,
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * OPENING_BRACKET_token,
+                data[:, 1:-1],
+            ),
+            dim=1,
+        )  # remove EOS
+
+        id_prompts = torch.cat(
+            (
+                data[:, 0].view(-1, 1),
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * OPENING_PARENTHESIS_token,
+                torch.ones((data.shape[0], 1), dtype=torch.long)
+                * OPENING_BRACKET_token,
+                data[:, 1:-1],
+            ),
+            dim=1,
+        )  # remove EOS
+
+        prompts = torch.cat((ood_prompts, id_prompts), dim=0)
     return prompts
 
 
@@ -853,6 +887,8 @@ def grammar_rules(grammar):
         return lambda x: check_matched_parentheses(x)
     elif grammar == "parentheses_and_brackets":
         return lambda x: check_matched_parentheses_and_brackets(x)
+    elif grammar == "not_nested_parentheses_and_brackets":
+        return lambda x: check_matched_parentheses(x) and check_matched_brackets(x)
     else:
         raise ValueError(f"Unknown grammar {grammar}")
 
@@ -887,6 +923,8 @@ def prompt_grammar_rules(grammar):
         return lambda x: check_matched_parentheses(x)
     elif grammar == "parentheses_and_brackets":
         return lambda x: check_matched_parentheses_and_brackets(x)
+    elif grammar == "parentheses_and_brackets":
+        return lambda x: check_matched_brackets(x) and check_matched_parentheses(x)
     else:
         raise ValueError(f"Unknown grammar {grammar}")
 
@@ -947,6 +985,73 @@ def generate_matched_parentheses_and_brackets(n):
 
             if len(stack) == 0:
                 break
+
+        return np.concatenate((SOS_token, *word, EOS_token))
+
+
+def generate_not_nested_matched_parentheses_and_brackets(n):
+    """
+    Generate a word of length n with paired () and [].
+    """
+    if n == 0:
+        return np.concatenate((SOS_token, EOS_token))
+    elif n % 2 == 1:
+        raise ValueError("Length can only be even")
+    else:
+        word = []
+        stack_b = []
+        stack_p = []
+        while len(word) < n:  # Each pair of parentheses or brackets adds 2 characters
+            if len(stack_b) + len(stack_p) == 0:
+                choice = random.choice(
+                    [OPENING_PARENTHESIS_token, OPENING_BRACKET_token]
+                )
+            elif len(stack_b) == 0 and len(stack_p) != 0:
+                choice = random.choice(
+                    [
+                        OPENING_BRACKET_token,
+                        OPENING_PARENTHESIS_token,
+                        CLOSING_PARENTHESIS_token,
+                    ]
+                )
+                if len(word) + len(stack_p) >= n:
+                    choice = CLOSING_PARENTHESIS_token
+            elif len(stack_b) != 0 and len(stack_p) == 0:
+                choice = random.choice(
+                    [
+                        OPENING_PARENTHESIS_token,
+                        OPENING_BRACKET_token,
+                        CLOSING_BRACKET_token,
+                    ]
+                )
+                if len(word) + len(stack_b) >= n:
+                    choice = CLOSING_BRACKET_token
+            else:
+                choice = random.choice(
+                    [
+                        OPENING_PARENTHESIS_token,
+                        OPENING_BRACKET_token,
+                        CLOSING_BRACKET_token,
+                        CLOSING_PARENTHESIS_token,
+                    ]
+                )
+                if len(word) + len(stack_b) + len(stack_p) >= n:
+                    choice = random.choice(
+                        [CLOSING_BRACKET_token, CLOSING_PARENTHESIS_token]
+                    )
+
+            if choice == OPENING_PARENTHESIS_token:
+                word.append(OPENING_PARENTHESIS_token)
+                stack_p.append(OPENING_PARENTHESIS_token)
+            elif choice == OPENING_BRACKET_token:
+                word.append(OPENING_BRACKET_token)
+                stack_b.append(OPENING_BRACKET_token)
+            elif choice == CLOSING_PARENTHESIS_token:
+                word.append(CLOSING_PARENTHESIS_token)
+                stack_p.pop()
+            elif choice == CLOSING_BRACKET_token:
+                word.append(CLOSING_BRACKET_token)
+                stack_b.pop()
 
         return np.concatenate((SOS_token, *word, EOS_token))
 
@@ -1164,6 +1269,31 @@ def generate_matched_parentheses_and_brackets_data(
     if fixed_length is False:
         lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
         data = [generate_matched_parentheses_and_brackets(2 * l) for l in lengths]
+    else:
+        data = []
+        while len(data) < num_samples:
+            sample = generate_matched_parentheses_and_brackets(max_length)
+            if len(sample) == (max_length + 2):  # +SOS, EOS
+                data.append(sample)
+
+    return data
+
+
+def generate_not_nested_matched_parentheses_and_brackets_data(
+    num_samples: int, max_length: int = 32, fixed_length=False
+) -> list:
+    """
+
+    :param num_samples: number of samples
+    :param max_length: maximum sequence length (inclusive SOS and EOS tokens)
+    :return: list of length num_samples with maximal sequences of length max_length
+    """
+
+    if fixed_length is False:
+        lengths = np.random.randint(low=1, high=max_length // 2 + 1, size=num_samples)
+        data = [
+            generate_not_nested_matched_parentheses_and_brackets(2 * l) for l in lengths
+        ]
     else:
         data = []
         while len(data) < num_samples:

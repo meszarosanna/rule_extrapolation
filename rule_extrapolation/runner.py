@@ -129,7 +129,10 @@ class LightningGrammarModule(pl.LightningModule):
             self.hparams["num_tokens"] = 6
         elif self.hparams.grammar == "parentheses":
             self.hparams["num_tokens"] = 5
-        elif self.hparams.grammar == "parentheses_and_brackets":
+        elif self.hparams.grammar in [
+            "parentheses_and_brackets",
+            "not_nested_parentheses_and_brackets",
+        ]:
             self.hparams["num_tokens"] = 7
         elif grammar == "brackets":
             raise NotImplementedError("num_tokens for brackets grammar is inconsistent")
@@ -215,7 +218,10 @@ class LightningGrammarModule(pl.LightningModule):
             grammar=self.hparams.grammar, length=self.hparams.test_prompt_length
         ).to(self.hparams.device)
 
-        if self.hparams.grammar != "parentheses_and_brackets":
+        if (
+            self.hparams.grammar != "parentheses_and_brackets"
+            and self.hparams.grammar != "not_nested_parentheses_and_brackets"
+        ):
             rules_met = [self.prompt_grammar_rules(t) for t in test_prompts]
             self.test_prompts_in_distribution = test_prompts[rules_met]
             self.test_prompts_out_of_distribution = test_prompts[
@@ -793,7 +799,10 @@ class LightningGrammarModule(pl.LightningModule):
                 )  # +1 is for the SOS token
                 for p in prompt_pred
             ]
-        elif self.hparams.grammar == "parentheses_and_brackets":
+        elif (
+            self.hparams.grammar == "parentheses_and_brackets"
+            or self.hparams.grammar == "not_nested_parentheses_and_brackets"
+        ):
             rule_2 = [check_matched_parentheses(p) for p in prompt_pred]
             rule_1 = [check_matched_brackets(p) for p in prompt_pred]
             rule_2_completion = [

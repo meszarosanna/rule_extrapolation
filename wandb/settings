@@ -1,0 +1,5 @@
+[default]
+entity = causal-representation-learning
+project = rule_extrapolation
+base_url = https://api.wandb.ai
+

@@ -32,6 +32,7 @@ from rule_extrapolation.data import (
     generate_test_prompts,
     grammar_rules,
     generate_matched_parentheses_and_brackets_data,
+    generate_not_nested_matched_parentheses_and_brackets_data,
     generate_matched_brackets_data,
     generate_matched_parentheses_data,
     generate_aNbNcN_grammar_data,
@@ -386,6 +387,7 @@ def test_check_begins_with_b():
         "parentheses",
         "brackets",
         "parentheses_and_brackets",
+        "not_nested_parentheses_and_brackets",
     ],
 )
 def test_generate_test_prompts(grammar):
@@ -396,7 +398,12 @@ def test_generate_test_prompts(grammar):
         assert prompts.shape == (2**length, length + 1)
     elif grammar == "aNbNcN":
         assert prompts.shape == (3**length, length + 1)
-    elif grammar in ["parentheses", "brackets", "parentheses_and_brackets"]:
+    elif grammar in [
+        "parentheses",
+        "brackets",
+        "parentheses_and_brackets",
+        "not_nested_parentheses_and_brackets",
+    ]:
         assert prompts.shape == (2**length, length + 3)
 
 
@@ -412,6 +419,7 @@ def test_generate_test_prompts(grammar):
         "parentheses",
         "brackets",
         "parentheses_and_brackets",
+        "not_nested_parentheses_and_brackets",
     ],
 )
 def test_grammar_rules(max_length, grammar, num_samples):
@@ -477,6 +485,10 @@ def test_grammar_rules(max_length, grammar, num_samples):
         data = torch.from_numpy(
             pad(generate_matched_parentheses_and_brackets_data(max_length))
         ).long()
+    elif grammar == "not_nested_parentheses_and_brackets":
+        data = torch.from_numpy(
+            pad(generate_not_nested_matched_parentheses_and_brackets_data(max_length))
+        ).long()
 
     assert torch.all(torch.tensor([rules(d) for d in data]))
 
@@ -485,6 +497,7 @@ from rule_extrapolation.data import (
     generate_matched_brackets,
     generate_matched_parentheses,
     generate_matched_parentheses_and_brackets,
+    generate_not_nested_matched_parentheses_and_brackets,
     check_matched_parentheses,
     check_matched_brackets,
     check_matched_parentheses_and_brackets,
@@ -505,6 +518,10 @@ def test_generate_matched_parentheses():
 
 def test_generate_matched_parentheses_and_brackets():
     generate_matched_parentheses_and_brackets(40)
+
+
+def test_generate_not_nested_matched_parentheses_and_brackets():
+    generate_not_nested_matched_parentheses_and_brackets(40)
 
 
 def test_check_matched_parentheses():
@@ -564,6 +581,33 @@ def test_check_matched_parentheses_and_brackets():
     cb = CLOSING_BRACKET_token.item()
 
     sequence = torch.tensor([op, cp, ob, cb, op, cp, ob, cb])  # ()[]()[]
+    assert check_matched_parentheses_and_brackets(sequence) == True
+
+    sequence = torch.tensor([op, cp, ob, cb, op, cp, ob, ob, cb, cb])  # ()[]()[[]]
+    assert check_matched_parentheses_and_brackets(sequence) == True
+
+    sequence = torch.tensor([op, cp, ob, cb, cp, op, ob, cb])  # ()[])([]
+    assert check_matched_parentheses_and_brackets(sequence) == False
+
+    sequence = torch.tensor([op, cp, ob, cb, cp, op, ob, cb, cp, op])  # ()[])([])(
+    assert check_matched_parentheses_and_brackets(sequence) == False
+
+    sequence = torch.tensor(
+        [op, cp, ob, cb, cp, op, ob, cb, cp, op, cp, cp]
+    )  # ()[])([])())
+    assert check_matched_parentheses_and_brackets(sequence) == False
+
+
+def test_check_not_nested_matched_parentheses_and_brackets():
+    op = OPENING_PARENTHESIS_token.item()
+    cp = CLOSING_PARENTHESIS_token.item()
+    ob = OPENING_BRACKET_token.item()
+    cb = CLOSING_BRACKET_token.item()
+
+    sequence = torch.tensor([op, ob, cp, cb, op, cp])  # ([)]()
+    assert check_matched_parentheses_and_brackets(sequence) == True
+
+    sequence = torch.tensor([ob, op, ob, cp, cb, cb])  # [([)]]
     assert check_matched_parentheses_and_brackets(sequence) == True
 
     sequence = torch.tensor([op, cp, ob, cb, op, cp, ob, ob, cb, cb])  # ()[]()[[]]
