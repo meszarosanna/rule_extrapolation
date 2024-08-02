@@ -14,7 +14,7 @@ parameters:
   trainer.max_epochs:
     value: 50000
   model.model:
-    values: [linear, mamba, transformer, lstm]
+    values: [xlstm] #[linear, mamba, transformer, lstm]
   model.test_prompt_length:
     value: 8
   model.max_pred_length:
@@ -35,12 +35,18 @@ parameters:
     value: 0.1
   model.embedding_dim: # lstm
     value: 16
-  model.hidden_dim: # lstm
+  model.hidden_dim: # lstm, xlstm
     value: 64
   model.num_layers: # lstm
     value: 5
   model.dropout: # lstm
     value: 0.4
+  model.num_blocks: #xlstm
+    value: 7
+  model.xlstm_embedding_dim: #xlstm
+    value: 128
+  model.slstm_at: 
+    value: 1
   model.bias: # linear
     value: True
   model.n_layers: # mamba
