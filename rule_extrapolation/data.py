@@ -58,7 +58,7 @@ def generate_aNbN_grammar_data(
     :return: list of length num_samples with maximal sequences of length max_length
 
     """
-
+    print(all_sequences)
     if all_sequences + only_even + only_odd > 1:
         raise ValueError("Only one of all_sequences, only_even, only_odd can be True")
 

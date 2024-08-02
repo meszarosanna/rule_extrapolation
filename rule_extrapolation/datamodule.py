@@ -31,6 +31,7 @@ class GrammarDataModule(pl.LightningDataModule):
         num_val: int = 3000,
         num_test: int = 1024,
         max_length: int = 32,
+        all_sequences: bool = True,
         batch_size: int = 64,
         grammar: str = "aNbN",
         max_num_workers: int = 4,
@@ -84,14 +85,30 @@ class GrammarDataModule(pl.LightningDataModule):
         grammar_generator = self._select_grammar()
 
         if self.hparams.grammar in ["aNbN", "aNbNaN", "aNbNcN"]:
-            # include all samples only once
-            self.hparams.num_train = (
-                self.hparams.num_val
-            ) = self.hparams.num_test = self.hparams.max_length
-
-        train_data = grammar_generator(self.hparams.num_train, self.hparams.max_length)
-        val_data = grammar_generator(self.hparams.num_val, self.hparams.max_length)
-        test_data = grammar_generator(self.hparams.num_test, self.hparams.max_length)
+            # self.hparams.num_val = self.hparams.num_test = self.hparams.num_train = self.hparams.max_length
+            train_data = grammar_generator(
+                self.hparams.num_train,
+                self.hparams.max_length,
+                self.hparams.all_sequences,
+            )
+            val_data = grammar_generator(
+                self.hparams.num_val,
+                self.hparams.max_length,
+                self.hparams.all_sequences,
+            )
+            test_data = grammar_generator(
+                self.hparams.num_test,
+                self.hparams.max_length,
+                self.hparams.all_sequences,
+            )
+        else:
+            train_data = grammar_generator(
+                self.hparams.num_train, self.hparams.max_length
+            )
+            val_data = grammar_generator(self.hparams.num_val, self.hparams.max_length)
+            test_data = grammar_generator(
+                self.hparams.num_test, self.hparams.max_length
+            )
 
         self.test_dataset = GrammarDataset(
             test_data,
