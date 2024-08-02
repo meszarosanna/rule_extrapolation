@@ -923,7 +923,7 @@ def prompt_grammar_rules(grammar):
         return lambda x: check_matched_parentheses(x)
     elif grammar == "parentheses_and_brackets":
         return lambda x: check_matched_parentheses_and_brackets(x)
-    elif grammar == "parentheses_and_brackets":
+    elif grammar == "not_nested_parentheses_and_brackets":
         return lambda x: check_matched_brackets(x) and check_matched_parentheses(x)
     else:
         raise ValueError(f"Unknown grammar {grammar}")

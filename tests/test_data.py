@@ -618,8 +618,8 @@ def test_check_not_nested_matched_parentheses_and_brackets():
 
     sequence = torch.tensor([op, cp, ob, cb, op, cp, ob, ob, cb, cb])  # ()[]()[[]]
     assert (
-        check_matched_parentheses(sequence) == False
-        or check_matched_brackets(sequence) == False
+        check_matched_parentheses(sequence) == True
+        and check_matched_brackets(sequence) == True
     )
 
     sequence = torch.tensor([op, cp, ob, cb, cp, op, ob, cb])  # ()[])([]
