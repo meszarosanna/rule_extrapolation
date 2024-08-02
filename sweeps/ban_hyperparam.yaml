@@ -1,0 +1,71 @@
+command:
+  - ${env}
+  - python3
+  - rule_extrapolation/cli.py
+  - fit
+  - "--config"
+  - "configs/config.yaml"
+  - ${args}
+method: random
+metric:
+  goal: minimize
+  name: Val/loss
+parameters:
+  trainer.max_epochs:
+    value: 50000
+  model.model:
+    values: [linear, lstm, mamba, transformer]
+  model.test_prompt_length:
+    value: 8
+  model.max_pred_length:
+    value: 300
+  model.optimizer:
+    values: ["sgd", "adamw"]
+  model.lr:
+    values: [0.02, 0.002, 0.0002] #0.002 origianally
+  model.layer_norm_eps:
+    value: 6e-3
+  model.dim_model: # transformer
+    value: 10
+  model.num_heads: # transformer
+    value: 5
+  model.dim_feedforward: # transformer
+    value: 1024
+  model.num_decoder_layers: # transformer
+    value: 7
+  model.dropout_p: # transformer
+    value: 0.1
+  model.embedding_dim: # lstm
+    value: 16
+  model.hidden_dim: # lstm
+    value: 64
+  model.num_layers: # lstm
+    value: 5
+  model.dropout: # lstm
+    value: 0.4
+  model.bias: # linear
+    value: True
+  model.n_layers: # mamba
+    value: 10
+  model.d_state: # mamba
+    value: 16
+  model.d_conv: # mamba
+    value: 8
+  model.d_model: # mamba
+    value: 32
+  model.adversarial_training:
+    value: false
+  model.extrapolation_training:
+    value: false
+  data.grammar:
+    value: baN
+  data.max_length:
+    value: 256
+  data.batch_size:
+    value: 128
+  data.num_train:
+    value: 15000
+  seed_everything:
+    distribution: int_uniform
+    min: 0
+    max: 100000
