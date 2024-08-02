@@ -92,8 +92,9 @@ class LightningGrammarModule(pl.LightningModule):
         d_state=16,
         d_conv=4,
         d_model=8,
-          num_blocks= 7,
-  xlstm_embedding_dim= 128
+        num_blocks=7,
+        xlstm_embedding_dim=128,
+        slstm_at=[1],
     ):
         """
         :param optimizer:
@@ -216,7 +217,7 @@ class LightningGrammarModule(pl.LightningModule):
               feedforward:
                 proj_factor: 1.3
                 act_fn: gelu
-            context_length: {self.hparams.max_data_length}
+            context_length: {self.hparams.max_data_length + 2}
             num_blocks: {self.hparams.num_blocks}
             embedding_dim: {self.hparams.xlstm_embedding_dim}
             slstm_at: [1]
@@ -529,6 +530,8 @@ class LightningGrammarModule(pl.LightningModule):
                 pred = self.model(prompt)
             elif self.hparams.model == "xlstm":
                 pred = self.model(prompt)
+                pred = pred.permute(0, 2, 1)
+                # raise ValueError(f"shape of pred: {pred.shape}, pred {pred}")
 
             pred = pred.squeeze(0)
             pred = nn.functional.softmax(pred, dim=0)  # make the columns sum to 1
@@ -888,6 +891,7 @@ class LightningGrammarModule(pl.LightningModule):
             pred = self.model(X_input)
         elif self.hparams.model == "xlstm":
             pred = self.model(X_input)
+            pred = pred.permute(0, 2, 1)
 
         if completion_loss is False:
             loss = self.hparams.loss_fn(pred, X_expected)
@@ -959,6 +963,7 @@ class LightningGrammarModule(pl.LightningModule):
                 pred = self.model(prompt)
             elif self.hparams.model == "xlstm":
                 pred = self.model(prompt)
+                pred = pred.permute(0, 2, 1)
 
             # pick the prediction for the last token only
             next_items = self._pick_next_tokens(pred)[:, -1].view(-1, 1)
