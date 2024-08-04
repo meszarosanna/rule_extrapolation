@@ -4,7 +4,7 @@ trainer:
     class_path: pytorch_lightning.loggers.WandbLogger
     init_args:
       entity: causal-representation-learning
-      log_model: True
+      log_model: False
       project: rule_extrapolation
       save_dir:
       offline: false
