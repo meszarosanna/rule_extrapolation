@@ -14,15 +14,15 @@ parameters:
   trainer.max_epochs:
     value: 50000
   model.model:
-    values: [linear, lstm, mamba, transformer, xlstm] #[xlstm]
+    value: transformer
   model.dim_model: # transformer
     value: 10
   model.num_heads: # transformer
-    value: 5
+    values: [5, 10]
   model.dim_feedforward: # transformer
     value: 1024
   model.num_decoder_layers: # transformer
-    value: 7
+    values: [7, 10, 13]
   model.dropout_p: # transformer
     value: 0.1
   model.test_prompt_length:
@@ -45,12 +45,6 @@ parameters:
     value: 5
   model.dropout: # lstm
     value: 0.4
-  model.num_blocks: #xlstm
-    value: 7
-  model.xlstm_embedding_dim: #xlstm
-    value: 128
-  model.slstm_at: #xlstm
-    value: 1
   model.bias: # linear
     value: True
   model.n_layers: # mamba
@@ -68,6 +62,4 @@ parameters:
   data.batch_size:
     value: 128
   seed_everything:
-    distribution: int_uniform
-    min: 0
-    max: 100000
+    values: [42, 64, 982, 5748, 23567]
