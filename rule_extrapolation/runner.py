@@ -990,12 +990,10 @@ class LightningGrammarModule(pl.LightningModule):
         if self.hparams.next_token_pick_mode == "max":
             _, next_items = torch.max(pred, dim=1)
         elif self.hparams.next_token_pick_mode == "sample":
-            if len(pred.shape) > 2 and len(pred.squeeze().shape) != 2:
+            if len(pred.shape) > 2:
                 next_items = torch.cat(
                     [
-                        torch.multinomial(
-                            torch.softmax(p.squeeze(), dim=1).T, num_samples=1
-                        ).T
+                        torch.multinomial(torch.softmax(p, dim=1).T, num_samples=1).T
                         for p in pred
                     ]
                 )
@@ -1007,6 +1005,8 @@ class LightningGrammarModule(pl.LightningModule):
             raise ValueError(
                 f"Unknown next_token_pick_mode: {self.hparams.next_token_pick_mode}, should be 'max' or 'sample'"
             )
+
+        print(next_items.shape)
         return next_items.to(self.hparams.device)
 
     def on_fit_end(self) -> None:

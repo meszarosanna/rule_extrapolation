@@ -40,6 +40,20 @@ def test_fit_model(num_train, num_val, num_test, model, max_length):
     trainer.fit(runner, datamodule=dm)
 
 
+@pytest.mark.parametrize("model", ["transformer", "linear", "lstm", "mamba", "xlstm"])
+def test_fit_sampling(num_train, num_val, num_test, model, max_length):
+    if model == "xlstm" and torch.cuda.is_available() is False:
+        pytest.skip("xLSTM requires a GPU")
+    trainer = Trainer(fast_dev_run=True)
+    runner = LightningGrammarModule(
+        max_data_length=max_length, model=model, next_token_pick_mode="sample"
+    )
+    dm = GrammarDataModule(
+        num_train=num_train, num_val=num_val, num_test=num_test, max_length=max_length
+    )
+    trainer.fit(runner, datamodule=dm)
+
+
 @pytest.mark.parametrize(
     "grammar",
     [
