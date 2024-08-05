@@ -956,9 +956,6 @@ class LightningGrammarModule(pl.LightningModule):
             max_length = self.hparams.max_data_length - prompt.shape[1]
 
         for _ in range(max_length):
-            with open("/home/sru23/rule_extrapolation/test.txt", "a") as file:
-                file.write(f"max_len: {max_length} \n")
-
             # Get mask to mask out the next words
             tgt_mask = get_tgt_mask(size=(prompt.size(1)), device=self.hparams.device)
 
