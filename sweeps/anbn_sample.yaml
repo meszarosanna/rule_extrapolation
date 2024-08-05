@@ -15,8 +15,10 @@ parameters:
     value: 50000
   model.model:
     values: [linear, mamba, transformer, lstm]
+  model.next_token_pick_mode:
+    value: "sample"
   model.test_prompt_length:
-    value: 5
+    value: 8
   model.max_pred_length:
     value: 300
   model.lr:
@@ -56,7 +58,7 @@ parameters:
   model.extrapolation_training:
     value: false
   data.grammar:
-    value: aNbNcN
+    value: aNbN
   data.all_sequences:
     value: false
   data.max_length:

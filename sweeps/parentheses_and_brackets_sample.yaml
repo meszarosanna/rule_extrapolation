@@ -14,15 +14,9 @@ parameters:
   trainer.max_epochs:
     value: 50000
   model.model:
-    value: lstm
-  model.test_prompt_length:
-    value: 5
-  model.max_pred_length:
-    value: 300
-  model.lr:
-    value: 0.002
-  model.layer_norm_eps:
-    value: 6e-3
+    values: [linear, lstm, mamba, transformer] #[xlstm]
+  model.next_token_pick_mode:
+    value: "sample"
   model.dim_model: # transformer
     value: 10
   model.num_heads: # transformer
@@ -33,6 +27,18 @@ parameters:
     value: 7
   model.dropout_p: # transformer
     value: 0.1
+  model.test_prompt_length:
+    value: 6
+  model.max_pred_length:
+    value: 300
+  model.lr:
+    value: 0.002
+  model.layer_norm_eps:
+    value: 6e-3
+  model.adversarial_training:
+    value: false
+  model.extrapolation_training:
+    value: false
   model.embedding_dim: # lstm
     value: 16
   model.hidden_dim: # lstm
@@ -41,6 +47,12 @@ parameters:
     value: 5
   model.dropout: # lstm
     value: 0.4
+  model.num_blocks: #xlstm
+    value: 7
+  model.xlstm_embedding_dim: #xlstm
+    value: 128
+  model.slstm_at: #xlstm
+    value: 1
   model.bias: # linear
     value: True
   model.n_layers: # mamba
@@ -51,14 +63,8 @@ parameters:
     value: 8
   model.d_model: # mamba
     value: 32
-  model.adversarial_training:
-    value: false
-  model.extrapolation_training:
-    value: false
   data.grammar:
-    value: aNbNcN
-  data.all_sequences:
-    value: false
+    value: parentheses_and_brackets
   data.max_length:
     value: 256
   data.batch_size:
