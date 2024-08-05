@@ -123,8 +123,7 @@ class GrammarDataModule(pl.LightningDataModule):
             max_length=self.hparams.max_length + 2,  # +2 for SOS and EOS tokens
         )
 
-    def train_dataloader(self):
-        return DataLoader(
+        self.train_dl = DataLoader(
             self.train_dataset,
             batch_size=self.hparams.batch_size,
             shuffle=True,
@@ -132,8 +131,7 @@ class GrammarDataModule(pl.LightningDataModule):
             persistent_workers=True,
         )
 
-    def val_dataloader(self):
-        return DataLoader(
+        self.val_dl = DataLoader(
             self.val_dataset,
             batch_size=self.hparams.batch_size,
             shuffle=False,
@@ -141,8 +139,7 @@ class GrammarDataModule(pl.LightningDataModule):
             persistent_workers=True,
         )
 
-    def test_dataloader(self):
-        return DataLoader(
+        self.test_dl = DataLoader(
             self.test_dataset,
             batch_size=self.hparams.batch_size,
             shuffle=False,
@@ -150,11 +147,14 @@ class GrammarDataModule(pl.LightningDataModule):
             persistent_workers=True,
         )
 
+    def train_dataloader(self):
+        return self.train_dl
+
+    def val_dataloader(self):
+        return self.val_dl
+
+    def test_dataloader(self):
+        return self.test_dl
+
     def predict_dataloader(self):
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.hparams.batch_size,
-            shuffle=False,
-            num_workers=min(os.cpu_count(), self.hparams.max_num_workers),
-            persistent_workers=True,
-        )
+        return self.test_dl
