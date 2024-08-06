@@ -147,6 +147,7 @@ def sweep2df(
                 batch_size = config["data.batch_size"]
                 seed_everything = config["seed_everything"]
                 model = config["model.model"]
+                optimizer = config["model.optimizer"]
 
                 try:
                     adversarial_training = config["model.adversarial_training"]
@@ -342,6 +343,7 @@ def sweep2df(
                         max_length,
                         batch_size,
                         model,
+                        optimizer,
                         # transformer
                         dim_model,
                         num_heads,
@@ -410,6 +412,7 @@ def sweep2df(
             "max_length",
             "batch_size",
             "model",
+            "optimizer",
             # transformer
             "dim_model",
             "num_heads",
@@ -566,8 +569,8 @@ def rule_stats2string_per_model(
     return table
 
 
-def grouped_rule_stats(df):
-    grouped_df = df.groupby("model")
+def grouped_rule_stats(df, groupby_key="model"):
+    grouped_df = df.groupby(groupby_key)
 
     stats = {}
 
