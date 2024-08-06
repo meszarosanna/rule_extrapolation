@@ -30,6 +30,7 @@ class GrammarMetrics:
     rule_2_completion_accuracy: float = 0.0
 
     rule_1_accuracy: float = 0.0
+    rule_3_accuracy: float = 0.0
     finished_accuracy: float = 0.0
     grammatical_accuracy: float = 0.0
 
@@ -321,6 +322,18 @@ def pad(data: list, max_seq_length: int = 0) -> np.ndarray:
             data[i] = np.concatenate((data[i], [PAD_token.item()] * remaining_length))
 
     return np.array(data)
+
+
+def check_parity(sequence: torch.Tensor):
+    """
+    Check if sequence has an even number of elements.
+    :param sequence:
+    :return:
+    """
+    if len(sequence) % 2 == 0:
+        return True
+    else:
+        return False
 
 
 def check_as_before_bs(sequence: torch.Tensor):
