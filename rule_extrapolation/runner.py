@@ -1006,7 +1006,6 @@ class LightningGrammarModule(pl.LightningModule):
                 f"Unknown next_token_pick_mode: {self.hparams.next_token_pick_mode}, should be 'max' or 'sample'"
             )
 
-        print(next_items.shape)
         return next_items.to(self.hparams.device)
 
     def on_fit_end(self) -> None:
