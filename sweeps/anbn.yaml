@@ -45,7 +45,7 @@ parameters:
     value: 7
   model.xlstm_embedding_dim: #xlstm
     value: 128
-  model.slstm_at: 
+  model.slstm_at: #xlstm
     value: 1
   model.bias: # linear
     value: True
