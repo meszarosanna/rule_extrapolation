@@ -636,7 +636,7 @@ class LightningGrammarModule(pl.LightningModule):
             name=f"{panel_name}/SOS/finished", dictionary=sos_metrics_finished.to_dict()
         )
 
-        if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
+        if False:  # isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
             logger: pl.loggers.wandb.WandbLogger = self.logger
 
             # log the prompts
@@ -684,31 +684,6 @@ class LightningGrammarModule(pl.LightningModule):
     def _log_dict(self, name, dictionary):
         for key, value in dictionary.items():
             self.log(f"{name}/{key}", value)
-
-    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-        (
-            prompts,
-            metrics,
-            prompts_finished,
-            metrics_finished,
-            ood_prompts,
-            ood_metrics,
-            ood_prompts_finished,
-            ood_metrics_finished,
-            sos_prompts,
-            sos_metrics,
-            sos_prompts_finished,
-            sos_metrics_finished,
-        ) = self.eval_prompt_prediction()
-
-        checkpoint["prompts"] = prompts.cpu().numpy()
-        checkpoint["prompts_finished"] = prompts_finished.cpu().numpy()
-
-        checkpoint["ood_prompts"] = ood_prompts.cpu().numpy()
-        checkpoint["ood_prompts_finished"] = ood_prompts_finished.cpu().numpy()
-
-        checkpoint["sos_prompts"] = sos_prompts.cpu().numpy()
-        checkpoint["sos_prompts_finished"] = sos_prompts_finished.cpu().numpy()
 
     @property
     def test_prompts_src(self):
