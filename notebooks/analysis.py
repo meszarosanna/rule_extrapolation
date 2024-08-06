@@ -63,19 +63,28 @@ def sweep2df(sweep_runs, filename, save=False, load=False, pick_max=True):
         sos_finised_histories = npy_data["sos_finised_history"]
 
         rule_1_histories = npy_data["rule_1_history"]
-        rule_3_histories = npy_data["rule_3_history"]
+        try:
+            rule_3_histories = npy_data["rule_3_history"]
+        except:
+            rule_3_histories = []
         rule_2_histories = npy_data["rule_2_history"]
 
         grammatical_histories = npy_data["grammatical_history"]
 
         ood_rule_1_histories = npy_data["ood_rule_1_history"]
-        ood_rule_3_histories = npy_data["ood_rule_3_history"]
+        try:
+            ood_rule_3_histories = npy_data["ood_rule_3_history"]
+        except:
+            ood_rule_3_histories = []
         ood_rule_2_histories = npy_data["ood_rule_2_history"]
         ood_rule_2_completion_histories = npy_data["ood_rule_2_completion_history"]
         ood_grammatical_histories = npy_data["ood_grammatical_history"]
 
         sos_rule_1_histories = npy_data["sos_rule_1_history"]
-        sos_rule_3_histories = npy_data["sos_rule_3_history"]
+        try:
+            sos_rule_3_histories = npy_data["sos_rule_3_history"]
+        except:
+            sos_rule_3_histories = []
         sos_rule_2_histories = npy_data["sos_rule_2_history"]
         sos_grammatical_histories = npy_data["sos_grammatical_history"]
 
@@ -137,7 +146,7 @@ def sweep2df(sweep_runs, filename, save=False, load=False, pick_max=True):
         except:
             continue
 
-        if run.state == "finished" or summary["epoch"] > 400:
+        if run.state == "finished" or summary["epoch"] > 100:
             print(f"\t Processing {run.name}...")
             # try:
             if True:
