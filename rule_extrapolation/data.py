@@ -711,12 +711,18 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         )
     elif grammar == "bbaN":
         ID_data = torch.tensor(
-            generate_bNaM_grammar_data(num_samples=num_samples // 2, max_length=length),
+            np.array(
+                generate_bNaM_grammar_data(
+                    num_samples=num_samples // 2, max_length=length
+                )
+            ),
             dtype=torch.long,
         )
         OOD_data = torch.tensor(
-            generate_bNaM_grammar_data(
-                num_samples=num_samples // 2, max_length=length - 1
+            np.array(
+                generate_bNaM_grammar_data(
+                    num_samples=num_samples // 2, max_length=length - 1
+                )
             ),
             dtype=torch.long,
         )
@@ -736,8 +742,10 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
 
     elif grammar == "parentheses":
         data = torch.tensor(
-            generate_matched_parentheses_data(
-                num_samples=num_samples / 2, max_length=length, fixed_length=True
+            np.array(
+                generate_matched_parentheses_data(
+                    num_samples=num_samples / 2, max_length=length, fixed_length=True
+                )
             ),
             dtype=torch.long,
         )
@@ -768,8 +776,10 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         prompts = torch.cat((ood_prompts, id_prompts), dim=0)
     elif grammar == "brackets":
         data = torch.tensor(
-            generate_matched_brackets_data(
-                num_samples=num_samples / 2, max_length=length, fixed_length=True
+            np.array(
+                generate_matched_brackets_data(
+                    num_samples=num_samples / 2, max_length=length, fixed_length=True
+                )
             ),
             dtype=torch.long,
         )
@@ -800,8 +810,10 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
 
     elif grammar == "parentheses_and_brackets":
         data = torch.tensor(
-            generate_matched_parentheses_and_brackets_data(
-                num_samples=num_samples / 2, max_length=length, fixed_length=True
+            np.array(
+                generate_matched_parentheses_and_brackets_data(
+                    num_samples=num_samples / 2, max_length=length, fixed_length=True
+                )
             ),
             dtype=torch.long,
         )
@@ -834,8 +846,10 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
 
     elif grammar == "not_nested_parentheses_and_brackets":
         data = torch.tensor(
-            generate_not_nested_matched_parentheses_and_brackets_data(
-                num_samples=num_samples / 2, max_length=length, fixed_length=True
+            np.array(
+                generate_not_nested_matched_parentheses_and_brackets_data(
+                    num_samples=num_samples / 2, max_length=length, fixed_length=True
+                )
             ),
             dtype=torch.long,
         )
