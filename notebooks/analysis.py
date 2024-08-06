@@ -165,20 +165,42 @@ def sweep2df(
 
                 # lstm
                 lstm_embedding_dim = config["model.dim_model"]
-                lstm_hidden_dim = config["model.hidden_dim"]
-                lstm_num_layers = config["model.num_layers"]
-                lstm_dropout = config["model.dropout"]
+                try:
+                    lstm_hidden_dim = config["model.hidden_dim"]
+                    lstm_num_layers = config["model.num_layers"]
+                    lstm_dropout = config["model.dropout"]
+                except:
+                    lstm_hidden_dim = config["hidden_dim"]
+                    lstm_num_layers = config["num_layers"]
+                    lstm_dropout = config["dropout"]
+
+                # xlstm
+                try:
+                    xlstm_embedding_dim = config["model.xlstm_embedding_dim"]
+                    xlstm_num_blocks = config["model.num_blocks"]
+                except:
+                    xlstm_embedding_dim = 0
+                    xlstm_num_blocks = 0
 
                 # linear
                 linear_embedding_dim = config["model.dim_model"]
-                linear_bias = config["model.bias"]
+                try:
+                    linear_bias = config["model.bias"]
+                except:
+                    linear_bias = config["bias"]
                 linear_dim = config["data.max_length"]
 
                 # mamba
-                mamba_d_model = config["model.d_model"]
-                mamba_d_state = config["model.d_state"]
-                mamba_d_conv = config["model.d_conv"]
-                mamba_n_layers = config["model.n_layers"]
+                try:
+                    mamba_d_model = config["model.d_model"]
+                    mamba_d_state = config["model.d_state"]
+                    mamba_d_conv = config["model.d_conv"]
+                    mamba_n_layers = config["model.n_layers"]
+                except:
+                    mamba_d_model = config["d_model"]
+                    mamba_d_state = config["d_state"]
+                    mamba_d_conv = config["d_conv"]
+                    mamba_n_layers = config["n_layers"]
 
                 # training stats
                 train_loss_history = run.history(keys=[f"Train/loss"])
@@ -341,6 +363,9 @@ def sweep2df(
                         mamba_d_state,
                         mamba_d_conv,
                         mamba_n_layers,
+                        # xlstm
+                        xlstm_embedding_dim,
+                        xlstm_num_blocks,
                         # train stats
                         min_train_loss,
                         min_train_loss_step,
@@ -397,6 +422,9 @@ def sweep2df(
             "lstm_hidden_dim",
             "lstm_num_layers",
             "lstm_dropout",
+            # xlstm
+            "xlstm_embedding_dim",
+            "xlstm_num_blocks",
             # linear
             "linear_embedding_dim",
             "linear_bias",
