@@ -41,14 +41,13 @@ def plot_typography(
     rc("figure", titlesize=big)  # fontsize of the figure title
 
 
-def sweep2df(
-    sweep_runs,
-    filename,
-    save=False,
-    load=False,
-):
-    csv_name = f"{filename}.csv"
-    npy_name = f"{filename}.npz"
+def sweep2df(sweep_runs, filename, save=False, load=False, pick_max=True):
+    if pick_max is True:
+        csv_name = f"{filename}.csv"
+        npy_name = f"{filename}.npz"
+    else:
+        csv_name = f"{filename}_at_min_val_loss.csv"
+        npy_name = f"{filename}_at_min_val_loss.npz"
 
     if load is True and isfile(csv_name) is True and isfile(npy_name) is True:
         print(f"\t Loading {filename}...")
@@ -129,9 +128,7 @@ def sweep2df(
         except:
             continue
 
-        if run.state != "failed" and (
-            run.state == "finished" or summary["epoch"] > 400
-        ):
+        if run.state == "finished" or summary["epoch"] > 400:
             # print(f"\t Processing {run.name}...")
             # try:
             if True:
@@ -147,7 +144,11 @@ def sweep2df(
                 batch_size = config["data.batch_size"]
                 seed_everything = config["seed_everything"]
                 model = config["model.model"]
-                optimizer = config["model.optimizer"]
+
+                try:
+                    optimizer = config["model.optimizer"]
+                except:
+                    optimizer = config["optimizer"]
 
                 try:
                     adversarial_training = config["model.adversarial_training"]
@@ -237,99 +238,79 @@ def sweep2df(
 
                 val_accuracy_histories.append(val_accuracy_history["Val/accuracy"])
 
+                pick_metric = (
+                    lambda history: history.max()[1]
+                    if pick_max
+                    else history.iloc[int(min_val_loss_step)][key]
+                )
+
                 # ID
                 key = f"Val/ID/finished_accuracy"
                 history = run.history(keys=[key])
-                finished4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][key]
+                finished4min_val_loss = pick_metric(history)
                 finised_histories.append(history[key])
 
                 key = f"Val/ID/finished/rule_1_accuracy"
                 history = run.history(keys=[key])
-                rule_1_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][key]
+                rule_1_accuracy4min_val_loss = pick_metric(history)
                 rule_1_histories.append(history[key])
 
                 key = f"Val/ID/finished/rule_2_accuracy"
                 history = run.history(keys=[key])
-                rule_2_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][key]
+                rule_2_accuracy4min_val_loss = pick_metric(history)
                 rule_2_histories.append(history[key])
 
                 key = f"Val/ID/finished/grammatical_accuracy"
                 history = run.history(keys=[key])
-                grammatical_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[ int(min_val_loss_step)][key]
+                grammatical_accuracy4min_val_loss = pick_metric(history)
                 grammatical_histories.append(history[key])
 
                 # OOD
                 key = f"Val/OOD/finished_accuracy"
                 history = run.history(keys=[key])
-                ood_finished4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][key]
+                ood_finished4min_val_loss = pick_metric(history)
                 ood_finised_histories.append(history[key])
 
                 key = f"Val/OOD/finished/rule_1_accuracy"
                 history = run.history(keys=[key])
-                ood_rule_1_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][ key]
+                ood_rule_1_accuracy4min_val_loss = pick_metric(history)
                 ood_rule_1_histories.append(history[key])
 
                 key = f"Val/OOD/finished/rule_2_accuracy"
                 history = run.history(keys=[key])
-                ood_rule_2_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][ key]
+                ood_rule_2_accuracy4min_val_loss = pick_metric(history)
                 ood_rule_2_histories.append(history[key])
 
                 key = f"Val/OOD/finished/rule_2_completion_accuracy"
                 history = run.history(keys=[key])
-                ood_rule_2_completion_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[ int(min_val_loss_step)][key]
+                ood_rule_2_completion_accuracy4min_val_loss = pick_metric(history)
                 ood_rule_2_completion_histories.append(history[key])
 
                 key = f"Val/OOD/finished/grammatical_accuracy"
                 history = run.history(keys=[key])
-                ood_grammatical_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[ int(min_val_loss_step)][key]
+                ood_grammatical_accuracy4min_val_loss = pick_metric(history)
                 ood_grammatical_histories.append(history[key])
 
                 # SOS
 
                 key = f"Val/SOS/finished_accuracy"
                 history = run.history(keys=[key])
-                sos_finished4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][key]
+                sos_finished4min_val_loss = pick_metric(history)
                 sos_finised_histories.append(history[key])
 
                 key = f"Val/SOS/finished/rule_1_accuracy"
                 history = run.history(keys=[key])
-                sos_rule_1_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][ key]
+                sos_rule_1_accuracy4min_val_loss = pick_metric(history)
                 sos_rule_1_histories.append(history[key])
 
                 key = f"Val/SOS/finished/rule_2_accuracy"
                 history = run.history(keys=[key])
-                sos_rule_2_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][ key]
+                sos_rule_2_accuracy4min_val_loss = pick_metric(history)
                 sos_rule_2_histories.append(history[key])
 
                 key = f"Val/SOS/finished/grammatical_accuracy"
                 history = run.history(keys=[key])
-                sos_grammatical_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[ int(min_val_loss_step)][key]
+                sos_grammatical_accuracy4min_val_loss = pick_metric(history)
                 sos_grammatical_histories.append(history[key])
 
                 data.append(
