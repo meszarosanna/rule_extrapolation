@@ -14,7 +14,7 @@ parameters:
   trainer.max_epochs:
     value: 50000
   model.model:
-    values: [linear, lstm, mamba, transformer]
+    values: [linear, lstm, mamba, transformer, xlstm]
   model.dim_model: # transformer
     value: 10
   model.num_heads: # transformer
@@ -45,6 +45,12 @@ parameters:
     value: 5
   model.dropout: # lstm
     value: 0.4
+  model.num_blocks: #xlstm
+    value: 6
+  model.xlstm_embedding_dim: #xlstm
+    value: 64
+  model.slstm_at: #xlstm
+    value: 1
   model.bias: # linear
     value: True
   model.n_layers: # mamba

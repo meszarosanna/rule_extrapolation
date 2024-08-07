@@ -21,6 +21,7 @@ from xlstm.blocks.slstm.block import sLSTMBlock, sLSTMBlockConfig
 
 from mamba.mamba_lm import MambaLM, MambaLMConfig
 from rule_extrapolation.data import (
+    check_parity,
     check_same_number_as_bs,
     check_as_before_bs,
     check_bs_before_as,
@@ -635,7 +636,7 @@ class LightningGrammarModule(pl.LightningModule):
             name=f"{panel_name}/SOS/finished", dictionary=sos_metrics_finished.to_dict()
         )
 
-        if isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
+        if False:  # isinstance(self.logger, pl.loggers.wandb.WandbLogger) is True:
             logger: pl.loggers.wandb.WandbLogger = self.logger
 
             # log the prompts
@@ -683,31 +684,6 @@ class LightningGrammarModule(pl.LightningModule):
     def _log_dict(self, name, dictionary):
         for key, value in dictionary.items():
             self.log(f"{name}/{key}", value)
-
-    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-        (
-            prompts,
-            metrics,
-            prompts_finished,
-            metrics_finished,
-            ood_prompts,
-            ood_metrics,
-            ood_prompts_finished,
-            ood_metrics_finished,
-            sos_prompts,
-            sos_metrics,
-            sos_prompts_finished,
-            sos_metrics_finished,
-        ) = self.eval_prompt_prediction()
-
-        checkpoint["prompts"] = prompts.cpu().numpy()
-        checkpoint["prompts_finished"] = prompts_finished.cpu().numpy()
-
-        checkpoint["ood_prompts"] = ood_prompts.cpu().numpy()
-        checkpoint["ood_prompts_finished"] = ood_prompts_finished.cpu().numpy()
-
-        checkpoint["sos_prompts"] = sos_prompts.cpu().numpy()
-        checkpoint["sos_prompts_finished"] = sos_prompts_finished.cpu().numpy()
 
     @property
     def test_prompts_src(self):
@@ -812,10 +788,16 @@ class LightningGrammarModule(pl.LightningModule):
                 # +1 is for the SOS token
                 for p in prompt_pred
             ]
+            rule_3 = []
 
         elif self.hparams.grammar in ["aNbN", "abN", "aNbM", "aNbNaN"]:
             rule_2 = [check_as_before_bs(p) for p in prompt_pred]
             rule_1 = [check_same_number_as_bs(p) for p in prompt_pred]
+
+            if self.hparams.grammar == "aNbN":
+                rule_3 = [check_parity(p) for p in prompt_pred]
+            else:
+                rule_3 = []
 
             if self.hparams.grammar != "aNbNaN":
                 rule_2_completion = [
@@ -834,6 +816,7 @@ class LightningGrammarModule(pl.LightningModule):
                 )  # +1 is for the SOS token
                 for p in prompt_pred
             ]
+            rule_3 = []
         elif self.hparams.grammar == "bbaN":
             rule_2 = [check_bs_before_as(p) for p in prompt_pred]
             rule_1 = [check_even_number_of_as_end(p) for p in prompt_pred]
@@ -843,6 +826,7 @@ class LightningGrammarModule(pl.LightningModule):
                 )  # +1 is for the SOS token
                 for p in prompt_pred
             ]
+            rule_3 = []
         elif (
             self.hparams.grammar == "parentheses_and_brackets"
             or self.hparams.grammar == "not_nested_parentheses_and_brackets"
@@ -852,10 +836,12 @@ class LightningGrammarModule(pl.LightningModule):
             rule_2_completion = [
                 check_matched_parentheses(p[3:]) for p in prompt_pred  # omit SOS, ), (
             ]
+            rule_3 = []
         else:
             rule_2 = []
             rule_1 = []
             rule_2_completion = []
+            rule_3 = []
 
         # general metrics
         grammatical = [self.grammar_rules(p) for p in prompt_pred]
@@ -868,6 +854,7 @@ class LightningGrammarModule(pl.LightningModule):
             grammatical_accuracy=sum(grammatical) / (len(grammatical) + eps),
             rule_2_completion_accuracy=sum(rule_2_completion)
             / (len(rule_2_completion) + eps),
+            rule_3_accuracy=sum(rule_3) / (len(rule_2) + eps),
         )
 
         return metrics, finished
@@ -1006,7 +993,6 @@ class LightningGrammarModule(pl.LightningModule):
                 f"Unknown next_token_pick_mode: {self.hparams.next_token_pick_mode}, should be 'max' or 'sample'"
             )
 
-        # print(next_items.shape)
         return next_items.to(self.hparams.device)
 
     def on_fit_end(self) -> None:

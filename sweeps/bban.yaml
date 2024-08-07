@@ -36,14 +36,14 @@ parameters:
   model.dropout_p: # transformer
     value: 0.1
   model.num_blocks: #xlstm
-    value: 7
+    value: 6
   model.xlstm_embedding_dim: #xlstm
-    value: 128
+    value: 64
   model.slstm_at: #xlstm
     value: 1
   model.embedding_dim: # lstm
     value: 16
-  model.hidden_dim: # lstm, xlstm
+  model.hidden_dim: # lstm
     value: 64
   model.num_layers: # lstm
     value: 5
