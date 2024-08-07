@@ -41,14 +41,13 @@ def plot_typography(
     rc("figure", titlesize=big)  # fontsize of the figure title
 
 
-def sweep2df(
-    sweep_runs,
-    filename,
-    save=False,
-    load=False,
-):
-    csv_name = f"{filename}.csv"
-    npy_name = f"{filename}.npz"
+def sweep2df(sweep_runs, filename, save=False, load=False, pick_max=True):
+    if pick_max is True:
+        csv_name = f"{filename}.csv"
+        npy_name = f"{filename}.npz"
+    else:
+        csv_name = f"{filename}_at_min_val_loss.csv"
+        npy_name = f"{filename}_at_min_val_loss.npz"
 
     if load is True and isfile(csv_name) is True and isfile(npy_name) is True:
         print(f"\t Loading {filename}...")
@@ -64,16 +63,28 @@ def sweep2df(
         sos_finised_histories = npy_data["sos_finised_history"]
 
         rule_1_histories = npy_data["rule_1_history"]
+        try:
+            rule_3_histories = npy_data["rule_3_history"]
+        except:
+            rule_3_histories = []
         rule_2_histories = npy_data["rule_2_history"]
 
         grammatical_histories = npy_data["grammatical_history"]
 
         ood_rule_1_histories = npy_data["ood_rule_1_history"]
+        try:
+            ood_rule_3_histories = npy_data["ood_rule_3_history"]
+        except:
+            ood_rule_3_histories = []
         ood_rule_2_histories = npy_data["ood_rule_2_history"]
         ood_rule_2_completion_histories = npy_data["ood_rule_2_completion_history"]
         ood_grammatical_histories = npy_data["ood_grammatical_history"]
 
         sos_rule_1_histories = npy_data["sos_rule_1_history"]
+        try:
+            sos_rule_3_histories = npy_data["sos_rule_3_history"]
+        except:
+            sos_rule_3_histories = []
         sos_rule_2_histories = npy_data["sos_rule_2_history"]
         sos_grammatical_histories = npy_data["sos_grammatical_history"]
 
@@ -87,13 +98,16 @@ def sweep2df(
             ood_finised_histories,
             sos_finised_histories,
             rule_1_histories,
+            rule_3_histories,
             rule_2_histories,
             grammatical_histories,
             ood_rule_1_histories,
+            ood_rule_3_histories,
             ood_rule_2_completion_histories,
             ood_rule_2_histories,
             ood_grammatical_histories,
             sos_rule_1_histories,
+            sos_rule_3_histories,
             sos_rule_2_histories,
             sos_grammatical_histories,
         )
@@ -105,17 +119,20 @@ def sweep2df(
     val_accuracy_histories = []
 
     rule_1_histories = []
+    rule_3_histories = []
     rule_2_histories = []
     finised_histories = []
     grammatical_histories = []
 
     ood_rule_1_histories = []
+    ood_rule_3_histories = []
     ood_rule_2_completion_histories = []
     ood_rule_2_histories = []
     ood_finised_histories = []
     ood_grammatical_histories = []
 
     sos_rule_1_histories = []
+    sos_rule_3_histories = []
     sos_rule_2_histories = []
     sos_finised_histories = []
     sos_grammatical_histories = []
@@ -129,10 +146,8 @@ def sweep2df(
         except:
             continue
 
-        if run.state != "failed" and (
-            run.state == "finished" or summary["epoch"] > 400
-        ):
-            # print(f"\t Processing {run.name}...")
+        if run.state == "finished" or summary["epoch"] > 100:
+            print(f"\t Processing {run.name}...")
             # try:
             if True:
                 # .config contains the hyperparameters.
@@ -147,6 +162,11 @@ def sweep2df(
                 batch_size = config["data.batch_size"]
                 seed_everything = config["seed_everything"]
                 model = config["model.model"]
+
+                try:
+                    optimizer = config["model.optimizer"]
+                except:
+                    optimizer = config["optimizer"]
 
                 try:
                     adversarial_training = config["model.adversarial_training"]
@@ -165,20 +185,42 @@ def sweep2df(
 
                 # lstm
                 lstm_embedding_dim = config["model.dim_model"]
-                lstm_hidden_dim = config["model.hidden_dim"]
-                lstm_num_layers = config["model.num_layers"]
-                lstm_dropout = config["model.dropout"]
+                try:
+                    lstm_hidden_dim = config["model.hidden_dim"]
+                    lstm_num_layers = config["model.num_layers"]
+                    lstm_dropout = config["model.dropout"]
+                except:
+                    lstm_hidden_dim = config["hidden_dim"]
+                    lstm_num_layers = config["num_layers"]
+                    lstm_dropout = config["dropout"]
+
+                # xlstm
+                try:
+                    xlstm_embedding_dim = config["model.xlstm_embedding_dim"]
+                    xlstm_num_blocks = config["model.num_blocks"]
+                except:
+                    xlstm_embedding_dim = 0
+                    xlstm_num_blocks = 0
 
                 # linear
                 linear_embedding_dim = config["model.dim_model"]
-                linear_bias = config["model.bias"]
+                try:
+                    linear_bias = config["model.bias"]
+                except:
+                    linear_bias = config["bias"]
                 linear_dim = config["data.max_length"]
 
                 # mamba
-                mamba_d_model = config["model.d_model"]
-                mamba_d_state = config["model.d_state"]
-                mamba_d_conv = config["model.d_conv"]
-                mamba_n_layers = config["model.n_layers"]
+                try:
+                    mamba_d_model = config["model.d_model"]
+                    mamba_d_state = config["model.d_state"]
+                    mamba_d_conv = config["model.d_conv"]
+                    mamba_n_layers = config["model.n_layers"]
+                except:
+                    mamba_d_model = config["d_model"]
+                    mamba_d_state = config["d_state"]
+                    mamba_d_conv = config["d_conv"]
+                    mamba_n_layers = config["n_layers"]
 
                 # training stats
                 train_loss_history = run.history(keys=[f"Train/loss"])
@@ -214,99 +256,106 @@ def sweep2df(
 
                 val_accuracy_histories.append(val_accuracy_history["Val/accuracy"])
 
+                pick_metric = (
+                    lambda history: history.max()[1]
+                    if pick_max
+                    else history.iloc[int(min_val_loss_step)][key]
+                )
+
                 # ID
                 key = f"Val/ID/finished_accuracy"
                 history = run.history(keys=[key])
-                finished4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][key]
+                finished4min_val_loss = pick_metric(history)
                 finised_histories.append(history[key])
 
                 key = f"Val/ID/finished/rule_1_accuracy"
                 history = run.history(keys=[key])
-                rule_1_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][key]
+                rule_1_accuracy4min_val_loss = pick_metric(history)
                 rule_1_histories.append(history[key])
+
+                try:
+                    key = f"Val/ID/finished/rule_3_accuracy"
+                    history = run.history(keys=[key])
+                    rule_3_accuracy4min_val_loss = pick_metric(history)
+                    rule_3_histories.append(history[key])
+                except:
+                    rule_3_accuracy4min_val_loss = 0
+                    rule_3_histories.append([])
 
                 key = f"Val/ID/finished/rule_2_accuracy"
                 history = run.history(keys=[key])
-                rule_2_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][key]
+                rule_2_accuracy4min_val_loss = pick_metric(history)
                 rule_2_histories.append(history[key])
 
                 key = f"Val/ID/finished/grammatical_accuracy"
                 history = run.history(keys=[key])
-                grammatical_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[ int(min_val_loss_step)][key]
+                grammatical_accuracy4min_val_loss = pick_metric(history)
                 grammatical_histories.append(history[key])
 
                 # OOD
                 key = f"Val/OOD/finished_accuracy"
                 history = run.history(keys=[key])
-                ood_finished4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][key]
+                ood_finished4min_val_loss = pick_metric(history)
                 ood_finised_histories.append(history[key])
 
                 key = f"Val/OOD/finished/rule_1_accuracy"
                 history = run.history(keys=[key])
-                ood_rule_1_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][ key]
+                ood_rule_1_accuracy4min_val_loss = pick_metric(history)
                 ood_rule_1_histories.append(history[key])
+
+                try:
+                    key = f"Val/OOD/finished/rule_3_accuracy"
+                    history = run.history(keys=[key])
+                    ood_rule_3_accuracy4min_val_loss = pick_metric(history)
+                    ood_rule_3_histories.append(history[key])
+                except:
+                    ood_rule_3_accuracy4min_val_loss = 0
+                    ood_rule_3_histories.append([])
 
                 key = f"Val/OOD/finished/rule_2_accuracy"
                 history = run.history(keys=[key])
-                ood_rule_2_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][ key]
+                ood_rule_2_accuracy4min_val_loss = pick_metric(history)
                 ood_rule_2_histories.append(history[key])
 
                 key = f"Val/OOD/finished/rule_2_completion_accuracy"
                 history = run.history(keys=[key])
-                ood_rule_2_completion_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[ int(min_val_loss_step)][key]
+                ood_rule_2_completion_accuracy4min_val_loss = pick_metric(history)
                 ood_rule_2_completion_histories.append(history[key])
 
                 key = f"Val/OOD/finished/grammatical_accuracy"
                 history = run.history(keys=[key])
-                ood_grammatical_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[ int(min_val_loss_step)][key]
+                ood_grammatical_accuracy4min_val_loss = pick_metric(history)
                 ood_grammatical_histories.append(history[key])
 
                 # SOS
 
                 key = f"Val/SOS/finished_accuracy"
                 history = run.history(keys=[key])
-                sos_finished4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][key]
+                sos_finished4min_val_loss = pick_metric(history)
                 sos_finised_histories.append(history[key])
 
                 key = f"Val/SOS/finished/rule_1_accuracy"
                 history = run.history(keys=[key])
-                sos_rule_1_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][ key]
+                sos_rule_1_accuracy4min_val_loss = pick_metric(history)
                 sos_rule_1_histories.append(history[key])
+
+                try:
+                    key = f"Val/SOS/finished/rule_3_accuracy"
+                    history = run.history(keys=[key])
+                    sos_rule_3_accuracy4min_val_loss = pick_metric(history)
+                    sos_rule_3_histories.append(history[key])
+                except:
+                    sos_rule_3_accuracy4min_val_loss = 0
+                    sos_rule_3_histories.append([])
 
                 key = f"Val/SOS/finished/rule_2_accuracy"
                 history = run.history(keys=[key])
-                sos_rule_2_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[int(min_val_loss_step)][ key]
+                sos_rule_2_accuracy4min_val_loss = pick_metric(history)
                 sos_rule_2_histories.append(history[key])
 
                 key = f"Val/SOS/finished/grammatical_accuracy"
                 history = run.history(keys=[key])
-                sos_grammatical_accuracy4min_val_loss = history.max()[
-                    1
-                ]  # .iloc[ int(min_val_loss_step)][key]
+                sos_grammatical_accuracy4min_val_loss = pick_metric(history)
                 sos_grammatical_histories.append(history[key])
 
                 data.append(
@@ -320,6 +369,7 @@ def sweep2df(
                         max_length,
                         batch_size,
                         model,
+                        optimizer,
                         # transformer
                         dim_model,
                         num_heads,
@@ -341,6 +391,9 @@ def sweep2df(
                         mamba_d_state,
                         mamba_d_conv,
                         mamba_n_layers,
+                        # xlstm
+                        xlstm_embedding_dim,
+                        xlstm_num_blocks,
                         # train stats
                         min_train_loss,
                         min_train_loss_step,
@@ -353,17 +406,20 @@ def sweep2df(
                         min_val_kl_step,
                         # ID
                         rule_1_accuracy4min_val_loss,
+                        rule_3_accuracy4min_val_loss,
                         rule_2_accuracy4min_val_loss,
                         grammatical_accuracy4min_val_loss,
                         finished4min_val_loss,
                         # OOD
                         ood_rule_1_accuracy4min_val_loss,
+                        ood_rule_3_accuracy4min_val_loss,
                         ood_rule_2_completion_accuracy4min_val_loss,
                         ood_rule_2_accuracy4min_val_loss,
                         ood_grammatical_accuracy4min_val_loss,
                         ood_finished4min_val_loss,
                         # SOS
                         sos_rule_1_accuracy4min_val_loss,
+                        sos_rule_3_accuracy4min_val_loss,
                         sos_rule_2_accuracy4min_val_loss,
                         sos_grammatical_accuracy4min_val_loss,
                         sos_finished4min_val_loss,
@@ -385,6 +441,7 @@ def sweep2df(
             "max_length",
             "batch_size",
             "model",
+            "optimizer",
             # transformer
             "dim_model",
             "num_heads",
@@ -397,6 +454,9 @@ def sweep2df(
             "lstm_hidden_dim",
             "lstm_num_layers",
             "lstm_dropout",
+            # xlstm
+            "xlstm_embedding_dim",
+            "xlstm_num_blocks",
             # linear
             "linear_embedding_dim",
             "linear_bias",
@@ -418,17 +478,20 @@ def sweep2df(
             "min_val_kl_step",
             # ID
             "rule_1_accuracy4min_val_loss",
+            "rule_3_accuracy4min_val_loss",
             "rule_2_accuracy4min_val_loss",
             "grammatical_accuracy4min_val_loss",
             "finished4min_val_loss",
             # OOD
             "ood_rule_1_accuracy4min_val_loss",
+            "ood_rule_3_accuracy4min_val_loss",
             "ood_rule_2_completion_accuracy4min_val_loss",
             "ood_rule_2_accuracy4min_val_loss",
             "ood_grammatical_accuracy4min_val_loss",
             "ood_finished4min_val_loss",
             # SOS
             "sos_rule_1_accuracy4min_val_loss",
+            "sos_rule_3_accuracy4min_val_loss",
             "sos_rule_2_accuracy4min_val_loss",
             "sos_grammatical_accuracy4min_val_loss",
             "sos_finished4min_val_loss",
@@ -452,15 +515,18 @@ def sweep2df(
             ood_finised_history=_prune_histories(ood_finised_histories),
             sos_finised_history=_prune_histories(sos_finised_histories),
             rule_1_history=_prune_histories(rule_1_histories),
+            rule_3_history=_prune_histories(rule_3_histories),
             rule_2_history=_prune_histories(rule_2_histories),
             grammatical_history=_prune_histories(grammatical_histories),
             ood_rule_1_history=_prune_histories(ood_rule_1_histories),
+            ood_rule_3_history=_prune_histories(ood_rule_3_histories),
             ood_rule_2_completion_history=_prune_histories(
                 ood_rule_2_completion_histories
             ),
             ood_rule_2_history=_prune_histories(ood_rule_2_histories),
             ood_grammatical_history=_prune_histories(ood_grammatical_histories),
             sos_rule_1_history=_prune_histories(sos_rule_1_histories),
+            sos_rule_3_history=_prune_histories(sos_rule_3_histories),
             sos_rule_2_history=_prune_histories(sos_rule_2_histories),
             sos_grammatical_history=_prune_histories(sos_grammatical_histories),
         )
@@ -475,13 +541,16 @@ def sweep2df(
         ood_finised_histories,
         sos_finised_histories,
         rule_1_histories,
+        rule_3_histories,
         rule_2_histories,
         grammatical_histories,
         ood_rule_1_histories,
+        ood_rule_3_histories,
         ood_rule_2_completion_histories,
         ood_rule_2_histories,
         ood_grammatical_histories,
         sos_rule_1_histories,
+        sos_rule_3_histories,
         sos_rule_2_histories,
         sos_grammatical_histories,
     )
@@ -538,8 +607,8 @@ def rule_stats2string_per_model(
     return table
 
 
-def grouped_rule_stats(df):
-    grouped_df = df.groupby("model")
+def grouped_rule_stats(df, groupby_key="model"):
+    grouped_df = df.groupby(groupby_key)
 
     stats = {}
 
@@ -547,10 +616,18 @@ def grouped_rule_stats(df):
 
     stats["rule_1"] = grouped_df.rule_1_accuracy4min_val_loss
     stats["rule_2"] = grouped_df.rule_2_accuracy4min_val_loss
+    try:
+        stats["rule_3"] = grouped_df.rule_3_accuracy4min_val_loss
+    except:
+        pass
     stats["grammatical"] = grouped_df.grammatical_accuracy4min_val_loss
     stats["finished"] = grouped_df.finished4min_val_loss
 
     stats["ood_rule_1"] = grouped_df.ood_rule_1_accuracy4min_val_loss
+    try:
+        stats["ood_rule_3"] = grouped_df.ood_rule_3_accuracy4min_val_loss
+    except:
+        pass
     stats["ood_rule_2"] = grouped_df.ood_rule_2_accuracy4min_val_loss
     stats[
         "ood_rule_2_completion"
