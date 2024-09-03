@@ -226,10 +226,15 @@ def sweep2df(sweep_runs, filename, save=False, load=False, pick_max=True):
                 train_loss_history = run.history(keys=[f"Train/loss"])
                 train_loss_histories.append(train_loss_history["Train/loss"])
 
-                min_train_loss_step, min_train_loss = (
-                    train_loss_history.idxmin()[1],
-                    train_loss_history.min()[1],
-                )
+                try:
+                    min_train_loss_step, min_train_loss = (
+                        train_loss_history.idxmin()[1],
+                        train_loss_history.min()[1],
+                    )
+                except:
+                    print(f"\t\t Skipping {run.name} due to NaN train loss")
+                    train_loss_histories.pop()
+                    continue
 
                 # validation stats
                 val_loss_history = run.history(keys=[f"Val/loss"])
@@ -574,6 +579,7 @@ def rule_stats2string_per_model(
         "lstm": "orange",
         "linear": "green!80!black",
         "mamba": "figred",
+        "xlstm": "purple",
     }
     models = sorted(stats["rule_1"].groups.keys())
     print("------------------------------")
