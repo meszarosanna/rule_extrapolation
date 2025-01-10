@@ -393,7 +393,7 @@ def test_check_begins_with_b():
     ],
 )
 def test_generate_test_prompts(grammar):
-    length = 6
+    length = 8
     prompts = generate_test_prompts(length, grammar=grammar)
 
     if grammar in ["aNbN", "abN", "aNbM", "baN", "bbaN"]:

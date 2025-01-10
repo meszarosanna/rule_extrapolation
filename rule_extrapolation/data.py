@@ -996,6 +996,7 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         )  # remove EOS
 
         prompts = torch.cat((ood_prompts, id_prompts), dim=0)
+
     return prompts
 
 
