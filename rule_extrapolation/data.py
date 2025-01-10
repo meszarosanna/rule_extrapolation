@@ -864,7 +864,7 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         )  # remove EOS
         prompts = torch.cat((ood_prompts, id_prompts), dim=0)
 
-    elif grammar == "separated_parentheses_and_brackets":
+    elif grammar == "separated_brackets_and_parentheses":
         # id prompts
         id_brackets_data = torch.tensor(
             np.array(
