@@ -33,6 +33,7 @@ from rule_extrapolation.data import (
     grammar_rules,
     generate_matched_parentheses_and_brackets_data,
     generate_not_nested_matched_parentheses_and_brackets_data,
+    generate_matched_parentheses_and_matched_brackets_data,
     generate_matched_brackets_data,
     generate_matched_parentheses_data,
     generate_aNbNcN_grammar_data,
@@ -388,6 +389,7 @@ def test_check_begins_with_b():
         "brackets",
         "parentheses_and_brackets",
         "not_nested_parentheses_and_brackets",
+        "separated_brackets_and_parentheses",
     ],
 )
 def test_generate_test_prompts(grammar):
@@ -403,6 +405,7 @@ def test_generate_test_prompts(grammar):
         "brackets",
         "parentheses_and_brackets",
         "not_nested_parentheses_and_brackets",
+        "separated_brackets_and_parentheses",
     ]:
         assert prompts.shape == (2**length, length + 3)
 
@@ -420,6 +423,7 @@ def test_generate_test_prompts(grammar):
         "brackets",
         "parentheses_and_brackets",
         "not_nested_parentheses_and_brackets",
+        "separated_brackets_and_parentheses",
     ],
 )
 def test_grammar_rules(max_length, grammar, num_samples):
@@ -489,6 +493,10 @@ def test_grammar_rules(max_length, grammar, num_samples):
         data = torch.from_numpy(
             pad(generate_not_nested_matched_parentheses_and_brackets_data(max_length))
         ).long()
+    elif grammar == "separated_brackets_and_parentheses":
+        data = torch.from_numpy(
+            pad(generate_matched_parentheses_and_matched_brackets_data(max_length))
+        ).long()
 
     assert torch.all(torch.tensor([rules(d) for d in data]))
 
@@ -501,6 +509,8 @@ from rule_extrapolation.data import (
     check_matched_parentheses,
     check_matched_brackets,
     check_matched_parentheses_and_brackets,
+    check_separated_brackets_and_parentheses,
+    check_separated_brackets_and_parentheses_prompts,
     OPENING_BRACKET_token,
     OPENING_PARENTHESIS_token,
     CLOSING_PARENTHESIS_token,
@@ -641,3 +651,57 @@ def test_check_not_nested_matched_parentheses_and_brackets():
         check_matched_parentheses(sequence) == False
         or check_matched_brackets(sequence) == False
     )
+
+
+def test_check_separated_brackets_and_parentheses():
+    op = OPENING_PARENTHESIS_token.item()
+    cp = CLOSING_PARENTHESIS_token.item()
+    ob = OPENING_BRACKET_token.item()
+    cb = CLOSING_BRACKET_token.item()
+
+    sequence = torch.tensor([op, op, cp, op, cp, cp])  # (()())
+    assert check_separated_brackets_and_parentheses(sequence) == True
+
+    sequence = torch.tensor([SOS_token.item(), op, op, cp, op, cp, cp])  # (()())
+    assert check_separated_brackets_and_parentheses(sequence) == True
+
+    sequence = torch.tensor([ob, ob, cb, ob, cb, cb])  # [[][]]
+    assert check_separated_brackets_and_parentheses(sequence) == True
+
+    sequence = torch.tensor([SOS_token.item(), ob, ob, cb, ob, cb, cb])  # [[][]]
+    assert check_separated_brackets_and_parentheses(sequence) == True
+
+    sequence = torch.tensor([op, ob, op, cp, op, cp, ob, cb, cb, cp])  # ([()()[]])
+    assert check_separated_brackets_and_parentheses(sequence) == False
+
+    sequence = torch.tensor(
+        [SOS_token.item(), op, ob, op, cp, op, cp, ob, cb, cb, cp]
+    )  # ([()()[]])
+    assert check_separated_brackets_and_parentheses(sequence) == False
+
+
+def test_check_separated_brackets_and_parentheses_prompts():
+    op = OPENING_PARENTHESIS_token.item()
+    cp = CLOSING_PARENTHESIS_token.item()
+    ob = OPENING_BRACKET_token.item()
+    cb = CLOSING_BRACKET_token.item()
+
+    sequence = torch.tensor([op, op, cp, op, cp])  # (()()
+    assert check_separated_brackets_and_parentheses_prompts(sequence) == True
+
+    sequence = torch.tensor([SOS_token.item(), op, op, cp, op, cp])  # (()()
+    assert check_separated_brackets_and_parentheses_prompts(sequence) == True
+
+    sequence = torch.tensor([ob, ob, cb, ob, cb])  # [[][]
+    assert check_separated_brackets_and_parentheses_prompts(sequence) == True
+
+    sequence = torch.tensor([SOS_token.item(), ob, ob, cb, ob, cb])  # [[][]
+    assert check_separated_brackets_and_parentheses_prompts(sequence) == True
+
+    sequence = torch.tensor([op, ob, op, cp, op, cp, ob, cb])  # ([()()[]
+    assert check_separated_brackets_and_parentheses_prompts(sequence) == False
+
+    sequence = torch.tensor(
+        [SOS_token.item(), op, ob, op, cp, op, cp, ob, cb]
+    )  # ([()()[]
+    assert check_separated_brackets_and_parentheses_prompts(sequence) == False

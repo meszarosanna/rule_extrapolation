@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import random
 
 # these are always used
 SOS_token = np.array([0])
@@ -683,6 +684,61 @@ def check_begins_with_b(sequence: torch.Tensor):
         return sequence[0] == B_token.item()
 
 
+def check_separated_brackets_and_parentheses(sequence: torch.Tensor):
+    """
+    Check if matched brackets only or matched parentheses only
+    """
+    if type(sequence) == np.ndarray:
+        sequence = torch.from_numpy(sequence)
+
+    stack = []
+    if sequence[0] == SOS_token.item():
+        start_token = sequence[1]
+    else:
+        start_token = sequence[0]
+
+    if start_token in [OPENING_BRACKET_token.item(), CLOSING_BRACKET_token.item()]:
+        for token in sequence:
+            if token == OPENING_BRACKET_token.item():
+                stack.append(token)
+            elif token == CLOSING_BRACKET_token.item():
+                if len(stack) == 0:
+                    return False
+                stack.pop()
+            elif token == OPENING_PARENTHESIS_token.item():
+                return False
+            elif token == CLOSING_PARENTHESIS_token.item():
+                return False
+    else:
+        for token in sequence:
+            if token == OPENING_PARENTHESIS_token.item():
+                stack.append(token)
+            elif token == CLOSING_PARENTHESIS_token.item():
+                if len(stack) == 0:
+                    return False
+                stack.pop()
+            elif token == OPENING_BRACKET_token.item():
+                return False
+            elif token == CLOSING_BRACKET_token.item():
+                return False
+
+    return len(stack) == 0
+
+
+def check_separated_brackets_and_parentheses_prompts(sequence: torch.Tensor):
+    if sequence[0] == SOS_token.item():
+        start_tokens = sequence[1:3]
+    else:
+        start_tokens = sequence[0:2]
+    if (
+        start_tokens[0] == OPENING_PARENTHESIS_token.item()
+        and start_tokens[1] == OPENING_BRACKET_token.item()
+    ):
+        return False
+    else:
+        return True
+
+
 def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
     """
     Generates all prompts of a given length with symbols a and b or (and c)
@@ -808,6 +864,67 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         )  # remove EOS
         prompts = torch.cat((ood_prompts, id_prompts), dim=0)
 
+    elif grammar == "separated_parentheses_and_brackets":
+        # id prompts
+        id_brackets_data = torch.tensor(
+            np.array(
+                generate_matched_brackets_data(
+                    num_samples=num_samples // 4, max_length=length, fixed_length=True
+                )
+            ),
+            dtype=torch.long,
+        )
+        id_parentheses_data = torch.tensor(
+            np.array(
+                generate_matched_parentheses_data(
+                    num_samples=num_samples // 4, max_length=length, fixed_length=True
+                )
+            ),
+            dtype=torch.long,
+        )
+        id_b_prompts = torch.cat(
+            (
+                id_brackets_data[:, 0].view(-1, 1),
+                torch.ones((id_brackets_data.shape[0], 1), dtype=torch.long)
+                * OPENING_BRACKET_token,
+                id_brackets_data[:, 1:-1],
+            ),
+            dim=1,
+        )  # remove EOS
+        id_p_prompts = torch.cat(
+            (
+                id_parentheses_data[:, 0].view(-1, 1),
+                torch.ones((id_parentheses_data.shape[0], 1), dtype=torch.long)
+                * OPENING_PARENTHESIS_token,
+                id_parentheses_data[:, 1:-1],
+            ),
+            dim=1,
+        )  # remove EOS
+        id_prompts = torch.cat((id_b_prompts, id_p_prompts), dim=0)
+
+        # the ood prompts here include both [] and ()
+        ood_data = torch.tensor(
+            np.array(
+                generate_matched_parentheses_and_brackets_data(
+                    num_samples=num_samples // 2, max_length=length, fixed_length=True
+                )
+            ),
+            dtype=torch.long,
+        )
+        ood_prompts = torch.cat(
+            (
+                ood_data[:, 0].view(-1, 1),
+                torch.ones((ood_data.shape[0], 1), dtype=torch.long)
+                * OPENING_PARENTHESIS_token,
+                torch.ones((ood_data.shape[0], 1), dtype=torch.long)
+                * OPENING_BRACKET_token,
+                ood_data[:, 1:-1],
+            ),
+            dim=1,
+        )  # remove EOS
+
+        prompts = torch.cat((ood_prompts, id_prompts), dim=0)
+
     elif grammar == "parentheses_and_brackets":
         data = torch.tensor(
             np.array(
@@ -915,6 +1032,8 @@ def grammar_rules(grammar):
         return lambda x: check_matched_parentheses_and_brackets(x)
     elif grammar == "not_nested_parentheses_and_brackets":
         return lambda x: check_matched_parentheses(x) and check_matched_brackets(x)
+    elif grammar == "separated_brackets_and_parentheses":
+        return lambda x: check_separated_brackets_and_parentheses(x)
     else:
         raise ValueError(f"Unknown grammar {grammar}")
 
@@ -951,11 +1070,10 @@ def prompt_grammar_rules(grammar):
         return lambda x: check_matched_parentheses_and_brackets(x)
     elif grammar == "not_nested_parentheses_and_brackets":
         return lambda x: check_matched_brackets(x) and check_matched_parentheses(x)
+    elif grammar == "separated_brackets_and_parentheses":
+        return lambda x: check_separated_brackets_and_parentheses_prompts(x)
     else:
         raise ValueError(f"Unknown grammar {grammar}")
-
-
-import random
 
 
 def generate_matched_parentheses_and_brackets(n):
@@ -1278,6 +1396,33 @@ def generate_matched_brackets_data(
             if len(sample) == (max_length + 2):  # +SOS, EOS
                 data.append(sample)
 
+    return data
+
+
+def generate_matched_parentheses_and_matched_brackets_data(
+    num_samples: int, max_length: int = 32, fixed_length=False
+) -> list:
+    if fixed_length is False:
+        lengths_p = np.random.randint(
+            low=1, high=max_length // 2 + 1, size=num_samples // 2
+        )
+        lengths_b = np.random.randint(
+            low=1, high=max_length // 2 + 1, size=num_samples // 2
+        )
+        data = [generate_matched_parentheses(2 * l) for l in lengths_p]
+        data.extend(generate_matched_brackets(2 * l) for l in lengths_b)
+    else:
+        data = []
+        while len(data) < num_samples // 2:
+            sample = generate_matched_parentheses(max_length)
+            if len(sample) == (max_length + 2):  # +SOS, EOS
+                data.append(sample)
+        while len(data) < num_samples:
+            sample = generate_matched_brackets(max_length)
+            if len(sample) == (max_length + 2):  # +SOS, EOS
+                data.append(sample)
+
+    np.random.shuffle(data)
     return data
 
 

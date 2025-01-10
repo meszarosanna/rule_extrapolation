@@ -33,6 +33,7 @@ from rule_extrapolation.data import (
     check_matched_parentheses,
     check_begins_with_b,
     check_matched_brackets,
+    check_matched_parentheses_and_brackets,
     SOS_token,
     EOS_token,
     PAD_token,
@@ -143,6 +144,7 @@ class LightningGrammarModule(pl.LightningModule):
         elif self.hparams.grammar in [
             "parentheses_and_brackets",
             "not_nested_parentheses_and_brackets",
+            "separated_parentheses_and_brackets",
         ]:
             self.hparams["num_tokens"] = 7
         elif grammar == "brackets":
@@ -264,6 +266,7 @@ class LightningGrammarModule(pl.LightningModule):
         if (
             self.hparams.grammar != "parentheses_and_brackets"
             and self.hparams.grammar != "not_nested_parentheses_and_brackets"
+            and self.hparams.grammar != "separated_parentheses_and_brackets"
         ):
             rules_met = [self.prompt_grammar_rules(t) for t in test_prompts]
             self.test_prompts_in_distribution = test_prompts[rules_met]
@@ -837,6 +840,12 @@ class LightningGrammarModule(pl.LightningModule):
                 check_matched_parentheses(p[3:]) for p in prompt_pred  # omit SOS, ), (
             ]
             rule_3 = []
+        elif self.hparams.grammar == "separated_brackets_and_parentheses":
+            rule_1 = [
+                check_matched_brackets(p) and check_matched_parentheses(p)
+                for p in prompt_pred
+            ]
+            rule_2 = [check_matched_parentheses_and_brackets(p) for p in prompt_pred]
         else:
             rule_2 = []
             rule_1 = []

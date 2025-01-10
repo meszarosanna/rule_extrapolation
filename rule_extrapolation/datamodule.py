@@ -13,6 +13,7 @@ from rule_extrapolation.data import (
     generate_aNbNaN_grammar_data,
     generate_matched_parentheses_and_brackets_data,
     generate_not_nested_matched_parentheses_and_brackets_data,
+    generate_matched_parentheses_and_matched_brackets_data,
     generate_matched_brackets_data,
     generate_matched_parentheses_data,
     generate_aNbNcN_grammar_data,
@@ -70,6 +71,8 @@ class GrammarDataModule(pl.LightningDataModule):
             return generate_matched_parentheses_data
         elif self.hparams.grammar == "parentheses_and_brackets":
             return generate_matched_parentheses_and_brackets_data
+        elif self.hparams.grammar == "separated_parentheses_and_brackets":
+            return generate_matched_parentheses_and_matched_brackets_data
         elif self.hparams.grammar == "not_nested_parentheses_and_brackets":
             return generate_not_nested_matched_parentheses_and_brackets_data
         elif self.hparams.grammar == "aNbNcN":
