@@ -887,6 +887,8 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
                 id_brackets_data[:, 0].view(-1, 1),
                 torch.ones((id_brackets_data.shape[0], 1), dtype=torch.long)
                 * OPENING_BRACKET_token,
+                torch.ones((id_brackets_data.shape[0], 1), dtype=torch.long)
+                * OPENING_BRACKET_token,
                 id_brackets_data[:, 1:-1],
             ),
             dim=1,
@@ -894,6 +896,8 @@ def generate_test_prompts(length: int = 6, grammar: str = "aNbN"):
         id_p_prompts = torch.cat(
             (
                 id_parentheses_data[:, 0].view(-1, 1),
+                torch.ones((id_parentheses_data.shape[0], 1), dtype=torch.long)
+                * OPENING_PARENTHESIS_token,
                 torch.ones((id_parentheses_data.shape[0], 1), dtype=torch.long)
                 * OPENING_PARENTHESIS_token,
                 id_parentheses_data[:, 1:-1],
